@@ -1,13 +1,7 @@
-// import PagePlaceholder from "../../components/common/PagePlaceholder"
-// export default function ReceptionistDashboard() {
-//   return <PagePlaceholder title="Receptionist Dashboard" description="Overview of appointments and daily activity." />
-// }
-
-
-import { useState, useEffect } from 'react';
-import { 
-  Users, 
-  Calendar, 
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Users,
+  Calendar,
   DollarSign,
   TrendingUp,
   Clock,
@@ -18,16 +12,73 @@ import {
   Filter,
   MoreVertical,
   Phone,
-  Mail,
   Eye
 } from 'lucide-react';
+
+// Types moved to top so they can be used in useState generics and helper signatures
+interface User {
+  fullName?: string;
+  [key: string]: unknown;
+}
+
+interface Patient {
+  id?: string;
+  user?: User;
+  [key: string]: unknown;
+}
+
+interface Doctor {
+  user?: User;
+  specialization?: string;
+  [key: string]: unknown;
+}
+
+interface Appointment {
+  patient?: Patient;
+  doctor?: Doctor;
+  appointmentDate?: string;
+  createdAt?: string;
+  status?: string;
+  type?: string;
+  patientId?: string;
+  [key: string]: unknown;
+}
+
+interface Payment {
+  patient?: Patient;
+  amount?: number | string;
+  status?: string;
+  method?: string;
+  createdAt?: string;
+  [key: string]: unknown;
+}
+
+interface AppointmentStat {
+  month: string;
+  count: number;
+}
+
+type StatusType = 'COMPLETED' | 'PAID' | 'PENDING' | 'CANCELLED' | 'FAILED' | string;
 
 // API Base URL
 const API_BASE_URL = 'http://localhost:5001';
 
 const ReceptionistDashboard = () => {
   const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState({
+  const [dashboardData, setDashboardData] = useState<{
+    totalAppointments: number;
+    pendingAppointments: number;
+    confirmedAppointments: number;
+    completedAppointments: number;
+    todayAppointments: number;
+    totalPatients: number;
+    totalPayments: number;
+    pendingPayments: number;
+    recentAppointments: Appointment[];
+    upcomingAppointments: Appointment[];
+    recentPayments: Payment[];
+    appointmentStats: AppointmentStat[];
+  }>({
     totalAppointments: 0,
     pendingAppointments: 0,
     confirmedAppointments: 0,
@@ -44,6 +95,8 @@ const ReceptionistDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
+  // intentionally only run on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -51,7 +104,15 @@ const ReceptionistDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : null;
+      const token = (() => {
+        const raw = localStorage.getItem('user');
+        if (!raw) return null;
+        try {
+          return JSON.parse(raw).token;
+        } catch {
+          return null;
+        }
+      })();
       const headers = {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -60,12 +121,12 @@ const ReceptionistDashboard = () => {
       // Fetch appointments
       const appointmentsResponse = await fetch(`${API_BASE_URL}/appointments`, { headers });
       const appointmentsData = await appointmentsResponse.json();
-      const appointments = appointmentsData.data || [];
+      const appointments: Appointment[] = (appointmentsData.data as Appointment[]) || [];
 
       // Fetch payments
       const paymentsResponse = await fetch(`${API_BASE_URL}/payments`, { headers });
       const paymentsData = await paymentsResponse.json();
-      const payments = paymentsData.data || [];
+      const payments: Payment[] = (paymentsData.data as Payment[]) || [];
 
       // Calculate statistics
       const today = new Date();
@@ -79,6 +140,7 @@ const ReceptionistDashboard = () => {
       const completedAppointments = appointments.filter(a => a.status === 'COMPLETED').length;
       
       const todayAppointments = appointments.filter(a => {
+        if (!a.appointmentDate) return false;
         const aptDate = new Date(a.appointmentDate);
         return aptDate >= today && aptDate < tomorrow;
       }).length;
@@ -93,18 +155,18 @@ const ReceptionistDashboard = () => {
 
       // Recent appointments (last 5)
       const recentAppointments = appointments
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .sort((a, b) => (new Date(b.createdAt ?? 0)).getTime() - (new Date(a.createdAt ?? 0)).getTime())
         .slice(0, 5);
 
       // Upcoming appointments (next 5)
       const upcomingAppointments = appointments
-        .filter(a => new Date(a.appointmentDate) >= new Date() && a.status !== 'CANCELLED')
-        .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
+        .filter(a => (a.appointmentDate ? new Date(a.appointmentDate) : new Date(0)) >= new Date() && a.status !== 'CANCELLED')
+        .sort((a, b) => (new Date(a.appointmentDate ?? 0)).getTime() - (new Date(b.appointmentDate ?? 0)).getTime())
         .slice(0, 5);
 
       // Recent payments
       const recentPayments = payments
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .sort((a, b) => (new Date(b.createdAt ?? 0)).getTime() - (new Date(a.createdAt ?? 0)).getTime())
         .slice(0, 5);
 
       // Appointment stats by month
@@ -131,18 +193,18 @@ const ReceptionistDashboard = () => {
     }
   };
 
-  const processMonthlyStats = (appointments) => {
+  const processMonthlyStats = (appointments: Appointment[]): AppointmentStat[] => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     const currentYear = new Date().getFullYear();
     const monthCounts = new Array(6).fill(0);
 
-    appointments.forEach(apt => {
-      const date = new Date(apt.appointmentDate || apt.createdAt);
+    appointments.forEach((apt: Appointment) => {
+      const date: Date = new Date(apt.appointmentDate ?? apt.createdAt ?? 0);
       if (date.getFullYear() === currentYear) {
-        const monthIndex = date.getMonth();
-        if (monthIndex < 6) {
-          monthCounts[monthIndex]++;
-        }
+      const monthIndex: number = date.getMonth();
+      if (monthIndex < 6) {
+        monthCounts[monthIndex]++;
+      }
       }
     });
 
@@ -152,19 +214,16 @@ const ReceptionistDashboard = () => {
     }));
   };
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number | string = 0): string => {
     return new Intl.NumberFormat('en-RW', {
       style: 'currency',
       currency: 'RWF',
       minimumFractionDigits: 0
-    }).format(amount);
+    }).format(Number(amount));
   };
 
-  const formatNumber = (num) => {
-    return new Intl.NumberFormat('en-US').format(num);
-  };
-
-  const formatDate = (dateString) => {
+  const formatDate = (dateString?: string | number): string => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -174,7 +233,7 @@ const ReceptionistDashboard = () => {
     });
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status?: StatusType) => {
     switch (status) {
       case 'COMPLETED':
         return 'bg-green-100 text-green-800 border-green-200';
@@ -193,7 +252,9 @@ const ReceptionistDashboard = () => {
     }
   };
 
-  const getStatusIcon = (status) => {
+  
+
+  const getStatusIcon = (status?: StatusType): React.ReactElement => {
     switch (status) {
       case 'COMPLETED':
       case 'PAID':
@@ -507,7 +568,7 @@ const ReceptionistDashboard = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="py-8 text-center text-gray-500">
+                  <td colSpan={6} className="py-8 text-center text-gray-500">
                     No appointments found
                   </td>
                 </tr>
