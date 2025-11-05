@@ -1,16 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Video, Phone, Send, Paperclip, MoreVertical, Search, ArrowLeft, Smile, Image, X } from 'lucide-react';
 
-// Mock data for conversations
+// Mock data for patient conversations (from doctor's perspective)
 const mockConversations = [
   {
     id: '1',
-    doctorName: 'Dr. Aline UWERA',
-    doctorSpecialty: 'Cardiology',
-    doctorAvatar: 'AU',
-    lastMessage: 'Your test results look good. Continue with...',
+    patientName: 'Jean Paul NIYONZIMA',
+    patientAge: '45 years',
+    patientAvatar: 'JN',
+    lastMessage: 'Thank you doctor, I will continue with...',
     timestamp: '2 min ago',
-    unread: 2,
+    unread: 1,
+    condition: 'Hypertension Follow-up',
     messages: [
       { id: '1', sender: 'doctor', text: 'Good morning! How are you feeling today?', timestamp: '10:30 AM', date: 'Today' },
       { id: '2', sender: 'patient', text: 'Good morning Doctor. I\'m feeling much better than yesterday.', timestamp: '10:32 AM', date: 'Today' },
@@ -24,28 +25,31 @@ const mockConversations = [
   },
   {
     id: '2',
-    doctorName: 'Dr. Jean Bosco KABANDA',
-    doctorSpecialty: 'Pediatrics',
-    doctorAvatar: 'JK',
-    lastMessage: 'The vaccination schedule for your child...',
+    patientName: 'Marie Claire UWASE',
+    patientAge: '32 years',
+    patientAvatar: 'MU',
+    lastMessage: 'When should I bring her for the vaccines?',
     timestamp: '1 hour ago',
     unread: 0,
+    condition: 'Child Vaccination',
     messages: [
       { id: '1', sender: 'patient', text: 'Hello Doctor, I wanted to ask about my child\'s vaccination schedule.', timestamp: '9:15 AM', date: 'Today' },
       { id: '2', sender: 'doctor', text: 'Hello! I\'d be happy to help. How old is your child?', timestamp: '9:20 AM', date: 'Today' },
       { id: '3', sender: 'patient', text: 'She just turned 6 months old last week.', timestamp: '9:22 AM', date: 'Today' },
       { id: '4', sender: 'doctor', text: 'At 6 months, she should receive several important vaccines. Let me send you the complete schedule.', timestamp: '9:25 AM', date: 'Today' },
       { id: '5', sender: 'doctor', text: 'The vaccination schedule for your child includes: DTP, Polio, and Hepatitis B vaccines.', timestamp: '9:26 AM', date: 'Today' },
+      { id: '6', sender: 'patient', text: 'When should I bring her for the vaccines?', timestamp: '9:28 AM', date: 'Today' },
     ]
   },
   {
     id: '3',
-    doctorName: 'Dr. Sarah MUKAMANA',
-    doctorSpecialty: 'General Medicine',
-    doctorAvatar: 'SM',
-    lastMessage: 'Remember to schedule your follow-up...',
+    patientName: 'Eric MUTABAZI',
+    patientAge: '28 years',
+    patientAvatar: 'EM',
+    lastMessage: 'I\'ll schedule the appointment today.',
     timestamp: 'Yesterday',
     unread: 0,
+    condition: 'Diet Management',
     messages: [
       { id: '1', sender: 'doctor', text: 'Hi! Just checking in on how you\'re managing with the new diet plan.', timestamp: '3:45 PM', date: 'Yesterday' },
       { id: '2', sender: 'patient', text: 'Hello Doctor! It\'s been going well. I\'ve been following it strictly.', timestamp: '4:10 PM', date: 'Yesterday' },
@@ -53,11 +57,30 @@ const mockConversations = [
       { id: '4', sender: 'patient', text: 'No major issues, though I did feel a bit tired the first few days.', timestamp: '4:15 PM', date: 'Yesterday' },
       { id: '5', sender: 'doctor', text: 'That\'s normal as your body adjusts. It should improve within a week.', timestamp: '4:18 PM', date: 'Yesterday' },
       { id: '6', sender: 'doctor', text: 'Remember to schedule your follow-up appointment in two weeks.', timestamp: '4:20 PM', date: 'Yesterday' },
+      { id: '7', sender: 'patient', text: 'I\'ll schedule the appointment today.', timestamp: '4:22 PM', date: 'Yesterday' },
+    ]
+  },
+  {
+    id: '4',
+    patientName: 'Grace MUKANDAYISENGA',
+    patientAge: '56 years',
+    patientAvatar: 'GM',
+    lastMessage: 'The pain has reduced significantly.',
+    timestamp: '2 days ago',
+    unread: 0,
+    condition: 'Arthritis Treatment',
+    messages: [
+      { id: '1', sender: 'doctor', text: 'Good afternoon! How is your knee pain today?', timestamp: '2:30 PM', date: '2 days ago' },
+      { id: '2', sender: 'patient', text: 'Hello Doctor. The pain has reduced significantly since I started the new medication.', timestamp: '2:45 PM', date: '2 days ago' },
+      { id: '3', sender: 'doctor', text: 'That\'s wonderful to hear! Are you able to walk more comfortably now?', timestamp: '2:47 PM', date: '2 days ago' },
+      { id: '4', sender: 'patient', text: 'Yes, I can walk around the house without much difficulty now.', timestamp: '2:50 PM', date: '2 days ago' },
+      { id: '5', sender: 'doctor', text: 'Great progress! Continue with the medication and the exercises I recommended.', timestamp: '2:52 PM', date: '2 days ago' },
     ]
   }
 ];
 
-const ConsultationPage = () => {
+const DoctorConsultationsPage = () => {
+  const [conversations, setConversations] = useState(mockConversations);
   const [selectedConversation, setSelectedConversation] = useState(mockConversations[0]);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,29 +108,45 @@ const ConsultationPage = () => {
     }
   };
 
-  const filteredConversations = mockConversations.filter(conv =>
-    conv.doctorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    conv.doctorSpecialty.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredConversations = conversations.filter(conv =>
+    conv.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    conv.condition.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleCloseChat = (e, conversationId) => {
+    e.stopPropagation();
+    
+    const updatedConversations = conversations.filter(conv => conv.id !== conversationId);
+    setConversations(updatedConversations);
+    
+    if (selectedConversation.id === conversationId) {
+      if (updatedConversations.length > 0) {
+        setSelectedConversation(updatedConversations[0]);
+      } else {
+        setShowMobileChat(false);
+      }
+    }
+  };
+
   const startVideoCall = () => {
-    alert('Starting video call with ' + selectedConversation.doctorName);
+    alert('Starting video call with ' + selectedConversation.patientName);
   };
 
   const startVoiceCall = () => {
-    alert('Starting voice call with ' + selectedConversation.doctorName);
+    alert('Starting voice call with ' + selectedConversation.patientName);
   };
 
   return (
     <div className="h-190 lg:h-180 md:h-190 bg-gray-50 flex flex-col">
-     <div className="flex-1 flex overflow-hidden">
-     <div className={`${showMobileChat ? 'hidden lg:flex' : 'flex'} flex-col w-full lg:w-80 bg-white border-r border-gray-200`}>
+      <div className="flex-1 flex overflow-hidden ">
+        <div className={`${showMobileChat ? 'hidden lg:flex' : 'flex'} flex-col w-full lg:w-80 bg-white border-r border-gray-200`}>
           <div className="p-4 border-b border-gray-200">
+            <h1 className="text-xl font-bold text-gray-900 mb-3">Patient Consultations</h1>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search conversations..."
+                placeholder="Search patients..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -116,62 +155,81 @@ const ConsultationPage = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {filteredConversations.map((conv) => (
-              <div
-                key={conv.id}
-                onClick={() => {
-                  setSelectedConversation(conv);
-                  setShowMobileChat(true);
-                }}
-                className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${
-                  selectedConversation.id === conv.id
-                    ? 'bg-blue-50 border-l-4 border-l-blue-600'
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white font-semibold text-sm">{conv.doctorAvatar}</span>
+            {filteredConversations.length > 0 ? (
+              filteredConversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  className={`group relative p-4 border-b border-gray-100 cursor-pointer transition-colors ${
+                    selectedConversation.id === conv.id
+                      ? 'bg-blue-50 border-l-4 border-l-blue-600'
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div
+                    onClick={() => {
+                      setSelectedConversation(conv);
+                      setShowMobileChat(true);
+                    }}
+                    className="flex items-start gap-3"
+                  >
+                    <div className="relative">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-semibold text-sm">{conv.patientAvatar}</span>
+                      </div>
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                     </div>
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between mb-1">
+                        <h3 className="font-semibold text-gray-900 text-sm truncate">{conv.patientName}</h3>
+                        <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{conv.timestamp}</span>
+                      </div>
+                      <p className="text-xs text-blue-600 mb-1">{conv.patientAge} • {conv.condition}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-600 truncate">{conv.lastMessage}</p>
+                        {conv.unread > 0 && (
+                          <span className="ml-2 bg-blue-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0">
+                            {conv.unread}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-1">
-                      <h3 className="font-semibold text-gray-900 text-sm truncate">{conv.doctorName}</h3>
-                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{conv.timestamp}</span>
-                    </div>
-                    <p className="text-xs text-blue-600 mb-1">{conv.doctorSpecialty}</p>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-gray-600 truncate">{conv.lastMessage}</p>
-                      {conv.unread > 0 && (
-                        <span className="ml-2 bg-blue-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0">
-                          {conv.unread}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  <button
+                    onClick={(e) => handleCloseChat(e, conv.id)}
+                    className="absolute top-4 right-4 p-1.5 bg-white hover:bg-red-50 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Close chat"
+                  >
+                    <X className="w-4 h-4 text-gray-600 hover:text-red-600" />
+                  </button>
                 </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <Search className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No patients found</h3>
+                <p className="text-sm text-gray-500">Try adjusting your search</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
-        <div className={`${showMobileChat ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-gray-50`}>
+        <div className={`${showMobileChat ? 'flex' : 'hidden lg:flex'} flex-1 flex-col bg-gray-50`}>
           <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowMobileChat(false)}
-                className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">{selectedConversation.doctorAvatar}</span>
+                <span className="text-white font-semibold text-sm">{selectedConversation.patientAvatar}</span>
               </div>
               <div>
-                <h2 className="font-semibold text-gray-900">{selectedConversation.doctorName}</h2>
-                <p className="text-xs text-gray-500">{selectedConversation.doctorSpecialty}</p>
+                <h2 className="font-semibold text-gray-900">{selectedConversation.patientName}</h2>
+                <p className="text-xs text-gray-500">{selectedConversation.patientAge} • {selectedConversation.condition}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -208,22 +266,22 @@ const ConsultationPage = () => {
                       </div>
                     </div>
                   )}
-                  <div className={`flex ${message.sender === 'patient' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex items-end gap-2 max-w-[70%] ${message.sender === 'patient' ? 'flex-row-reverse' : 'flex-row'}`}>
-                      {message.sender === 'doctor' && (
+                  <div className={`flex ${message.sender === 'doctor' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`flex items-end gap-2 max-w-[70%] ${message.sender === 'doctor' ? 'flex-row-reverse' : 'flex-row'}`}>
+                      {message.sender === 'patient' && (
                         <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-white font-semibold text-xs">{selectedConversation.doctorAvatar}</span>
+                          <span className="text-white font-semibold text-xs">{selectedConversation.patientAvatar}</span>
                         </div>
                       )}
                       <div>
                         <div className={`rounded-2xl px-4 py-2 ${
-                          message.sender === 'patient'
+                          message.sender === 'doctor'
                             ? 'bg-blue-600 text-white rounded-br-none'
                             : 'bg-white text-gray-900 rounded-bl-none shadow-sm'
                         }`}>
                           <p className="text-sm leading-relaxed">{message.text}</p>
                         </div>
-                        <p className={`text-xs text-gray-500 mt-1 ${message.sender === 'patient' ? 'text-right' : 'text-left'}`}>
+                        <p className={`text-xs text-gray-500 mt-1 ${message.sender === 'doctor' ? 'text-right' : 'text-left'}`}>
                           {message.timestamp}
                         </p>
                       </div>
@@ -237,7 +295,7 @@ const ConsultationPage = () => {
               <div className="flex justify-start">
                 <div className="flex items-end gap-2 max-w-[70%]">
                   <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-white font-semibold text-xs">{selectedConversation.doctorAvatar}</span>
+                    <span className="text-white font-semibold text-xs">{selectedConversation.patientAvatar}</span>
                   </div>
                   <div className="bg-white rounded-2xl rounded-bl-none shadow-sm px-4 py-3">
                     <div className="flex gap-1">
@@ -280,7 +338,7 @@ const ConsultationPage = () => {
                       handleSendMessage(e);
                     }
                   }}
-                  placeholder="Type your message..."
+                  placeholder="Type your message to patient..."
                   className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                   rows={1}
                   style={{ minHeight: '44px', maxHeight: '120px' }}
@@ -308,4 +366,4 @@ const ConsultationPage = () => {
   );
 };
 
-export default ConsultationPage;
+export default DoctorConsultationsPage;

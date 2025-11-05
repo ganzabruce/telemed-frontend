@@ -40,6 +40,7 @@ const navigationByRole: Record<string, NavItem[]> = {
   DOCTOR: [
     { name: "Dashboard", href: "/doctor-dashboard", icon: LayoutDashboard },
     { name: "Appointments", href: "/doctor/appointments", icon: Calendar },
+    { name: "Consultations", href: "/doctor/consultations", icon: Stethoscope },
     { name: "Patients", href: "/doctor/patients", icon: Users },
   ],
   RECEPTIONIST: [
