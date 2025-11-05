@@ -9,6 +9,7 @@ import DoctorRoutes from "./routes/DoctorRoutes"
 import ReceptionistRoutes from "./routes/ReceptionistRoutes"
 import PatientRoutes from "./routes/PatientRoutes"
 import LandingPage from "./pages/landingPage"
+import ProfilePage from "./pages/shared/ProfilePage"
 
 // Separate component that uses useAuth
 const AppRoutes = () => {
@@ -26,6 +27,10 @@ const AppRoutes = () => {
       <Route
         path="/"
         element={<LandingPage />}
+      />
+      <Route
+        path="/profile"
+        element={<ProfilePage />}
       />
       <Route
         path="/login"

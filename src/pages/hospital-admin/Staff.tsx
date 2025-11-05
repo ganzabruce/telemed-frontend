@@ -36,7 +36,6 @@ const API_URL = 'http://localhost:5002';
 
 export const StaffManagement = () => {
   const [staff, setStaff] = useState<any[]>([]);
-  const [receptionists, setReceptionists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteType, setInviteType] = useState<'DOCTOR' | 'RECEPTIONIST'>('DOCTOR');
@@ -51,16 +50,14 @@ export const StaffManagement = () => {
     try {
       const token = JSON.parse(localStorage.getItem('user') || '{}').token;
       
-      const [doctorsRes, receptionistsRes] = await Promise.all([
+      const [doctorsRes] = await Promise.all([
         fetch(`${API_URL}/doctors`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_URL}/receptionists`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       const doctorsData = await doctorsRes.json();
-      const receptionistsData = await receptionistsRes.json();
+
       
       setStaff(doctorsData.data || []);
-      setReceptionists(receptionistsData.data || []);
     } catch (err) {
       toast.error('Failed to fetch staff');
     } finally {
@@ -101,11 +98,7 @@ export const StaffManagement = () => {
     s.specialization?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredReceptionists = receptionists.filter(r =>
-    r.user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+  
   const stats = [
     {
       label: 'Total Doctors',
@@ -122,14 +115,6 @@ export const StaffManagement = () => {
       color: 'bg-green-500',
       textColor: 'text-green-600',
       bgColor: 'bg-green-50'
-    },
-    {
-      label: 'Receptionists',
-      value: receptionists.length,
-      icon: Users,
-      color: 'bg-purple-500',
-      textColor: 'text-purple-600',
-      bgColor: 'bg-purple-50'
     }
   ];
 
@@ -149,7 +134,7 @@ export const StaffManagement = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold bg-blue-600 bg-clip-text text-transparent">
             Staff Management
           </h1>
           <p className="text-gray-600 mt-2 text-lg">Manage doctors and receptionists</p>
@@ -165,7 +150,7 @@ export const StaffManagement = () => {
           </Button>
           <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 gap-2 shadow-lg hover:shadow-xl transition-all duration-300">
+              <Button className="bg-blue-600 text-white hover:from-blue-700 hover:to-purple-700 gap-2 shadow-lg hover:shadow-xl transition-all duration-300">
                 <Plus className="w-4 h-4" />
                 Invite Staff
               </Button>
@@ -432,75 +417,7 @@ export const StaffManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Receptionists Table */}
-      <Card className="border-none shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-purple-600 to-purple-700 text-white">
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <Users className="w-6 h-6" />
-            Receptionists ({filteredReceptionists.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50 hover:bg-gray-50">
-                  <TableHead className="font-semibold text-gray-700">Receptionist</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Email</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Phone</TableHead>
-                  <TableHead className="text-right font-semibold text-gray-700">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredReceptionists.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-12">
-                      <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500 text-lg font-medium">No receptionists found</p>
-                      <p className="text-gray-400 text-sm mt-1">Try adjusting your search criteria</p>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredReceptionists.map((receptionist) => (
-                    <TableRow key={receptionist.id} className="hover:bg-purple-50 transition-colors duration-150">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-semibold">
-                            {receptionist.user?.fullName?.charAt(0) || 'R'}
-                          </div>
-                          <span className="font-medium text-gray-900">{receptionist.user?.fullName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <Mail className="w-4 h-4 text-gray-400" />
-                          {receptionist.user?.email}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <Phone className="w-4 h-4 text-gray-400" />
-                          {receptionist.user?.phone}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="gap-2 hover:bg-purple-100 hover:text-purple-600 transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                          Edit
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+    
     </div>
   );
 };
