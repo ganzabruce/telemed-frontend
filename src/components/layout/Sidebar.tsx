@@ -13,6 +13,7 @@ import {
   Bell,
   ChevronLeft,
   ChevronRight,
+  Stethoscope,
   X,
 } from "lucide-react"
 import { NavLink } from "react-router-dom"
@@ -39,6 +40,7 @@ const navigationByRole: Record<string, NavItem[]> = {
   DOCTOR: [
     { name: "Dashboard", href: "/doctor-dashboard", icon: LayoutDashboard },
     { name: "Appointments", href: "/doctor/appointments", icon: Calendar },
+    { name: "Consultations", href: "/doctor/consultations", icon: Stethoscope },
     { name: "Patients", href: "/doctor/patients", icon: Users },
   ],
   RECEPTIONIST: [
@@ -50,6 +52,7 @@ const navigationByRole: Record<string, NavItem[]> = {
   PATIENT: [
     { name: "Dashboard", href: "/patient-dashboard", icon: LayoutDashboard },
     { name: "My Appointments", href: "/patient/appointments", icon: Calendar },
+    { name: "My Consultations", href: "/patient/consultations", icon: Stethoscope },
     { name: "Medical Records", href: "/patient/records", icon: ClipboardList },
   ],
 }
