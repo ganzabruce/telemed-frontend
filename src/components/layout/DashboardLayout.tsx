@@ -78,7 +78,7 @@ const DashboardLayout: React.FC = () => {
                 
                 {/* Mobile Logo - visible only on mobile */}
                 <div className="md:hidden">
-                  <h1 className="text-xl font-bold text-blue-600">TeleMed</h1>
+                  <h1 className="text-xl font-bold text-blue-600">TeleMedecine</h1>
                 </div>
               </div>
 

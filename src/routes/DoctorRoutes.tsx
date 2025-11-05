@@ -3,8 +3,9 @@ import { Route } from "react-router-dom"
 import ProtectedRoute from "./ProtectedRoute"
 import DashboardLayout from "../components/layout/DashboardLayout"
 import DoctorDashboard from "../pages/doctor/DoctorDashboard"
-import Appointments from "../pages/doctor/Appointments"
-import Patients from "../pages/doctor/Patients"
+import DoctorAppointments from "../pages/doctor/Appointments"
+import DoctorPatientsPage from "../pages/doctor/Patients"
+
 
 const DoctorRoutes = (
   <Route
@@ -15,8 +16,8 @@ const DoctorRoutes = (
     }
   >
     <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-    <Route path="/doctor/appointments" element={<Appointments />} />
-    <Route path="/doctor/patients" element={<Patients />} />
+    <Route path="/doctor/appointments" element={<DoctorAppointments />} />
+    <Route path="/doctor/patients" element={<DoctorPatientsPage />} />
   </Route>
 )
 
