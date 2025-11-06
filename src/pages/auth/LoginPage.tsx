@@ -1,6 +1,6 @@
 // src/pages/auth/hospital-adminge.tsx
 import React, { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { useAuth, type User, type UserRole, type UserStatus } from "../../context/AuthContext"
 import { redirectByRole } from "../../utils/redirects"
@@ -83,6 +83,7 @@ const LoginPage: React.FC = () => {
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
           <p className="text-gray-600">Sign in to access your telemedicine dashboard</p>
+          
         </div>
 
         {/* Form Card */}
@@ -187,6 +188,7 @@ const LoginPage: React.FC = () => {
                 "Sign In"
               )}
             </button>
+            <p className="text-gray-600 mt-4">Don't have an account? <Link to="/register" className="font-medium text-blue-600 hover:underline">Register</Link></p>
           </form>
         </div>
 

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Mail, UserCog, Users, Edit, Search, Stethoscope, Phone, DollarSign, FileText, Filter, Download } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import {

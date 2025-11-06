@@ -10,6 +10,8 @@ import ReceptionistRoutes from "./routes/ReceptionistRoutes"
 import PatientRoutes from "./routes/PatientRoutes"
 import LandingPage from "./pages/landingPage"
 import ProfilePage from "./pages/shared/ProfilePage"
+import CompleteProfilePage from "./pages/auth/CompleteProfile"
+import RegisterPage from "./pages/auth/RegisterPage"
 
 // Separate component that uses useAuth
 const AppRoutes = () => {
@@ -23,10 +25,18 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Route - Login */}
-      
+      <Route path="/complete-profile" element={<CompleteProfilePage />} />
       <Route
         path="/"
         element={<LandingPage />}
+      />
+      <Route path="/register" element={
+          state.user ? (
+            <Navigate to={`/${state.user.role.toLowerCase().replace('_', '-')}-dashboard`} replace />
+          ) : (
+            <RegisterPage />
+          )
+        } 
       />
       <Route
         path="/profile"

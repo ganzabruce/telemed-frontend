@@ -496,7 +496,7 @@ const DoctorAppointments = () => {
           {selectedAppointment && (
             <div className="space-y-6 py-4">
               <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
                   {selectedAppointment.patient?.user?.fullName?.charAt(0) || 'P'}
                 </div>
                 <div>
@@ -563,7 +563,7 @@ const DoctorAppointments = () => {
           <DialogFooter>
             <Button
               onClick={() => setDetailsDialogOpen(false)}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              className="bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-indigo-700"
             >
               Close
             </Button>
@@ -573,7 +573,7 @@ const DoctorAppointments = () => {
 
       {/* Status Update Dialog */}
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-        <DialogContent>
+        <DialogContent className='bg-white'>
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Update Appointment Status</DialogTitle>
             <DialogDescription>
@@ -585,7 +585,7 @@ const DoctorAppointments = () => {
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className='bg-white'>
                 <SelectItem value="PENDING">Pending</SelectItem>
                 <SelectItem value="CONFIRMED">Confirmed</SelectItem>
                 <SelectItem value="COMPLETED">Completed</SelectItem>
@@ -604,7 +604,7 @@ const DoctorAppointments = () => {
             <Button 
               onClick={handleStatusUpdate} 
               disabled={updating}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              className="bg-gradient-to-r from-blue-600 text-white to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             >
               {updating ? 'Updating...' : 'Update Status'}
             </Button>
