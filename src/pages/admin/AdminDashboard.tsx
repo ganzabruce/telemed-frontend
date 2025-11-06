@@ -9,11 +9,10 @@ import {
   Building2, 
   Calendar, 
   DollarSign,
-  TrendingUp,
-  FileText,
-  AlertCircle,
-  MoreVertical,
-  Search
+  RefreshCw,
+  Shield,
+  User,
+  Clock
 } from 'lucide-react';
 
 // API Base URL
@@ -142,8 +141,8 @@ const AdminDashboard = () => {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <RefreshCw className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
+          <p className="text-gray-600 font-medium text-lg">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -153,74 +152,66 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Welcome back! Here's what's happening today.</p>
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 p-3 rounded-xl">
+              <Shield className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-gray-600 mt-1">System overview and management</p>
+            </div>
+          </div>
+          <button 
+            onClick={fetchDashboardData}
+            className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
-        {/* Total Patients */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Patients Registered</p>
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{formatNumber(dashboardData.totalPatients)}</h3>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-500 font-medium">+{dashboardData.patientGrowth}%</span>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-blue-50 p-3 rounded-full">
-              <Users className="w-6 h-6 text-blue-600" />
-            </div>
+            <span className="text-3xl font-bold text-gray-900">{formatNumber(dashboardData.totalPatients)}</span>
           </div>
+          <h3 className="text-sm font-medium text-gray-600">Total Patients</h3>
         </div>
 
-        {/* Total Healthcare Providers */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Healthcare Providers</p>
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{formatNumber(dashboardData.totalProviders)}</h3>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
+              <Building2 className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-blue-50 p-3 rounded-full">
-              <Building2 className="w-6 h-6 text-blue-600" />
-            </div>
+            <span className="text-3xl font-bold text-indigo-600">{formatNumber(dashboardData.totalProviders)}</span>
           </div>
+          <h3 className="text-sm font-medium text-gray-600">Healthcare Providers</h3>
         </div>
 
-        {/* Total Appointments */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Appointments</p>
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900">+{formatNumber(dashboardData.totalAppointments)}</h3>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-500 font-medium">+{dashboardData.appointmentGrowth}%</span>
-              </div>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-blue-50 p-3 rounded-full">
-              <Calendar className="w-6 h-6 text-blue-600" />
-            </div>
+            <span className="text-3xl font-bold text-green-600">{formatNumber(dashboardData.totalAppointments)}</span>
           </div>
+          <h3 className="text-sm font-medium text-gray-600">Total Appointments</h3>
         </div>
 
-        {/* Total Revenue */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{formatCurrency(dashboardData.totalRevenue)}</h3>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-500 font-medium">+{dashboardData.revenueGrowth}%</span>
-              </div>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-blue-50 p-3 rounded-full">
-              <DollarSign className="w-6 h-6 text-blue-600" />
-            </div>
+            <span className="text-3xl font-bold text-purple-600">{formatCurrency(dashboardData.totalRevenue)}</span>
           </div>
+          <h3 className="text-sm font-medium text-gray-600">Total Revenue</h3>
         </div>
       </div>
 
@@ -229,178 +220,107 @@ const AdminDashboard = () => {
         {/* Monthly Activity Chart */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Activity</h3>
-          <div className="h-64 flex items-end justify-between gap-2">
+          <div className="h-48 flex items-end justify-between gap-3">
             {dashboardData.monthlyActivity.map((data, index) => {
-              const maxValue = Math.max(...dashboardData.monthlyActivity.map(d => d.count));
-              const height = maxValue > 0 ? (data.count / maxValue) * 100 : 0;
+              const maxValue = Math.max(...dashboardData.monthlyActivity.map(d => d.count), 1);
+              const height = (data.count / maxValue) * 100;
+              const isCurrentMonth = index === new Date().getMonth();
               
               return (
                 <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors cursor-pointer relative group"
-                       style={{ height: `${height}%`, minHeight: data.count > 0 ? '8px' : '0' }}>
+                  <div 
+                    className={`w-full rounded-t-lg transition-all cursor-pointer relative group ${
+                      isCurrentMonth ? 'bg-blue-600' : 'bg-blue-400 hover:bg-blue-500'
+                    }`}
+                    style={{ height: `${height}%`, minHeight: data.count > 0 ? '12px' : '0' }}
+                  >
                     <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                       {data.count} appointments
                     </div>
                   </div>
-                  <span className="text-xs text-gray-600">{data.month}</span>
+                  <span className={`text-xs font-medium ${isCurrentMonth ? 'text-blue-600' : 'text-gray-600'}`}>
+                    {data.month}
+                  </span>
                 </div>
               );
             })}
           </div>
-          
-          {/* Stats below chart */}
-          <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Users className="w-4 h-4 text-gray-400" />
-                <span className="text-xs text-gray-600">Users</span>
-              </div>
-              <p className="text-lg font-semibold text-gray-900">{formatNumber(dashboardData.totalPatients)}</p>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <FileText className="w-4 h-4 text-gray-400" />
-                <span className="text-xs text-gray-600">Pending Claims</span>
-              </div>
-              <p className="text-lg font-semibold text-gray-900">2.45m</p>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <AlertCircle className="w-4 h-4 text-gray-400" />
-                <span className="text-xs text-gray-600">Total Complaints</span>
-              </div>
-              <p className="text-lg font-semibold text-gray-900">320</p>
-            </div>
-          </div>
         </div>
 
-        {/* Consultation Overview Chart */}
+        {/* Recent Consultations */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Consultation Overview</h3>
-            <span className="text-sm text-blue-600">(+5) more in 2021</span>
-          </div>
-          <div className="h-64 relative">
-            <svg className="w-full h-full" viewBox="0 0 800 200" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3"/>
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05"/>
-                </linearGradient>
-              </defs>
-              
-              {/* Area fill */}
-              <path
-                d={`M 0 ${200 - (dashboardData.consultationOverview[0]?.count || 0) * 0.8} 
-                   ${dashboardData.consultationOverview.map((d, i) => 
-                     `L ${(i * 800) / (dashboardData.consultationOverview.length - 1)} ${200 - d.count * 0.8}`
-                   ).join(' ')} 
-                   L 800 200 L 0 200 Z`}
-                fill="url(#areaGradient)"
-              />
-              
-              {/* Line */}
-              <path
-                d={`M 0 ${200 - (dashboardData.consultationOverview[0]?.count || 0) * 0.8} 
-                   ${dashboardData.consultationOverview.map((d, i) => 
-                     `L ${(i * 800) / (dashboardData.consultationOverview.length - 1)} ${200 - d.count * 0.8}`
-                   ).join(' ')}`}
-                fill="none"
-                stroke="#3b82f6"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            
-            {/* X-axis labels */}
-            <div className="flex justify-between mt-2 px-2">
-              {dashboardData.consultationOverview.map((data, index) => (
-                <span key={index} className="text-xs text-gray-600">{data.month}</span>
-              ))}
-            </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Appointments</h3>
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {dashboardData.recentConsultations.length > 0 ? (
+              dashboardData.recentConsultations.map((consultation, index) => (
+                <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <User className="w-6 h-6 text-blue-600" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold text-gray-900 truncate">
+                        {consultation.patient?.user?.fullName || 'Patient Name'}
+                      </p>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
+                        consultation.status === 'COMPLETED' ? 'text-green-600 bg-green-50 border-green-200' :
+                        consultation.status === 'CONFIRMED' ? 'text-blue-600 bg-blue-50 border-blue-200' :
+                        consultation.status === 'PENDING' ? 'text-yellow-600 bg-yellow-50 border-yellow-200' :
+                        'text-gray-600 bg-gray-50 border-gray-200'
+                      }`}>
+                        {consultation.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{new Date(consultation.appointmentDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span>{consultation.type}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">No recent appointments</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Bottom Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Completed Consultations */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Appointments</h3>
-          <div className="space-y-4">
-            {dashboardData.recentConsultations.length > 0 ? (
-              dashboardData.recentConsultations.map((consultation, index) => (
-                <div key={index} className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h4 className="font-semibold text-gray-900">
-                        {consultation.patient?.user?.fullName || 'Patient Name'}
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        Type: {consultation.type}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="text-sm text-red-500 hover:text-red-600 font-medium">
-                        DELETE
-                      </button>
-                      <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                        EDIT
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Doctor: {consultation.doctor?.user?.fullName || 'Doctor Name'}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Date: {new Date(consultation.appointmentDate).toLocaleDateString()}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Status: <span className={`font-medium ${
-                      consultation.status === 'COMPLETED' ? 'text-green-600' :
-                      consultation.status === 'CONFIRMED' ? 'text-blue-600' :
-                      consultation.status === 'CANCELLED' ? 'text-red-600' :
-                      'text-yellow-600'
-                    }`}>{consultation.status}</span>
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500 text-center py-8">No recent appointments</p>
-            )}
-          </div>
-        </div>
-
-        {/* Complaints */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">System Notifications</h3>
-          <div className="space-y-3">
-            {[
-              { user: 'System Admin', message: 'New hospital registration pending approval', time: '2h ago' },
-              { user: 'Hospital Admin', message: 'Monthly report generated successfully', time: '5h ago' },
-              { user: 'System', message: 'Database backup completed', time: '1d ago' },
-              { user: 'Payment System', message: 'Payment gateway integration updated', time: '2d ago' }
-            ].map((notification, index) => (
-              <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm font-semibold text-blue-600">
-                    {notification.user.split(' ').map(n => n[0]).join('')}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="font-semibold text-sm text-gray-900">{notification.user}</h4>
-                    <span className="text-xs text-gray-500">{notification.time}</span>
-                  </div>
-                  <p className="text-sm text-gray-600 truncate">{notification.message}</p>
-                </div>
-                <button className="text-sm text-blue-600 hover:text-blue-700 font-medium flex-shrink-0">
-                  VIEW
-                </button>
+      {/* System Notifications */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">System Notifications</h3>
+        <div className="space-y-3">
+          {[
+            { user: 'System Admin', message: 'New hospital registration pending approval', time: '2h ago' },
+            { user: 'Hospital Admin', message: 'Monthly report generated successfully', time: '5h ago' },
+            { user: 'System', message: 'Database backup completed', time: '1d ago' },
+            { user: 'Payment System', message: 'Payment gateway integration updated', time: '2d ago' }
+          ].map((notification, index) => (
+            <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-semibold text-sm">
+                  {notification.user.split(' ').map(n => n[0]).join('').toUpperCase()}
+                </span>
               </div>
-            ))}
-          </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="font-semibold text-sm text-gray-900">{notification.user}</h4>
+                  <span className="text-xs text-gray-500">{notification.time}</span>
+                </div>
+                <p className="text-sm text-gray-600 truncate">{notification.message}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

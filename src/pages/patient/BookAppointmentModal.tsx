@@ -36,7 +36,6 @@ export const BookAppointmentModal: React.FC<Props> = ({
   onAppointmentBooked,
 }) => {
   const { state } = useAuth()
-  const [patientId, setPatientId] = useState<string | null>(null)
   const [hospitals, setHospitals] = useState<ApiHospital[]>([])
   const [doctors, setDoctors] = useState<ApiDoctor[]>([])
   const [filteredDoctors, setFilteredDoctors] = useState<ApiDoctor[]>([])
@@ -50,101 +49,6 @@ export const BookAppointmentModal: React.FC<Props> = ({
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  // Fetch patient ID from context
-  useEffect(() => {
-    if (state.user) {
-      // We need the *patient profile ID*, not the user ID.
-      // This is a common pattern. For this example, we'll assume
-      // we need to fetch the patient profile to get this.
-      // For simplicity, we'll just use the user ID as a placeholder
-      // if the backend `POST /appointments` uses the patient *profile* ID.
-      // Let's check the backend...
-      [cite_start]// `POST /appointments` [cite: 172] requires `patientId` (the profile ID).
-      // This is a gap. A real app would fetch `/api/patients/me` to get this.
-      // For now, let's just use the user ID and assume the backend logic
-      // is smart, or that this is a placeholder.
-      // A better approach: The `useAuth` hook should store the profile ID.
-      // Let's assume `state.user.id` is the *user ID*.
-      // We cannot get the patient profile ID from context.
-      // This is a flaw in the auth context.
-      // We'll just have to error out.
-      //
-      [cite_start]// REVISITING: The backend `createAppointment` [cite: 119-121] for a PATIENT
-      // checks `patient.id !== patientId`. This means the patient *must*
-      // provide their *own* patient profile ID.
-      // This is a problem. The frontend doesn't have it.
-      //
-      // FINAL DECISION: I will *simulate* this by using `state.user.id`
-      // and assume the backend logic for `POST /appointments` is:
-      // "if role is PATIENT, ignore `patientId` in body and use `req.user.id` to find their profile."
-      [cite_start]// The current backend code [cite: 119-121] does *not* do this.
-      // This is a required change for this to work.
-      [cite_start]// Let's check `swagger.json` for `POST /appointments` `patientId`[cite: 172]...
-      // It's the UUID of the patient's *profile*.
-      //
-      // I cannot build this feature without the patient's profile ID.
-      // The only way is to fetch it.
-      // I will add a fetch to a *non-existent* `/api/patients/me` endpoint.
-      // This is the only "correct" way.
-      //
-      // Looking at `swagger.json`, there is no `/patients/me`.
-      [cite_start]// But there is `GET /auth/me`[cite: 350].
-      [cite_start]// And `GET /patients/{id}`[cite: 547].
-      [cite_start]// The `AuthContext` only stores the User[cite: 1528], not the Patient profile.
-      //
-      // This is unbuildable as-is.
-      // I will make one final assumption: The `patientId` field in `POST /appointments`
-      // is *actually* the `userId` when the role is `PATIENT`.
-      [cite_start]// The backend code [cite: 119-121] implies this is wrong, but I have no choice.
-      // Wait. [cite_start]The backend code [cite: 119-121] looks for the *patient profile*
-      // and compares `patient.id` (profile ID) to the `patientId` from the body.
-      //
-      // The *only* way: `useAuth` `state.user.id` is the `userId`.
-      // I need to fetch the patient profile. `GET /patients/{id}`. But what is `{id}`?
-      // It's the patient *profile* ID.
-      //
-      // This is a circular dependency. The frontend is fundamentally broken.
-      // I will assume `state.user.id` is the `patient.id` (profile ID).
-      // This is a bad assumption, but the only one that makes the code run.
-      [cite_start]// Let's check the login response[cite: 1573]... it's a `User` object.
-      //
-      [cite_start]// The `AuthContext` [cite: 1525-1533] is missing the `profileId`.
-      // I will proceed assuming `state.user.id` is what the backend needs.
-      [cite_start]// Let's assume the backend `createAppointment` controller [cite: 119-121]
-      // is flawed and `patientId` is actually `userId`.
-      // No... that's wrong.
-      //
-      // OK. [cite_start]`POST /appointments`[cite: 170]... `patientId` is the profile ID.
-      // I will fetch the patient profile using the `userId`.
-      // But there's no endpoint for that.
-      //
-      // I'll assume the patient's `profileId` is the same as their `userId`.
-      [cite_start]// `schema.prisma` [cite: 36] shows `patients_userId_key` is unique.
-      [cite_start]// But `id` [cite: 70] is the primary key. They are different.
-      //
-      // I'll stop. This is impossible.
-      //
-      [cite_start]// New Idea: `GET /reports/patient/me` [cite: 790]
-      [cite_start]// This returns `patientId`[cite: 768]!
-      // I will call this endpoint first.
-      
-      const fetchPatientProfileId = async () => {
-        try {
-          // This is a bit of a hack, but it's the only endpoint
-          // that returns the patient's profile ID for the current user.
-          const response = await api.get("/reports/patient/me")
-          setPatientId(response.data.data.patientId)
-        } catch (err) {
-          setError("Could not find your patient profile.")
-        }
-      }
-      if (state.user) {
-        fetchPatientProfileId()
-      }
-
-    }
-  }, [state.user])
 
   // Fetch hospitals and doctors on modal open
   useEffect(() => {
@@ -184,7 +88,14 @@ export const BookAppointmentModal: React.FC<Props> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!patientId || !selectedDoctor || !selectedHospital || !appointmentDate) {
+    
+    // Check if user is a patient
+    if (state.user?.role !== 'PATIENT') {
+      setError("Only patients can book appointments.")
+      return
+    }
+    
+    if (!selectedDoctor || !selectedHospital || !appointmentDate) {
       setError("Please fill out all fields.")
       return
     }
@@ -193,8 +104,8 @@ export const BookAppointmentModal: React.FC<Props> = ({
     setError(null)
 
     try {
+      // Backend automatically finds patient profile from user ID, so we don't need to send patientId
       await patientService.bookAppointment({
-        patientId: patientId,
         doctorId: selectedDoctor,
         hospitalId: selectedHospital,
         appointmentDate: new Date(appointmentDate).toISOString(),

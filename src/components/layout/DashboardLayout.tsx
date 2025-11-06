@@ -114,7 +114,7 @@ const DashboardLayout: React.FC = () => {
                       onClick={() => setIsProfileOpen(!isProfileOpen)}
                       className="flex items-center gap-2 md:gap-3 p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                         <span className="text-xs font-semibold text-white">
                           {getInitials(state.user.fullName)}
                         </span>

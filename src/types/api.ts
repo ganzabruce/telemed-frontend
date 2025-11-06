@@ -42,8 +42,9 @@ export interface ApiAppointment {
 }
 
 // Data required for booking an appointment
+// Note: patientId is optional - backend automatically finds it from user ID for PATIENT role
 export interface BookAppointmentData {
-  patientId: string
+  patientId?: string // Optional - backend handles this for PATIENT role
   doctorId: string
   hospitalId: string
   appointmentDate: string // ISO string

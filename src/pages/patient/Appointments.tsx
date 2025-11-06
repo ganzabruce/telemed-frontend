@@ -59,20 +59,26 @@ const BookingModal = ({ isOpen, onClose, onAppointmentBooked }) => {
     try {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const token = user.token;
-        const patientId = user?.patientProfile?.id;
 
-        if (!token || !patientId) {
-            throw new Error("You must be logged in as a patient to book an appointment.");
+        if (!token) {
+            throw new Error("You must be logged in to book an appointment.");
+        }
+
+        // Check if user is a patient
+        if (user.role !== 'PATIENT') {
+            throw new Error("Only patients can book appointments.");
         }
         
         if (!formData.doctorId || !formData.hospitalId || !formData.appointmentDate || !formData.type) {
             throw new Error("Please fill in all fields.");
         }
 
+        // Backend automatically finds patient profile from user ID, so we don't need to send patientId
         const payload = {
-            ...formData,
-            patientId,
+            doctorId: formData.doctorId,
+            hospitalId: formData.hospitalId,
             appointmentDate: new Date(formData.appointmentDate).toISOString(),
+            type: formData.type,
         };
 
         const response = await fetch(`${API_BASE_URL}/appointments`, {

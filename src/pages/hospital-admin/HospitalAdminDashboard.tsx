@@ -17,7 +17,9 @@ import {
   XCircle,
   MoreVertical,
   Search,
-  Building2
+  Building2,
+  RefreshCw,
+  User
 } from 'lucide-react';
 
 // API Base URL
@@ -222,8 +224,8 @@ const HospitalAdminDashboard = () => {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <RefreshCw className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
+          <p className="text-gray-600 font-medium text-lg">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -233,91 +235,73 @@ const HospitalAdminDashboard = () => {
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Building2 className="w-8 h-8 text-blue-600" />
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-              {hospitalInfo?.name || 'Hospital'} Dashboard
-            </h1>
-            <p className="text-gray-600 mt-1">Manage your hospital operations and staff</p>
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 p-3 rounded-xl">
+              <Building2 className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                {hospitalInfo?.name || 'Hospital'} Dashboard
+              </h1>
+              <p className="text-gray-600 mt-1">Manage your hospital operations and staff</p>
+            </div>
           </div>
+          <button 
+            onClick={fetchDashboardData}
+            className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
       </div>
 
-      {/* Stats Cards - First Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
-        {/* Total Staff */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Staff</p>
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{formatNumber(dashboardData.totalStaff)}</h3>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs text-gray-500">{dashboardData.totalDoctors} Doctors</span>
-                <span className="text-gray-300">•</span>
-                <span className="text-xs text-gray-500">{dashboardData.totalReceptionists} Receptionists</span>
-              </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+              <UserCog className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-blue-50 p-3 rounded-full">
-              <UserCog className="w-6 h-6 text-blue-600" />
-            </div>
+            <span className="text-3xl font-bold text-gray-900">{formatNumber(dashboardData.totalStaff)}</span>
           </div>
+          <h3 className="text-sm font-medium text-gray-600">Total Staff</h3>
         </div>
 
-        {/* Total Patients */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Patients</p>
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{formatNumber(dashboardData.totalPatients)}</h3>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-500 font-medium">+{dashboardData.patientGrowth}%</span>
-              </div>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-blue-50 p-3 rounded-full">
-              <Users className="w-6 h-6 text-blue-600" />
-            </div>
+            <span className="text-3xl font-bold text-green-600">{formatNumber(dashboardData.totalPatients)}</span>
           </div>
+          <h3 className="text-sm font-medium text-gray-600">Total Patients</h3>
         </div>
 
-        {/* Total Appointments */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Appointments</p>
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{formatNumber(dashboardData.totalAppointments)}</h3>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-500 font-medium">+{dashboardData.appointmentGrowth}%</span>
-              </div>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-blue-50 p-3 rounded-full">
-              <Calendar className="w-6 h-6 text-blue-600" />
-            </div>
+            <span className="text-3xl font-bold text-indigo-600">{formatNumber(dashboardData.totalAppointments)}</span>
           </div>
+          <h3 className="text-sm font-medium text-gray-600">Total Appointments</h3>
         </div>
 
-        {/* Total Revenue */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{formatCurrency(dashboardData.totalRevenue)}</h3>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-500 font-medium">+{dashboardData.revenueGrowth}%</span>
-              </div>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-white" />
             </div>
-            <div className="bg-blue-50 p-3 rounded-full">
-              <DollarSign className="w-6 h-6 text-blue-600" />
-            </div>
+            <span className="text-3xl font-bold text-purple-600">{formatCurrency(dashboardData.totalRevenue)}</span>
           </div>
+          <h3 className="text-sm font-medium text-gray-600">Total Revenue</h3>
         </div>
       </div>
 
-      {/* Stats Cards - Second Row (Appointment Status) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+      {/* Appointment Status Overview */}
+      <div className="grid grid-cols-3 gap-4 md:gap-6 mb-6">
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center gap-3">
             <div className="bg-yellow-50 p-2 rounded-lg">
@@ -345,23 +329,11 @@ const HospitalAdminDashboard = () => {
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center gap-3">
             <div className="bg-green-50 p-2 rounded-lg">
-              <Activity className="w-5 h-5 text-green-600" />
+              <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
             <div>
               <p className="text-xs text-gray-600">Completed</p>
               <p className="text-xl font-bold text-gray-900">{dashboardData.completedAppointments}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-red-50 p-2 rounded-lg">
-              <XCircle className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Cancelled</p>
-              <p className="text-xl font-bold text-gray-900">{dashboardData.cancelledAppointments}</p>
             </div>
           </div>
         </div>
@@ -372,20 +344,27 @@ const HospitalAdminDashboard = () => {
         {/* Monthly Activity Chart */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Appointments</h3>
-          <div className="h-64 flex items-end justify-between gap-2">
+          <div className="h-48 flex items-end justify-between gap-3">
             {dashboardData.monthlyAppointments.map((data, index) => {
-              const maxValue = Math.max(...dashboardData.monthlyAppointments.map(d => d.count));
-              const height = maxValue > 0 ? (data.count / maxValue) * 100 : 0;
+              const maxValue = Math.max(...dashboardData.monthlyAppointments.map(d => d.count), 1);
+              const height = (data.count / maxValue) * 100;
+              const isCurrentMonth = index === new Date().getMonth();
               
               return (
                 <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors cursor-pointer relative group"
-                       style={{ height: `${height}%`, minHeight: data.count > 0 ? '8px' : '0' }}>
+                  <div 
+                    className={`w-full rounded-t-lg transition-all cursor-pointer relative group ${
+                      isCurrentMonth ? 'bg-blue-600' : 'bg-blue-400 hover:bg-blue-500'
+                    }`}
+                    style={{ height: `${height}%`, minHeight: data.count > 0 ? '12px' : '0' }}
+                  >
                     <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                       {data.count} appointments
                     </div>
                   </div>
-                  <span className="text-xs text-gray-600">{data.month}</span>
+                  <span className={`text-xs font-medium ${isCurrentMonth ? 'text-blue-600' : 'text-gray-600'}`}>
+                    {data.month}
+                  </span>
                 </div>
               );
             })}
@@ -398,22 +377,36 @@ const HospitalAdminDashboard = () => {
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {dashboardData.recentAppointments.length > 0 ? (
               dashboardData.recentAppointments.map((appointment, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-gray-900 truncate">
-                      {appointment.patient?.user?.fullName || 'Patient Name'}
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      {new Date(appointment.appointmentDate).toLocaleDateString()} • {appointment.type}
-                    </p>
+                <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <User className="w-6 h-6 text-blue-600" />
+                    </div>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
-                    {appointment.status}
-                  </span>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold text-gray-900 truncate">
+                        {appointment.patient?.user?.fullName || 'Patient Name'}
+                      </p>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
+                        {appointment.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{new Date(appointment.appointmentDate).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-center py-8">No recent appointments</p>
+              <div className="text-center py-12">
+                <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">No recent appointments</p>
+              </div>
             )}
           </div>
         </div>
@@ -435,66 +428,55 @@ const HospitalAdminDashboard = () => {
           </div>
         </div>
         
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden lg:table-cell">Specialization</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {dashboardData.staffList
-                .filter(staff => 
-                  staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  staff.role.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map((staff, index) => (
-                  <tr key={index} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                          <span className="text-xs font-semibold text-blue-600">
-                            {staff.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="font-medium text-sm text-gray-900">{staff.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm text-gray-600">{staff.role}</span>
-                    </td>
-                    <td className="px-4 py-3 hidden md:table-cell">
-                      <span className="text-sm text-gray-600">{staff.email}</span>
-                    </td>
-                    <td className="px-4 py-3 hidden lg:table-cell">
-                      <span className="text-sm text-gray-600">{staff.specialization || '-'}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(staff.status)}`}>
-                        {staff.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button className="text-gray-400 hover:text-gray-600">
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {dashboardData.staffList
+            .filter(staff => 
+              staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              staff.role.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .map((staff, index) => (
+              <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">
+                      {staff.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-semibold text-gray-900 truncate">{staff.name}</p>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(staff.status)}`}>
+                      {staff.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <span>{staff.role}</span>
+                    {staff.specialization && (
+                      <>
+                        <span>•</span>
+                        <span>{staff.specialization}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ))}
           
           {dashboardData.staffList.filter(staff => 
             staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             staff.role.toLowerCase().includes(searchQuery.toLowerCase())
           ).length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No staff members found
+            <div className="text-center py-12">
+              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">No staff members found</p>
             </div>
           )}
         </div>

@@ -1,6 +1,24 @@
-// src/pages/ProfilePage.tsx
+// src/pages/shared/ProfilePage.tsx
 import React, { useState, useEffect } from 'react';
-import { Camera, Mail, Phone, Calendar, Briefcase, User, Edit2, Save, X } from 'lucide-react';
+import { 
+  Camera, 
+  Mail, 
+  Phone, 
+  Calendar, 
+  Briefcase, 
+  User, 
+  Edit2, 
+  Save, 
+  X,
+  Shield,
+  Stethoscope,
+  ClipboardList,
+  Heart,
+  Building2,
+  RefreshCw,
+  CheckCircle,
+  Clock
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 
@@ -29,7 +47,7 @@ const ProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Form states for editing
+  // Form states for editing (currently not used for user updates, only for role-specific)
   const [_editForm, setEditForm] = useState({
     fullName: '',
     phone: '',
@@ -38,6 +56,8 @@ const ProfilePage: React.FC = () => {
 
   // Role-specific form states
   const [roleSpecificForm, setRoleSpecificForm] = useState<any>({});
+
+  const API_BASE_URL = 'http://localhost:5003';
 
   useEffect(() => {
     if (user) {
@@ -53,7 +73,7 @@ const ProfilePage: React.FC = () => {
       setError(null);
 
       // Fetch basic user profile
-      const response = await fetch('http://localhost/5003/auth/me', {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 
@@ -64,13 +84,22 @@ const ProfilePage: React.FC = () => {
       // Fetch role-specific data
       let roleSpecificData: any = {};
       if (user.role === 'DOCTOR') {
-        const doctorResponse = await fetch('http://localhost:5003/doctors', {
+        const doctorResponse = await fetch(`${API_BASE_URL}/doctors`, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
         
         if (doctorResponse.ok) {
           const doctorData = await doctorResponse.json();
           roleSpecificData = doctorData.data.find((d: any) => d.userId === user.id) || {};
+        }
+      } else if (user.role === 'PATIENT') {
+        const patientResponse = await fetch(`${API_BASE_URL}/patients`, {
+          headers: { Authorization: `Bearer ${user.token}` }
+        });
+        
+        if (patientResponse.ok) {
+          const patientData = await patientResponse.json();
+          roleSpecificData = patientData.data.find((p: any) => p.userId === user.id) || {};
         }
       }
 
@@ -88,7 +117,8 @@ const ProfilePage: React.FC = () => {
         setRoleSpecificForm({
           specialization: roleSpecificData.specialization || '',
           availability: roleSpecificData.availability || '',
-          consultationFee: roleSpecificData.consultationFee || ''
+          consultationFee: roleSpecificData.consultationFee || '',
+          status: roleSpecificData.status || 'OFFLINE'
         });
       }
 
@@ -122,7 +152,7 @@ const ProfilePage: React.FC = () => {
       formData.append('avatar', file);
 
       const response = await fetch(
-        `http://localhost:5001/users/${user.id}/avatar`,
+        `${API_BASE_URL}/users/${user.id}/avatar`,
         {
           method: 'POST',
           headers: {
@@ -166,7 +196,7 @@ const ProfilePage: React.FC = () => {
 
       if (user.role === 'DOCTOR' && profileData.roleSpecific?.id) {
         const response = await fetch(
-          `http://localhost:5001/doctors/${profileData.roleSpecific.id}`,
+          `${API_BASE_URL}/doctors/${profileData.roleSpecific.id}`,
           {
             method: 'PATCH',
             headers: {
@@ -213,58 +243,120 @@ const ProfilePage: React.FC = () => {
     return roleMap[role] || role;
   };
 
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'DOCTOR':
+        return <Stethoscope className="w-6 h-6" />;
+      case 'PATIENT':
+        return <Heart className="w-6 h-6" />;
+      case 'RECEPTIONIST':
+        return <ClipboardList className="w-6 h-6" />;
+      case 'HOSPITAL_ADMIN':
+        return <Building2 className="w-6 h-6" />;
+      case 'ADMIN':
+        return <Shield className="w-6 h-6" />;
+      default:
+        return <User className="w-6 h-6" />;
+    }
+  };
+
+  const getDashboardPath = (role: string) => {
+    const roleMap: Record<string, string> = {
+      'ADMIN': '/admin-dashboard',
+      'HOSPITAL_ADMIN': '/hospital-admin-dashboard',
+      'DOCTOR': '/doctor-dashboard',
+      'RECEPTIONIST': '/receptionist-dashboard',
+      'PATIENT': '/patient-dashboard'
+    };
+    return roleMap[role] || '/';
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center">
+          <RefreshCw className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
+          <p className="text-gray-600 font-medium text-lg">Loading profile...</p>
+        </div>
       </div>
     );
   }
 
   if (!profileData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center">
-          <p className="text-gray-600">Failed to load profile</p>
-          <button 
-            onClick={fetchProfileData}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Retry
-          </button>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+            <p className="text-red-600 font-medium mb-2">Error loading profile</p>
+            <p className="text-red-500 text-sm mb-4">{error || 'Failed to load profile data'}</p>
+            <button 
+              onClick={fetchProfileData}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-600 p-3 rounded-xl">
+                {getRoleIcon(profileData.role)}
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">My Profile</h1>
+                <p className="text-gray-600 mt-1">Manage your account information</p>
+              </div>
+            </div>
+            <Link
+              to={getDashboardPath(profileData.role)}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <X className="w-4 h-4" />
+              Back to Dashboard
+            </Link>
+          </div>
+        </div>
+
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
-            {successMessage}
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-medium">{successMessage}</span>
+            </div>
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-            {error}
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
+            <div className="flex items-center gap-2">
+              <X className="w-5 h-5" />
+              <span className="font-medium">{error}</span>
+            </div>
           </div>
         )}
 
         {/* Profile Header Card */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
           {/* Cover Image */}
-          <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+          <div className="h-32 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"></div>
           
           {/* Profile Info */}
           <div className="px-6 pb-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-16 sm:-mt-12">
               {/* Avatar */}
               <div className="relative">
-                <div className="w-32 h-32 rounded-full border-4 border-white bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden">
+                <div className="w-32 h-32 rounded-full border-4 border-white bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center overflow-hidden shadow-lg">
                   {profileData.avatarUrl ? (
                     <img 
                       src={profileData.avatarUrl} 
@@ -279,7 +371,7 @@ const ProfilePage: React.FC = () => {
                 </div>
                 
                 {/* Upload Avatar Button */}
-                <label className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <label className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors border-2 border-gray-200">
                   <input
                     type="file"
                     accept="image/*"
@@ -288,7 +380,7 @@ const ProfilePage: React.FC = () => {
                     disabled={uploadingAvatar}
                   />
                   {uploadingAvatar ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                    <RefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
                   ) : (
                     <Camera className="w-5 h-5 text-gray-600" />
                   )}
@@ -297,18 +389,18 @@ const ProfilePage: React.FC = () => {
 
               {/* Name and Role */}
               <div className="flex-1 text-center sm:text-left sm:ml-4 mt-4 sm:mt-0">
-                <h1 className="text-2xl font-bold text-gray-900">{profileData.fullName}</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{profileData.fullName}</h1>
                 <p className="text-blue-600 font-medium mt-1">{getRoleDisplay(profileData.role)}</p>
                 <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     profileData.status === 'ACTIVE' 
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-yellow-100 text-yellow-700'
+                      ? 'bg-green-100 text-green-700 border border-green-200'
+                      : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
                   }`}>
                     {profileData.status}
                   </span>
                   {profileData.isEmailVerified && (
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium border border-blue-200">
                       Verified
                     </span>
                   )}
@@ -317,8 +409,15 @@ const ProfilePage: React.FC = () => {
 
               {/* Edit Button */}
               <button
-                onClick={() => isEditing ? setIsEditing(false) : setIsEditing(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                onClick={() => {
+                  if (isEditing) {
+                    setIsEditing(false);
+                    setError(null);
+                  } else {
+                    setIsEditing(true);
+                  }
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
               >
                 {isEditing ? (
                   <>
@@ -337,23 +436,27 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {/* Contact Information */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Contact Information</h2>
           
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <Mail className="w-5 h-5 text-blue-600" />
-              <div>
-                <p className="text-xs text-gray-500">Email</p>
-                <p className="text-sm font-medium text-gray-900">{profileData.email}</p>
+            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
+              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <Mail className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-500 mb-1">Email</p>
+                <p className="text-sm font-semibold text-gray-900 truncate">{profileData.email}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <Phone className="w-5 h-5 text-blue-600" />
-              <div>
-                <p className="text-xs text-gray-500">Phone</p>
-                <p className="text-sm font-medium text-gray-900">{profileData.phone}</p>
+            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
+              <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                <Phone className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-500 mb-1">Phone</p>
+                <p className="text-sm font-semibold text-gray-900">{profileData.phone || 'Not provided'}</p>
               </div>
             </div>
           </div>
@@ -361,65 +464,85 @@ const ProfilePage: React.FC = () => {
 
         {/* Role-Specific Information */}
         {user?.role === 'DOCTOR' && profileData.roleSpecific && (
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Professional Information</h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Professional Information</h2>
             
             {isEditing ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Specialization
                   </label>
                   <input
                     type="text"
-                    value={roleSpecificForm.specialization}
+                    value={roleSpecificForm.specialization || ''}
                     onChange={(e) => setRoleSpecificForm((prev: any) => ({
                       ...prev,
                       specialization: e.target.value
                     }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    placeholder="e.g., Cardiology, Pediatrics"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Availability
                   </label>
                   <input
                     type="text"
-                    value={roleSpecificForm.availability}
+                    value={roleSpecificForm.availability || ''}
                     onChange={(e) => setRoleSpecificForm((prev: any) => ({
                       ...prev,
                       availability: e.target.value
                     }))}
                     placeholder="e.g., Mon-Fri 9am-5pm"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Consultation Fee (RWF)
                   </label>
                   <input
                     type="number"
-                    value={roleSpecificForm.consultationFee}
+                    value={roleSpecificForm.consultationFee || ''}
                     onChange={(e) => setRoleSpecificForm((prev: any) => ({
                       ...prev,
                       consultationFee: e.target.value
                     }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    placeholder="20000"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={roleSpecificForm.status || 'OFFLINE'}
+                    onChange={(e) => setRoleSpecificForm((prev: any) => ({
+                      ...prev,
+                      status: e.target.value
+                    }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none bg-white"
+                  >
+                    <option value="AVAILABLE">Available</option>
+                    <option value="BUSY">Busy</option>
+                    <option value="OFFLINE">Offline</option>
+                  </select>
                 </div>
 
                 <button
                   onClick={handleSaveProfile}
                   disabled={saving}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-sm"
                 >
                   {saving ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <RefreshCw className="w-5 h-5 animate-spin" />
                       Saving...
                     </>
                   ) : (
@@ -432,41 +555,49 @@ const ProfilePage: React.FC = () => {
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Briefcase className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="text-xs text-gray-500">Specialization</p>
-                    <p className="text-sm font-medium text-gray-900">
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">Specialization</p>
+                    <p className="text-sm font-semibold text-gray-900">
                       {profileData.roleSpecific.specialization || 'Not specified'}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Calendar className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="text-xs text-gray-500">Availability</p>
-                    <p className="text-sm font-medium text-gray-900">
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">Availability</p>
+                    <p className="text-sm font-semibold text-gray-900">
                       {profileData.roleSpecific.availability || 'Not specified'}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <User className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="text-xs text-gray-500">License Number</p>
-                    <p className="text-sm font-medium text-gray-900">
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">License Number</p>
+                    <p className="text-sm font-semibold text-gray-900">
                       {profileData.roleSpecific.licenseNumber || 'Not specified'}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <span className="text-xl">💰</span>
-                  <div>
-                    <p className="text-xs text-gray-500">Consultation Fee</p>
-                    <p className="text-sm font-medium text-gray-900">
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-2xl">💰</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">Consultation Fee</p>
+                    <p className="text-sm font-semibold text-gray-900">
                       {profileData.roleSpecific.consultationFee 
                         ? `${Number(profileData.roleSpecific.consultationFee).toLocaleString()} RWF`
                         : 'Not specified'}
@@ -474,17 +605,25 @@ const ProfilePage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className={`w-3 h-3 rounded-full ${
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
                     profileData.roleSpecific.status === 'AVAILABLE' 
-                      ? 'bg-green-500'
+                      ? 'bg-green-100'
                       : profileData.roleSpecific.status === 'BUSY'
-                      ? 'bg-yellow-500'
-                      : 'bg-gray-500'
-                  }`}></div>
-                  <div>
-                    <p className="text-xs text-gray-500">Status</p>
-                    <p className="text-sm font-medium text-gray-900">
+                      ? 'bg-yellow-100'
+                      : 'bg-gray-100'
+                  }`}>
+                    <div className={`w-4 h-4 rounded-full ${
+                      profileData.roleSpecific.status === 'AVAILABLE' 
+                        ? 'bg-green-500'
+                        : profileData.roleSpecific.status === 'BUSY'
+                        ? 'bg-yellow-500'
+                        : 'bg-gray-500'
+                    }`}></div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">Status</p>
+                    <p className="text-sm font-semibold text-gray-900">
                       {profileData.roleSpecific.status || 'OFFLINE'}
                     </p>
                   </div>
@@ -494,18 +633,79 @@ const ProfilePage: React.FC = () => {
           </div>
         )}
 
-        {/* Account Details */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Account Details</h2>
-          
-          <div className="space-y-3">
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">User ID</span>
-              <span className="text-sm font-medium text-gray-900 font-mono">{profileData.id}</span>
+        {/* Patient-Specific Information */}
+        {user?.role === 'PATIENT' && profileData.roleSpecific && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Patient Information</h2>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              {profileData.roleSpecific.dateOfBirth && (
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">Date of Birth</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {new Date(profileData.roleSpecific.dateOfBirth).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {profileData.roleSpecific.gender && (
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-pink-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">Gender</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {profileData.roleSpecific.gender}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {profileData.roleSpecific.bloodType && (
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <Heart className="w-6 h-6 text-red-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">Blood Type</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {profileData.roleSpecific.bloodType}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-600">Member Since</span>
-              <span className="text-sm font-medium text-gray-900">
+          </div>
+        )}
+
+        {/* Account Details */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Account Details</h2>
+          
+          <div className="space-y-4">
+            <div className="flex justify-between items-center py-3 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                  <User className="w-5 h-5 text-gray-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-600">User ID</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900 font-mono">{profileData.id}</span>
+            </div>
+            <div className="flex justify-between items-center py-3 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-600">Member Since</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">
                 {new Date(profileData.createdAt).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
@@ -513,16 +713,20 @@ const ProfilePage: React.FC = () => {
                 })}
               </span>
             </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-sm text-gray-600">Last Updated</span>
-              <span className="text-sm font-medium text-gray-900">
+            <div className="flex justify-between items-center py-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-green-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-600">Last Updated</span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">
                 {new Date(profileData.updatedAt).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
                 })}
               </span>
-                <Link to={`/${state.user?.role.toLowerCase().replace('_', '-')}-dashboard`} className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-blue-700 transition-colors">  Go Back to Dashboard</Link>
             </div>
           </div>
         </div>
