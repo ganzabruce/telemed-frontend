@@ -446,7 +446,7 @@ const DoctorDashboard = () => {
           <div className="space-y-3">
             {dashboardData.recentPatients.length > 0 && dashboardData.recentPatients.map((patient) => (
                 <div key={patient.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-semibold text-sm">
                       {patient.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </span>

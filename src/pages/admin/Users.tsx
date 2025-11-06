@@ -1,7 +1,28 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Mail, Phone, UserCircle, CheckCircle, XCircle, AlertCircle, Eye, Send, Shield, Building2, Stethoscope, Users, UserCheck, Calendar } from 'lucide-react';
+import { Plus, Search, Mail, UserCircle, CheckCircle, AlertCircle, Eye, Send, Shield, Building2, Stethoscope, Users, Calendar } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const API_BASE_URL = 'http://localhost:5003';
+
+interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  role: 'ADMIN' | 'HOSPITAL_ADMIN' | 'DOCTOR' | 'PATIENT';
+  status: 'PENDING' | 'ACTIVE' | 'SUSPENDED';
+  isEmailVerified: boolean;
+  avatarUrl?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface InviteForm {
+  email: string;
+  fullName: string;
+  phone: string;
+  role: 'DOCTOR';
+}
 
 const getAuthHeaders = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -11,30 +32,11 @@ const getAuthHeaders = () => {
   };
 };
 
-const Toast = ({ message, type, onClose }) => {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-  
-  return (
-    <div className={`fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2`}>
-      {type === 'success' && <CheckCircle size={20} />}
-      {type === 'error' && <XCircle size={20} />}
-      {type === 'info' && <AlertCircle size={20} />}
-      <span>{message}</span>
-    </div>
-  );
-};
-
-const RoleBadge = ({ role }) => {
+const RoleBadge = ({ role }: { role: User['role'] }) => {
   const roleConfig = {
     ADMIN: { color: 'bg-purple-100 text-purple-700 border-purple-200', icon: Shield },
     HOSPITAL_ADMIN: { color: 'bg-blue-100 text-blue-700 border-blue-200', icon: Building2 },
     DOCTOR: { color: 'bg-green-100 text-green-700 border-green-200', icon: Stethoscope },
-    RECEPTIONIST: { color: 'bg-yellow-100 text-yellow-700 border-yellow-200', icon: UserCheck },
     PATIENT: { color: 'bg-gray-100 text-gray-700 border-gray-200', icon: Users }
   };
 
@@ -44,12 +46,12 @@ const RoleBadge = ({ role }) => {
   return (
     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${config.color}`}>
       <Icon size={14} />
-      {role?.replace('_', ' ')}
+      {role?.replace(/_/g, ' ')}
     </span>
   );
 };
 
-const StatusBadge = ({ isVerified }) => {
+const StatusBadge = ({ isVerified }: { isVerified: boolean }) => {
   return isVerified ? (
     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
       <CheckCircle size={14} />
@@ -64,17 +66,16 @@ const StatusBadge = ({ isVerified }) => {
 };
 
 const UsersManagement = () => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('ALL');
-  const [verificationFilter, setVerificationFilter] = useState('ALL');
+  const [roleFilter, setRoleFilter] = useState<string>('ALL');
+  const [verificationFilter, setVerificationFilter] = useState<string>('ALL');
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [toast, setToast] = useState(null);
-  const [inviteType, setInviteType] = useState('HOSPITAL_ADMIN');
-  const [inviteForm, setInviteForm] = useState({
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [inviteType, setInviteType] = useState<'HOSPITAL_ADMIN' | 'STAFF'>('HOSPITAL_ADMIN');
+  const [inviteForm, setInviteForm] = useState<InviteForm>({
     email: '',
     fullName: '',
     phone: '',
@@ -93,31 +94,31 @@ const UsersManagement = () => {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch users');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to fetch users: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
       
       if (data.status === 'success' && data.data) {
         setUsers(data.data);
+      } else {
+        throw new Error(data.message || 'Failed to fetch users');
       }
     } catch (error) {
-      showToast('Failed to fetch users', 'error');
-      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch users';
+      toast.error(errorMessage);
+      console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const showToast = (message, type) => {
-    setToast({ message, type });
-  };
-
-  const handleInviteSubmit = async (e) => {
+  const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       let endpoint = '';
-      let payload = {};
+      let payload: Record<string, string> = {};
 
       if (inviteType === 'HOSPITAL_ADMIN') {
         endpoint = `${API_BASE_URL}/users/invite-hospital-admin`;
@@ -147,28 +148,35 @@ const UsersManagement = () => {
         throw new Error(error.message || 'Failed to send invitation');
       }
 
-      showToast('Invitation sent successfully!', 'success');
+      const data = await response.json();
+      toast.success(data.message || 'Invitation sent successfully!');
       setShowInviteModal(false);
       resetInviteForm();
       fetchUsers();
     } catch (error) {
-      showToast(error.message || 'Failed to send invitation', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send invitation';
+      toast.error(errorMessage);
     }
   };
 
-  const handleResendInvite = async (email) => {
+  const handleResendInvite = async (email: string, fullName?: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/resend-invite`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ email, fullName: selectedUser?.fullName || 'User' })
+        body: JSON.stringify({ email, fullName: fullName || 'User' })
       });
 
-      if (!response.ok) throw new Error('Failed to resend invitation');
-      
-      showToast('Invitation resent successfully!', 'success');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to resend invitation');
+      }
+
+      const data = await response.json();
+      toast.success(data.message || 'Invitation resent successfully!');
     } catch (error) {
-      showToast(error.message || 'Failed to resend invitation', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to resend invitation';
+      toast.error(errorMessage);
     }
   };
 
@@ -182,7 +190,7 @@ const UsersManagement = () => {
     setInviteType('HOSPITAL_ADMIN');
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -191,7 +199,7 @@ const UsersManagement = () => {
     });
   };
 
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user: User) => {
     const matchesSearch = 
       user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -216,8 +224,6 @@ const UsersManagement = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
-      
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Users Management</h1>
@@ -293,7 +299,6 @@ const UsersManagement = () => {
             <option value="ADMIN">Admin</option>
             <option value="HOSPITAL_ADMIN">Hospital Admin</option>
             <option value="DOCTOR">Doctor</option>
-            <option value="RECEPTIONIST">Receptionist</option>
             <option value="PATIENT">Patient</option>
           </select>
 
@@ -331,7 +336,7 @@ const UsersManagement = () => {
               <tbody className="divide-y divide-gray-200">
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center">
+                    <td colSpan={6} className="px-6 py-12 text-center">
                       <Users className="mx-auto text-gray-400 mb-3" size={48} />
                       <p className="text-gray-600">No users found</p>
                       <p className="text-sm text-gray-500 mt-1">Try adjusting your filters</p>
@@ -383,7 +388,7 @@ const UsersManagement = () => {
                           </button>
                           {!user.isEmailVerified && (
                             <button
-                              onClick={() => handleResendInvite(user.email)}
+                              onClick={() => handleResendInvite(user.email, user.fullName)}
                               className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                               title="Resend Invitation"
                             >
@@ -411,11 +416,11 @@ const UsersManagement = () => {
 
       {showInviteModal && (
         <div 
-          className="fixed inset-0 bg-transparent bg-opacity-10 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fadeIn"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => { setShowInviteModal(false); resetInviteForm(); }}
         >
           <div 
-            className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-slideUp"
+            className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b">
@@ -499,11 +504,10 @@ const UsersManagement = () => {
                     </label>
                     <select
                       value={inviteForm.role}
-                      onChange={(e) => setInviteForm({...inviteForm, role: e.target.value})}
+                      onChange={(e) => setInviteForm({...inviteForm, role: e.target.value as 'DOCTOR'})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="DOCTOR">Doctor</option>
-                      <option value="RECEPTIONIST">Receptionist</option>
                     </select>
                   </div>
                 )}
@@ -537,8 +541,14 @@ const UsersManagement = () => {
       )}
 
       {showViewModal && selectedUser && (
-        <div className="fixed inset-0 bg-transparent bg-opacity-10 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-lg max-w-2xl w-full">
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowViewModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-2xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6 border-b">
               <h2 className="text-2xl font-bold text-gray-800">User Details</h2>
             </div>
@@ -588,7 +598,7 @@ const UsersManagement = () => {
                 {!selectedUser.isEmailVerified && (
                   <button
                     onClick={() => {
-                      handleResendInvite(selectedUser.email);
+                      handleResendInvite(selectedUser.email, selectedUser.fullName);
                       setShowViewModal(false);
                     }}
                     className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"

@@ -6,7 +6,7 @@ import { jwtDecode } from "jwt-decode"
 
 interface DecodedToken {
   email: string
-  role: "DOCTOR" | "PATIENT" | "RECEPTIONIST" | "HOSPITAL_ADMIN"
+  role: "DOCTOR" | "PATIENT" | "HOSPITAL_ADMIN"
   hospitalId?: string
   exp: number
 }
@@ -134,8 +134,6 @@ const CompleteProfilePage: React.FC = () => {
         return "Complete Doctor Profile"
       case "PATIENT":
         return "Complete Patient Profile"
-      case "RECEPTIONIST":
-        return "Complete Receptionist Profile"
       case "HOSPITAL_ADMIN":
         return "Complete Admin Profile"
       default:

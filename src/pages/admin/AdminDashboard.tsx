@@ -79,8 +79,8 @@ const AdminDashboard = () => {
       const revenueGrowth = Math.floor(Math.random() * 12) + 3;
 
       setDashboardData({
-        totalPatients: reportData.data?.totalUsers || 0,
-        totalProviders: reportData.data?.totalHospitals || 100,
+        totalPatients: reportData.data?.totalPatients || 0,
+        totalProviders: reportData.data?.totalHospitals || 0,
         totalAppointments: reportData.data?.totalAppointments || 0,
         totalRevenue: reportData.data?.totalEarnings || 0,
         patientGrowth,
@@ -268,7 +268,7 @@ const AdminDashboard = () => {
             { user: 'Payment System', message: 'Payment gateway integration updated', time: '2d ago' }
           ].map((notification, index) => (
             <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-semibold text-sm">
                   {notification.user.split(' ').map(n => n[0]).join('').toUpperCase()}
                 </span>

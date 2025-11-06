@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Video, Phone, Send, Paperclip, MoreVertical, Search, ArrowLeft, Smile, Image, MessageSquare, Plus } from 'lucide-react';
+import { Video, Phone, Send, Paperclip, MoreVertical, Search, ArrowLeft, Smile, Image, Plus, PhoneOff } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
 import { listConversations, getConversationMessages, markMessagesAsRead, type Conversation, type Message } from '../../api/chatApi';
@@ -22,6 +22,8 @@ const ConsultationPage = () => {
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [appointmentIdForCall, setAppointmentIdForCall] = useState<string | null>(null);
   const [showStartConversationModal, setShowStartConversationModal] = useState(false);
+  const [incomingCall, setIncomingCall] = useState<{ appointmentId: string; roomId: string; callerName: string; callerId: string } | null>(null);
+  const [callTimer, setCallTimer] = useState<number>(60); // 60 seconds = 1 minute
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch conversations on mount
@@ -76,12 +78,25 @@ const ConsultationPage = () => {
       console.log('Message read:', data);
     };
 
+    const handleIncomingCall = (callData: { appointmentId: string; roomId: string; callerId: string; callerName: string; appointmentDate: string }) => {
+      console.log('Incoming call:', callData);
+      setIncomingCall({
+        appointmentId: callData.appointmentId,
+        roomId: callData.roomId,
+        callerName: callData.callerName,
+        callerId: callData.callerId,
+      });
+      setCallTimer(60); // Reset timer to 60 seconds
+    };
+
     socket.on('receiveChatMessage', handleReceiveMessage);
     socket.on('messageRead', handleMessageRead);
+    socket.on('incomingCall', handleIncomingCall);
 
     return () => {
       socket.off('receiveChatMessage', handleReceiveMessage);
       socket.off('messageRead', handleMessageRead);
+      socket.off('incomingCall', handleIncomingCall);
     };
   }, [socket, selectedConversation, state.user?.id]);
 
@@ -160,7 +175,7 @@ const ConsultationPage = () => {
         sender: {
           id: state.user!.id,
           fullName: state.user!.fullName,
-          avatarUrl: state.user?.avatarUrl || null,
+          avatarUrl: (state.user as any)?.avatarUrl || null,
         },
       };
       setMessages((prev) => [...prev, tempMessage]);
@@ -209,6 +224,64 @@ const ConsultationPage = () => {
     return doctorName.toLowerCase().includes(searchLower);
   });
 
+  // Timer effect for incoming call
+  useEffect(() => {
+    if (!incomingCall) {
+      setCallTimer(60);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCallTimer((prev) => {
+        if (prev <= 1) {
+          // Call timed out - notify doctor
+          if (socket && incomingCall) {
+            socket.emit('callStatusUpdate', {
+              appointmentId: incomingCall.appointmentId,
+              status: 'TIMEOUT',
+              patientId: state.user?.id,
+            });
+          }
+          setIncomingCall(null);
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [incomingCall, socket, state.user?.id]);
+
+  const handleJoinCall = () => {
+    if (incomingCall) {
+      // Notify doctor that patient joined
+      if (socket) {
+        socket.emit('callStatusUpdate', {
+          appointmentId: incomingCall.appointmentId,
+          status: 'ACCEPTED',
+          patientId: state.user?.id,
+        });
+      }
+      setAppointmentIdForCall(incomingCall.appointmentId);
+      setShowVideoCall(true);
+      setIncomingCall(null);
+      setCallTimer(60);
+    }
+  };
+
+  const handleDeclineCall = () => {
+    if (incomingCall && socket) {
+      // Notify doctor that patient declined
+      socket.emit('callStatusUpdate', {
+        appointmentId: incomingCall.appointmentId,
+        status: 'DECLINED',
+        patientId: state.user?.id,
+      });
+    }
+    setIncomingCall(null);
+    setCallTimer(60);
+  };
+
   const startVideoCall = async () => {
     if (!selectedConversation) return;
     
@@ -219,7 +292,7 @@ const ConsultationPage = () => {
       
       // Find appointment with this doctor
       const appointment = appointments.find(
-        (apt) => apt.doctorId === doctorId && apt.status === 'CONFIRMED'
+        (apt) => apt.doctor?.id === doctorId && apt.status === 'CONFIRMED'
       );
       
       if (appointment) {
@@ -244,7 +317,7 @@ const ConsultationPage = () => {
       
       // Find appointment with this doctor
       const appointment = appointments.find(
-        (apt) => apt.doctorId === doctorId && apt.status === 'CONFIRMED'
+        (apt) => apt.doctor?.id === doctorId && apt.status === 'CONFIRMED'
       );
       
       if (appointment) {
@@ -304,6 +377,48 @@ const ConsultationPage = () => {
           }}
           isVideoEnabled={true}
         />
+      )}
+      {/* Incoming Call Modal */}
+      {incomingCall && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
+          <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-white/20">
+            <div className="text-center">
+              <div className="relative w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <div className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-75"></div>
+                <div className="absolute inset-0 rounded-full bg-blue-500 animate-pulse"></div>
+                <Video className="w-12 h-12 text-white relative z-10" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Incoming Video Call</h2>
+              <p className="text-xl font-semibold text-gray-800 mb-1">{incomingCall.callerName}</p>
+              <p className="text-sm text-gray-500 mb-2">wants to start a video consultation</p>
+              {/* Timer display */}
+              <div className="mb-6">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-gray-700">
+                    {Math.floor(callTimer / 60)}:{(callTimer % 60).toString().padStart(2, '0')}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={handleDeclineCall}
+                  className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all duration-200 font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                >
+                  <PhoneOff className="w-5 h-5" />
+                  Decline
+                </button>
+                <button
+                  onClick={handleJoinCall}
+                  className="px-8 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all duration-200 font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                >
+                  <Video className="w-5 h-5" />
+                  Join Call
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
       <div className="h-190 lg:h-180 md:h-190 bg-gray-50 flex flex-col">
         <div className="flex-1 flex overflow-hidden">

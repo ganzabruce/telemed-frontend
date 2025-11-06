@@ -37,7 +37,7 @@ interface ProfileData {
 }
 
 const ProfilePage: React.FC = () => {
-  const { state } = useAuth();
+  const { state, dispatch } = useAuth();
   const user = state.user;
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -47,8 +47,8 @@ const ProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Form states for editing (currently not used for user updates, only for role-specific)
-  const [_editForm, setEditForm] = useState({
+  // Form states for editing user profile
+  const [editForm, setEditForm] = useState({
     fullName: '',
     phone: '',
     email: ''
@@ -194,8 +194,40 @@ const ProfilePage: React.FC = () => {
       setSaving(true);
       setError(null);
 
+      // Update basic user profile (fullName, phone)
+      const userResponse = await fetch(
+        `${API_BASE_URL}/users/${user.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${user.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fullName: editForm.fullName,
+            phone: editForm.phone
+          })
+        }
+      );
+
+      if (!userResponse.ok) {
+        const errorData = await userResponse.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
+
+      const userData = await userResponse.json();
+      
+      // Update localStorage and AuthContext with new user data
+      if (userData.data && user) {
+        const updatedUser = { ...user, fullName: userData.data.fullName, phone: userData.data.phone };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        // Update AuthContext using RESTORE action
+        dispatch({ type: 'RESTORE', payload: updatedUser });
+      }
+
+      // Update role-specific data if applicable
       if (user.role === 'DOCTOR' && profileData.roleSpecific?.id) {
-        const response = await fetch(
+        const doctorResponse = await fetch(
           `${API_BASE_URL}/doctors/${profileData.roleSpecific.id}`,
           {
             method: 'PATCH',
@@ -207,7 +239,9 @@ const ProfilePage: React.FC = () => {
           }
         );
 
-        if (!response.ok) throw new Error('Failed to update profile');
+        if (!doctorResponse.ok) {
+          console.warn('User profile updated but doctor profile update failed');
+        }
       }
 
       setSuccessMessage('Profile updated successfully!');
@@ -217,7 +251,8 @@ const ProfilePage: React.FC = () => {
 
     } catch (err) {
       console.error('Error saving profile:', err);
-      setError('Failed to update profile. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile. Please try again.';
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -237,7 +272,6 @@ const ProfilePage: React.FC = () => {
       'ADMIN': 'System Administrator',
       'HOSPITAL_ADMIN': 'Hospital Administrator',
       'DOCTOR': 'Doctor',
-      'RECEPTIONIST': 'Receptionist',
       'PATIENT': 'Patient'
     };
     return roleMap[role] || role;
@@ -249,8 +283,6 @@ const ProfilePage: React.FC = () => {
         return <Stethoscope className="w-6 h-6" />;
       case 'PATIENT':
         return <Heart className="w-6 h-6" />;
-      case 'RECEPTIONIST':
-        return <ClipboardList className="w-6 h-6" />;
       case 'HOSPITAL_ADMIN':
         return <Building2 className="w-6 h-6" />;
       case 'ADMIN':
@@ -265,7 +297,6 @@ const ProfilePage: React.FC = () => {
       'ADMIN': '/admin-dashboard',
       'HOSPITAL_ADMIN': '/hospital-admin-dashboard',
       'DOCTOR': '/doctor-dashboard',
-      'RECEPTIONIST': '/receptionist-dashboard',
       'PATIENT': '/patient-dashboard'
     };
     return roleMap[role] || '/';
@@ -349,14 +380,14 @@ const ProfilePage: React.FC = () => {
         {/* Profile Header Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
           {/* Cover Image */}
-          <div className="h-32 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"></div>
+          <div className="h-32 bg-blue-500 "></div>
           
           {/* Profile Info */}
           <div className="px-6 pb-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-16 sm:-mt-12">
               {/* Avatar */}
               <div className="relative">
-                <div className="w-32 h-32 rounded-full border-4 border-white bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center overflow-hidden shadow-lg">
+                <div className="w-32 h-32 rounded-full border-4 border-white bg-blue-500 flex items-center justify-center overflow-hidden shadow-lg">
                   {profileData.avatarUrl ? (
                     <img 
                       src={profileData.avatarUrl} 
@@ -389,7 +420,17 @@ const ProfilePage: React.FC = () => {
 
               {/* Name and Role */}
               <div className="flex-1 text-center sm:text-left sm:ml-4 mt-4 sm:mt-0">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{profileData.fullName}</h1>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editForm.fullName}
+                    onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                    className="text-2xl md:text-3xl font-bold text-gray-900 bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 pb-1 w-full max-w-md"
+                    placeholder="Enter your name"
+                  />
+                ) : (
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{profileData.fullName}</h1>
+                )}
                 <p className="text-blue-600 font-medium mt-1">{getRoleDisplay(profileData.role)}</p>
                 <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -408,29 +449,24 @@ const ProfilePage: React.FC = () => {
               </div>
 
               {/* Edit Button */}
-              <button
-                onClick={() => {
-                  if (isEditing) {
-                    setIsEditing(false);
-                    setError(null);
-                  } else {
+              {!isEditing && (
+                <button
+                  onClick={() => {
                     setIsEditing(true);
-                  }
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                {isEditing ? (
-                  <>
-                    <X className="w-4 h-4" />
-                    Cancel
-                  </>
-                ) : (
-                  <>
-                    <Edit2 className="w-4 h-4" />
-                    Edit Profile
-                  </>
-                )}
-              </button>
+                    setError(null);
+                    // Initialize edit form with current values
+                    setEditForm({
+                      fullName: profileData.fullName || '',
+                      phone: profileData.phone || '',
+                      email: profileData.email || ''
+                    });
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit Profile
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -439,27 +475,108 @@ const ProfilePage: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Contact Information</h2>
           
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
-              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <Mail className="w-6 h-6 text-blue-600" />
+          {isEditing ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  value={editForm.fullName}
+                  onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                  placeholder="Enter your full name"
+                  required
+                />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500 mb-1">Email</p>
-                <p className="text-sm font-semibold text-gray-900 truncate">{profileData.email}</p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
-              <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
-                <Phone className="w-6 h-6 text-green-600" />
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                  placeholder="0781234567"
+                  required
+                />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500 mb-1">Phone</p>
-                <p className="text-sm font-semibold text-gray-900">{profileData.phone || 'Not provided'}</p>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  disabled
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
+                  placeholder="Email cannot be changed"
+                />
+                <p className="text-xs text-gray-500 mt-1">Email cannot be changed for security reasons</p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setError(null);
+                    // Reset form to original values
+                    setEditForm({
+                      fullName: profileData.fullName || '',
+                      phone: profileData.phone || '',
+                      email: profileData.email || ''
+                    });
+                  }}
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
+                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <Mail className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-500 mb-1">Email</p>
+                  <p className="text-sm font-semibold text-gray-900 truncate">{profileData.email}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
+                <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <Phone className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-500 mb-1">Phone</p>
+                  <p className="text-sm font-semibold text-gray-900">{profileData.phone || 'Not provided'}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Role-Specific Information */}

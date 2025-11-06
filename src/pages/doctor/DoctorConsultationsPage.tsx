@@ -7,6 +7,7 @@ import axios from 'axios';
 import VideoCall from '../../components/shared/VideoCall';
 import StartConversationModal from '../../components/shared/StartConversationModal';
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
+import toast from 'react-hot-toast';
 
 const DoctorConsultationsPage = () => {
   const { state } = useAuth();
@@ -76,14 +77,49 @@ const DoctorConsultationsPage = () => {
       console.log('Message read:', data);
     };
 
+    const handleCallStatusUpdate = (data: { appointmentId: string; status: string; message: string; patientName: string }) => {
+      console.log('Call status update:', data);
+      
+      // Show notification to doctor and close call if declined or timed out
+      if (data.status === 'DECLINED') {
+        // Close the call on doctor's side
+        if (showVideoCall && appointmentIdForCall === data.appointmentId) {
+          setShowVideoCall(false);
+          setAppointmentIdForCall(null);
+        }
+        toast.error(`${data.patientName} declined your call.`, {
+          duration: 5000,
+          icon: '📞',
+        });
+      } else if (data.status === 'TIMEOUT') {
+        // Close the call on doctor's side
+        if (showVideoCall && appointmentIdForCall === data.appointmentId) {
+          setShowVideoCall(false);
+          setAppointmentIdForCall(null);
+        }
+        toast.error(`${data.patientName} didn't answer your call. The call timed out after 1 minute.`, {
+          duration: 5000,
+          icon: '⏱️',
+        });
+      } else if (data.status === 'ACCEPTED') {
+        // Patient joined - this is handled by the VideoCall component
+        toast.success(`${data.patientName} joined the call.`, {
+          duration: 3000,
+          icon: '✅',
+        });
+      }
+    };
+
     socket.on('receiveChatMessage', handleReceiveMessage);
     socket.on('messageRead', handleMessageRead);
+    socket.on('callStatusUpdate', handleCallStatusUpdate);
 
     return () => {
       socket.off('receiveChatMessage', handleReceiveMessage);
       socket.off('messageRead', handleMessageRead);
+      socket.off('callStatusUpdate', handleCallStatusUpdate);
     };
-  }, [socket, selectedConversation, state.user?.id]);
+  }, [socket, selectedConversation, state.user?.id, showVideoCall, appointmentIdForCall]);
 
   // Join conversation room when conversation is selected
   useEffect(() => {

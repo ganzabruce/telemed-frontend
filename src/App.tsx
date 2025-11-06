@@ -7,12 +7,12 @@ import Loading from "./components/common/Loading"
 import AdminRoutes from "./routes/AdminRoutes"
 import HospitalAdminRoutes from "./routes/HospitalAdminRoutes"
 import DoctorRoutes from "./routes/DoctorRoutes"
-import ReceptionistRoutes from "./routes/ReceptionistRoutes"
 import PatientRoutes from "./routes/PatientRoutes"
 import LandingPage from "./pages/landingPage"
 import ProfilePage from "./pages/shared/ProfilePage"
 import CompleteProfilePage from "./pages/auth/CompleteProfile"
 import RegisterPage from "./pages/auth/RegisterPage"
+import NotificationsPage from "./pages/user/NotificationsPage"
 
 // Separate component that uses useAuth
 const AppRoutes = () => {
@@ -44,6 +44,10 @@ const AppRoutes = () => {
         element={<ProfilePage />}
       />
       <Route
+        path="/notifications"
+        element={<NotificationsPage />}
+      />
+      <Route
         path="/login"
         element={
           state.user ? (
@@ -58,7 +62,6 @@ const AppRoutes = () => {
       {AdminRoutes}
       {HospitalAdminRoutes}
       {DoctorRoutes}
-      {ReceptionistRoutes}
       {PatientRoutes}
 
       {/* Root Route - Redirect based on auth state */}
