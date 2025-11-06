@@ -7,7 +7,7 @@
 import  { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Building2, Users, Mail, Phone, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5002';
+const API_BASE_URL = 'http://localhost:5003';
 
 const getAuthHeaders = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');

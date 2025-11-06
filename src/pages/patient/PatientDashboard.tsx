@@ -26,12 +26,17 @@ import {
   Stethoscope,
   Building2
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import StartConversationModal from '../../components/shared/StartConversationModal';
 
 // API Base URL
-const API_BASE_URL = 'http://localhost:5002';
+const API_BASE_URL = 'http://localhost:5003';
 
 const PatientDashboard = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [showStartConversationModal, setShowStartConversationModal] = useState(false);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
   const [dashboardData, setDashboardData] = useState({
     upcomingAppointments: [],
     pastAppointments: [],
@@ -156,6 +161,7 @@ const PatientDashboard = () => {
         if (!doctorMap.has(a.doctorId)) {
           doctorMap.set(a.doctorId, {
             id: a.doctorId,
+            userId: a.doctor.user?.id,
             name: a.doctor.user?.fullName || 'Dr. Unknown',
             specialization: a.doctor.specialization,
             lastVisit: a.appointmentDate,
@@ -253,6 +259,16 @@ const PatientDashboard = () => {
   }
 
   return (
+    <>
+      <StartConversationModal
+        isOpen={showStartConversationModal}
+        onClose={() => {
+          setShowStartConversationModal(false);
+          setSelectedDoctorId(null);
+        }}
+        userRole="PATIENT"
+        preselectedUserId={selectedDoctorId || undefined}
+      />
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Header */}
       <div className="mb-6">
@@ -525,7 +541,7 @@ const PatientDashboard = () => {
           </div>
         </div>
 
-        {/* Sidebar */}
+      {/* Sidebar */}
         <div className="space-y-6">
           {/* Recent Doctors */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -533,7 +549,7 @@ const PatientDashboard = () => {
             <div className="space-y-3">
               {dashboardData.recentDoctors.length > 0 ? (
                 dashboardData.recentDoctors.map((doctor, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0">
                       <span className="text-white font-semibold text-sm">
                         {doctor.name.split(' ').map(n => n[0]).join('')}
@@ -543,7 +559,17 @@ const PatientDashboard = () => {
                       <p className="font-medium text-sm text-gray-900 truncate">{doctor.name}</p>
                       <p className="text-xs text-gray-500">{doctor.specialization}</p>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedDoctorId(doctor.userId);
+                        setShowStartConversationModal(true);
+                      }}
+                      className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      title="Start conversation"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                    </button>
                   </div>
                 ))
               ) : (
@@ -596,6 +622,7 @@ const PatientDashboard = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

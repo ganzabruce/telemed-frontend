@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 // API Base URL
-const API_BASE_URL = 'http://localhost:5002';
+const API_BASE_URL = 'http://localhost:5003';
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);

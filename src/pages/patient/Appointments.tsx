@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, Video, Phone, MessageSquare, Search, Plus, AlertCircle, X } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5002';
+const API_BASE_URL = 'http://localhost:5003';
 const APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
 
 const BookingModal = ({ isOpen, onClose, onAppointmentBooked }) => {

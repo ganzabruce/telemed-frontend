@@ -1,6 +1,7 @@
 // src/App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider, useAuth } from "./context/AuthContext"
+import { SocketProvider } from "./context/SocketContext"
 import LoginPage from "./pages/auth/LoginPage"
 import Loading from "./components/common/Loading"
 import AdminRoutes from "./routes/AdminRoutes"
@@ -117,7 +118,9 @@ const App = () => {
   return (
     <Router>
       <AuthProvider>
-        <AppRoutes />
+        <SocketProvider>
+          <AppRoutes />
+        </SocketProvider>
       </AuthProvider>
     </Router>
   )

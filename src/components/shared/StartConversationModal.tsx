@@ -1,0 +1,368 @@
+import React, { useState, useEffect } from 'react';
+import { X, Search, MessageSquare, User, Loader2, AlertCircle } from 'lucide-react';
+import { getOrCreateConversation } from '../../api/chatApi';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
+interface StartConversationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  userRole: 'PATIENT' | 'DOCTOR';
+  preselectedUserId?: string; // If provided, will auto-select this user
+}
+
+interface UserOption {
+  id: string;
+  fullName: string;
+  email: string;
+  avatarUrl?: string | null;
+  specialization?: string; // For doctors
+  hospital?: string; // For doctors
+}
+
+const StartConversationModal: React.FC<StartConversationModalProps> = ({
+  isOpen,
+  onClose,
+  userRole,
+  preselectedUserId,
+}) => {
+  const { state } = useAuth();
+  const navigate = useNavigate();
+  const [users, setUsers] = useState<UserOption[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserOption[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(preselectedUserId || null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchUsers();
+      if (preselectedUserId) {
+        setSelectedUserId(preselectedUserId);
+      } else {
+        setSelectedUserId(null);
+      }
+    } else {
+      // Reset state when modal closes
+      setSearchQuery('');
+      setSelectedUserId(null);
+      setError(null);
+    }
+  }, [isOpen, preselectedUserId]);
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const filtered = users.filter(
+        (user) =>
+          user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (user.specialization && user.specialization.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+      setFilteredUsers(filtered);
+    } else {
+      setFilteredUsers(users);
+    }
+  }, [searchQuery, users]);
+
+  // Debug: Log when selectedUserId changes
+  useEffect(() => {
+    console.log('selectedUserId changed:', selectedUserId);
+  }, [selectedUserId]);
+
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const token = state.user?.token;
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const API_BASE_URL = 'http://localhost:5003';
+      let endpoint = '';
+
+      if (userRole === 'PATIENT') {
+        // Fetch doctors for patients
+        endpoint = `${API_BASE_URL}/doctors`;
+      } else if (userRole === 'DOCTOR') {
+        // Fetch patients for doctors
+        // We'll need to get patients from appointments or a patients endpoint
+        // Increase limit to get more appointments (and thus more unique patients)
+        endpoint = `${API_BASE_URL}/appointments?limit=100`;
+      }
+
+      const response = await fetch(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
+      const data = await response.json();
+      let userList: UserOption[] = [];
+
+      if (userRole === 'PATIENT') {
+        // Extract doctors from response
+        userList = (data.data || [])
+          .filter((doctor: any) => doctor.user?.id) // Only include doctors with valid user IDs
+          .map((doctor: any) => ({
+            id: doctor.user.id, // Use user.id directly since we filtered
+            fullName: doctor.user.fullName || 'Unknown Doctor',
+            email: doctor.user.email || '',
+            avatarUrl: doctor.user.avatarUrl,
+            specialization: doctor.specialization,
+            hospital: doctor.hospital?.name,
+          }));
+      } else if (userRole === 'DOCTOR') {
+        // Extract unique patients from appointments
+        const appointments = data.data || [];
+        const patientMap = new Map<string, UserOption>();
+
+        console.log('Appointments data:', appointments);
+        
+        appointments.forEach((appt: any) => {
+          console.log('Processing appointment:', appt);
+          console.log('Patient data:', appt.patient);
+          console.log('Patient user data:', appt.patient?.user);
+          
+          if (appt.patient?.user?.id) {
+            const userId = appt.patient.user.id;
+            if (!patientMap.has(userId)) {
+              patientMap.set(userId, {
+                id: userId,
+                fullName: appt.patient.user.fullName || 'Unknown Patient',
+                email: appt.patient.user.email || '',
+                avatarUrl: appt.patient.user.avatarUrl,
+              });
+            }
+          } else {
+            console.warn('Appointment missing patient.user.id:', appt);
+          }
+        });
+
+        userList = Array.from(patientMap.values());
+        console.log('Extracted patient list:', userList);
+      }
+      
+      console.log('Fetched users:', userList);
+      console.log('Selected user ID:', selectedUserId);
+
+      setUsers(userList);
+      setFilteredUsers(userList);
+      
+      // If preselectedUserId is provided and exists in the list, select it
+      if (preselectedUserId && userList.some(u => u.id === preselectedUserId)) {
+        setSelectedUserId(preselectedUserId);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load users');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStartConversation = async () => {
+    if (!selectedUserId) {
+      setError('Please select a user to start a conversation');
+      return;
+    }
+
+    setIsCreating(true);
+    setError(null);
+
+    try {
+      await getOrCreateConversation(selectedUserId);
+      
+      // Close modal first
+      onClose();
+      
+      // Navigate to consultation page
+      const consultationPath = userRole === 'PATIENT' ? '/patient/consultations' : '/doctor/consultations';
+      navigate(consultationPath);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start conversation');
+      setIsCreating(false);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Start New Conversation</h2>
+              <p className="text-sm text-gray-500">
+                {userRole === 'PATIENT' ? 'Select a doctor to chat with' : 'Select a patient to chat with'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            disabled={isCreating}
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-hidden flex flex-col">
+          {/* Search */}
+          <div className="p-4 border-b border-gray-200">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder={`Search ${userRole === 'PATIENT' ? 'doctors' : 'patients'}...`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* User List */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+              </div>
+            ) : error ? (
+              <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-12">
+                <User className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500">
+                  {searchQuery ? 'No users found matching your search' : `No ${userRole === 'PATIENT' ? 'doctors' : 'patients'} available`}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredUsers.map((user) => {
+                  const isSelected = selectedUserId === user.id;
+                  return (
+                  <button
+                    key={user.id}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Selecting user:', user.id, user.fullName);
+                      setSelectedUserId(user.id);
+                      console.log('Selected user ID set to:', user.id);
+                    }}
+                    className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                      isSelected
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      {user.avatarUrl ? (
+                        <img
+                          src={user.avatarUrl}
+                          alt={user.fullName}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-semibold text-sm">{getInitials(user.fullName)}</span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 truncate">{user.fullName}</h3>
+                        <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                        {user.specialization && (
+                          <p className="text-xs text-blue-600 mt-1">{user.specialization}</p>
+                        )}
+                        {user.hospital && (
+                          <p className="text-xs text-gray-400 mt-1">{user.hospital}</p>
+                        )}
+                      </div>
+                      {isSelected && (
+                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 border-t border-gray-200 flex items-center justify-between">
+            {error && (
+              <div className="flex items-center gap-2 text-sm text-red-600">
+                <AlertCircle className="w-4 h-4" />
+                <span>{error}</span>
+              </div>
+            )}
+            {!error && selectedUserId && (
+              <div className="text-sm text-gray-600">
+                Selected: {filteredUsers.find(u => u.id === selectedUserId)?.fullName || 'Unknown'}
+              </div>
+            )}
+            <div className="ml-auto flex items-center gap-3">
+              <button
+                onClick={onClose}
+                disabled={isCreating}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStartConversation}
+                disabled={!selectedUserId || isCreating}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                title={!selectedUserId ? 'Please select a user first' : 'Start conversation'}
+              >
+                {isCreating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="w-4 h-4" />
+                    Start Conversation
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default StartConversationModal;
+

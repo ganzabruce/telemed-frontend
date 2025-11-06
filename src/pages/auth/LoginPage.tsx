@@ -36,7 +36,7 @@ const LoginPage: React.FC = () => {
 
     try {
       const { data } = await axios.post<LoginResponse>(
-        "http://localhost:5002/auth/login",
+        "http://localhost:5003/auth/login",
         { email, password },
         { headers: { "Content-Type": "application/json" } }
       )

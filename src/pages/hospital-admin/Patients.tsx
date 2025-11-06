@@ -16,7 +16,7 @@ import {
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 
-const API_URL = 'http://localhost:5002';
+const API_URL = 'http://localhost:5003';
 
 export const PatientsManagement = () => {
   const [patients, setPatients] = useState<any[]>([]);

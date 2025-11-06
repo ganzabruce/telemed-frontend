@@ -53,7 +53,7 @@ const ProfilePage: React.FC = () => {
       setError(null);
 
       // Fetch basic user profile
-      const response = await fetch('http://localhost:5002/auth/me', {
+      const response = await fetch('http://localhost/5003/auth/me', {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 
@@ -64,7 +64,7 @@ const ProfilePage: React.FC = () => {
       // Fetch role-specific data
       let roleSpecificData: any = {};
       if (user.role === 'DOCTOR') {
-        const doctorResponse = await fetch('http://localhost:5002/doctors', {
+        const doctorResponse = await fetch('http://localhost:5003/doctors', {
           headers: { Authorization: `Bearer ${user.token}` }
         });
         

@@ -2,16 +2,16 @@
 
 import axios from "axios"
 import {
-  ApiAppointment,
-  ApiDoctor,
-  ApiHospital,
-  BookAppointmentData,
-  InitiatePaymentData,
+  type ApiAppointment,
+  type ApiDoctor,
+  type ApiHospital,
+  type BookAppointmentData,
+  type InitiatePaymentData,
 } from "../types/api" // We will create this file next
 
 // Create an Axios instance
 const api = axios.create({
-  baseURL: "http://localhost:5002", // From your swagger.json
+  baseURL: "http://localhost/5003", // From your swagger.json
 })
 
 // Function to get the auth token

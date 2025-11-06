@@ -1,368 +1,572 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Video, Phone, Send, Paperclip, MoreVertical, Search, ArrowLeft, Smile, Image, X } from 'lucide-react';
-
-// Mock data for patient conversations (from doctor's perspective)
-const mockConversations = [
-  {
-    id: '1',
-    patientName: 'Jean Paul NIYONZIMA',
-    patientAge: '45 years',
-    patientAvatar: 'JN',
-    lastMessage: 'Thank you doctor, I will continue with...',
-    timestamp: '2 min ago',
-    unread: 1,
-    condition: 'Hypertension Follow-up',
-    messages: [
-      { id: '1', sender: 'doctor', text: 'Good morning! How are you feeling today?', timestamp: '10:30 AM', date: 'Today' },
-      { id: '2', sender: 'patient', text: 'Good morning Doctor. I\'m feeling much better than yesterday.', timestamp: '10:32 AM', date: 'Today' },
-      { id: '3', sender: 'doctor', text: 'That\'s great to hear! Have you been taking your medication as prescribed?', timestamp: '10:33 AM', date: 'Today' },
-      { id: '4', sender: 'patient', text: 'Yes, I take them twice daily with meals.', timestamp: '10:35 AM', date: 'Today' },
-      { id: '5', sender: 'doctor', text: 'Perfect. I\'ve reviewed your recent test results and they\'re showing good improvement.', timestamp: '10:36 AM', date: 'Today' },
-      { id: '6', sender: 'patient', text: 'That\'s wonderful news! What do the results show exactly?', timestamp: '10:38 AM', date: 'Today' },
-      { id: '7', sender: 'doctor', text: 'Your blood pressure has stabilized and your cholesterol levels are within normal range now.', timestamp: '10:40 AM', date: 'Today' },
-      { id: '8', sender: 'doctor', text: 'Your test results look good. Continue with your current medication.', timestamp: '10:41 AM', date: 'Today' },
-    ]
-  },
-  {
-    id: '2',
-    patientName: 'Marie Claire UWASE',
-    patientAge: '32 years',
-    patientAvatar: 'MU',
-    lastMessage: 'When should I bring her for the vaccines?',
-    timestamp: '1 hour ago',
-    unread: 0,
-    condition: 'Child Vaccination',
-    messages: [
-      { id: '1', sender: 'patient', text: 'Hello Doctor, I wanted to ask about my child\'s vaccination schedule.', timestamp: '9:15 AM', date: 'Today' },
-      { id: '2', sender: 'doctor', text: 'Hello! I\'d be happy to help. How old is your child?', timestamp: '9:20 AM', date: 'Today' },
-      { id: '3', sender: 'patient', text: 'She just turned 6 months old last week.', timestamp: '9:22 AM', date: 'Today' },
-      { id: '4', sender: 'doctor', text: 'At 6 months, she should receive several important vaccines. Let me send you the complete schedule.', timestamp: '9:25 AM', date: 'Today' },
-      { id: '5', sender: 'doctor', text: 'The vaccination schedule for your child includes: DTP, Polio, and Hepatitis B vaccines.', timestamp: '9:26 AM', date: 'Today' },
-      { id: '6', sender: 'patient', text: 'When should I bring her for the vaccines?', timestamp: '9:28 AM', date: 'Today' },
-    ]
-  },
-  {
-    id: '3',
-    patientName: 'Eric MUTABAZI',
-    patientAge: '28 years',
-    patientAvatar: 'EM',
-    lastMessage: 'I\'ll schedule the appointment today.',
-    timestamp: 'Yesterday',
-    unread: 0,
-    condition: 'Diet Management',
-    messages: [
-      { id: '1', sender: 'doctor', text: 'Hi! Just checking in on how you\'re managing with the new diet plan.', timestamp: '3:45 PM', date: 'Yesterday' },
-      { id: '2', sender: 'patient', text: 'Hello Doctor! It\'s been going well. I\'ve been following it strictly.', timestamp: '4:10 PM', date: 'Yesterday' },
-      { id: '3', sender: 'doctor', text: 'Excellent! Any difficulties or side effects?', timestamp: '4:12 PM', date: 'Yesterday' },
-      { id: '4', sender: 'patient', text: 'No major issues, though I did feel a bit tired the first few days.', timestamp: '4:15 PM', date: 'Yesterday' },
-      { id: '5', sender: 'doctor', text: 'That\'s normal as your body adjusts. It should improve within a week.', timestamp: '4:18 PM', date: 'Yesterday' },
-      { id: '6', sender: 'doctor', text: 'Remember to schedule your follow-up appointment in two weeks.', timestamp: '4:20 PM', date: 'Yesterday' },
-      { id: '7', sender: 'patient', text: 'I\'ll schedule the appointment today.', timestamp: '4:22 PM', date: 'Yesterday' },
-    ]
-  },
-  {
-    id: '4',
-    patientName: 'Grace MUKANDAYISENGA',
-    patientAge: '56 years',
-    patientAvatar: 'GM',
-    lastMessage: 'The pain has reduced significantly.',
-    timestamp: '2 days ago',
-    unread: 0,
-    condition: 'Arthritis Treatment',
-    messages: [
-      { id: '1', sender: 'doctor', text: 'Good afternoon! How is your knee pain today?', timestamp: '2:30 PM', date: '2 days ago' },
-      { id: '2', sender: 'patient', text: 'Hello Doctor. The pain has reduced significantly since I started the new medication.', timestamp: '2:45 PM', date: '2 days ago' },
-      { id: '3', sender: 'doctor', text: 'That\'s wonderful to hear! Are you able to walk more comfortably now?', timestamp: '2:47 PM', date: '2 days ago' },
-      { id: '4', sender: 'patient', text: 'Yes, I can walk around the house without much difficulty now.', timestamp: '2:50 PM', date: '2 days ago' },
-      { id: '5', sender: 'doctor', text: 'Great progress! Continue with the medication and the exercises I recommended.', timestamp: '2:52 PM', date: '2 days ago' },
-    ]
-  }
-];
+import { Video, Phone, Send, Paperclip, MoreVertical, Search, ArrowLeft, Smile, Image, Plus } from 'lucide-react';
+import { useSocket } from '../../context/SocketContext';
+import { useAuth } from '../../context/AuthContext';
+import { listConversations, getConversationMessages, markMessagesAsRead, type Conversation, type Message } from '../../api/chatApi';
+import axios from 'axios';
+import VideoCall from '../../components/shared/VideoCall';
+import StartConversationModal from '../../components/shared/StartConversationModal';
+import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 
 const DoctorConsultationsPage = () => {
-  const [conversations, setConversations] = useState(mockConversations);
-  const [selectedConversation, setSelectedConversation] = useState(mockConversations[0]);
+  const { state } = useAuth();
+  const { socket, joinConversation, leaveConversation, sendMessage } = useSocket();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showMobileChat, setShowMobileChat] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [showVideoCall, setShowVideoCall] = useState(false);
+  const [appointmentIdForCall, setAppointmentIdForCall] = useState<string | null>(null);
+  const [showStartConversationModal, setShowStartConversationModal] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch conversations on mount
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  // Handle socket events
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleReceiveMessage = (newMessage: Message) => {
+      if (selectedConversation && newMessage.conversationId === selectedConversation.id) {
+        setMessages((prev) => [...prev, newMessage]);
+        scrollToBottom();
+      }
+      // Update conversation list with new last message
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === newMessage.conversationId
+            ? { ...conv, lastMessageAt: newMessage.createdAt }
+            : conv
+        )
+      );
+    };
+
+    const handleMessageRead = (data: { conversationId: string; readerId: string; lastReadMessageId: string }) => {
+      // Handle read receipts if needed
+      console.log('Message read:', data);
+    };
+
+    socket.on('receiveChatMessage', handleReceiveMessage);
+    socket.on('messageRead', handleMessageRead);
+
+    return () => {
+      socket.off('receiveChatMessage', handleReceiveMessage);
+      socket.off('messageRead', handleMessageRead);
+    };
+  }, [socket, selectedConversation]);
+
+  // Join conversation room when conversation is selected
+  useEffect(() => {
+    if (selectedConversation) {
+      joinConversation(selectedConversation.id);
+      fetchMessages(selectedConversation.id);
+    }
+
+    return () => {
+      if (selectedConversation) {
+        leaveConversation(selectedConversation.id);
+      }
+    };
+  }, [selectedConversation?.id]);
+
+  const fetchConversations = async () => {
+    try {
+      setIsLoading(true);
+      const data = await listConversations();
+      setConversations(data);
+      if (data.length > 0 && !selectedConversation) {
+        setSelectedConversation(data[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchMessages = async (conversationId: string) => {
+    try {
+      setIsLoadingMessages(true);
+      const data = await getConversationMessages(conversationId);
+      setMessages(data);
+      scrollToBottom();
+      
+      // Mark messages as read
+      if (data.length > 0) {
+        const lastMessage = data[data.length - 1];
+        if (lastMessage.senderId !== state.user?.id) {
+          await markMessagesAsRead(conversationId, lastMessage.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [selectedConversation]);
-
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (messageInput.trim()) {
-      setMessageInput('');
-      setIsTyping(true);
+    if (!messageInput.trim() || !selectedConversation) return;
+
+    const content = messageInput.trim();
+    setMessageInput('');
+
+    try {
+      sendMessage(selectedConversation.id, content);
+      // Optimistically add message to UI
+      const tempMessage: Message = {
+        id: `temp-${Date.now()}`,
+        conversationId: selectedConversation.id,
+        senderId: state.user!.id,
+        content,
+        createdAt: new Date().toISOString(),
+        sender: {
+          id: state.user!.id,
+          fullName: state.user!.fullName,
+          avatarUrl: (state.user as any)?.avatarUrl || null,
+        },
+      };
+      setMessages((prev) => [...prev, tempMessage]);
+      scrollToBottom();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setMessageInput(content); // Restore message on error
+    }
+  };
+
+  const formatMessageTime = (dateString: string) => {
+    const date = new Date(dateString);
+    if (isToday(date)) {
+      return format(date, 'h:mm a');
+    } else if (isYesterday(date)) {
+      return 'Yesterday';
+    } else {
+      return format(date, 'MMM d');
+    }
+  };
+
+  const formatConversationTime = (dateString: string | null) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isToday(date)) {
+      return formatDistanceToNow(date, { addSuffix: true });
+    } else if (isYesterday(date)) {
+      return 'Yesterday';
+    } else {
+      return format(date, 'MMM d');
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const filteredConversations = conversations.filter((conv) => {
+    const patientName = conv.patient?.user?.fullName || '';
+    const searchLower = searchQuery.toLowerCase();
+    return patientName.toLowerCase().includes(searchLower);
+  });
+
+  const getAuthToken = () => {
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      const user = JSON.parse(stored);
+      return user?.token;
+    }
+    return null;
+  };
+
+  const startVideoCall = async () => {
+    if (!selectedConversation) return;
+    
+    try {
+      // Fetch appointments and find the most recent confirmed appointment for this patient
+      const token = getAuthToken();
+      const response = await axios.get('http://localhost:5003/appointments?status=CONFIRMED', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       
-      setTimeout(() => {
-        setIsTyping(false);
-      }, 2000);
-    }
-  };
-
-  const filteredConversations = conversations.filter(conv =>
-    conv.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    conv.condition.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleCloseChat = (e, conversationId) => {
-    e.stopPropagation();
-    
-    const updatedConversations = conversations.filter(conv => conv.id !== conversationId);
-    setConversations(updatedConversations);
-    
-    if (selectedConversation.id === conversationId) {
-      if (updatedConversations.length > 0) {
-        setSelectedConversation(updatedConversations[0]);
+      const appointments = response.data.data;
+      const patientId = selectedConversation.patientId;
+      
+      // Find appointment with this patient
+      const appointment = appointments.find(
+        (apt: any) => apt.patientId === patientId && apt.status === 'CONFIRMED'
+      );
+      
+      if (appointment) {
+        setAppointmentIdForCall(appointment.id);
+        setShowVideoCall(true);
       } else {
-        setShowMobileChat(false);
+        alert('No confirmed appointment found with this patient.');
       }
+    } catch (error) {
+      console.error('Error finding appointment:', error);
+      alert('Failed to start call. Please try again.');
     }
   };
 
-  const startVideoCall = () => {
-    alert('Starting video call with ' + selectedConversation.patientName);
+  const startVoiceCall = async () => {
+    if (!selectedConversation) return;
+    
+    try {
+      // Fetch appointments and find the most recent confirmed appointment for this patient
+      const token = getAuthToken();
+      const response = await axios.get('http://localhost:5003/appointments?status=CONFIRMED', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      const appointments = response.data.data;
+      const patientId = selectedConversation.patientId;
+      
+      // Find appointment with this patient
+      const appointment = appointments.find(
+        (apt: any) => apt.patientId === patientId && apt.status === 'CONFIRMED'
+      );
+      
+      if (appointment) {
+        setAppointmentIdForCall(appointment.id);
+        setShowVideoCall(true);
+      } else {
+        alert('No confirmed appointment found with this patient.');
+      }
+    } catch (error) {
+      console.error('Error finding appointment:', error);
+      alert('Failed to start call. Please try again.');
+    }
   };
 
-  const startVoiceCall = () => {
-    alert('Starting voice call with ' + selectedConversation.patientName);
+  const getPatientInfo = (conversation: Conversation) => {
+    return {
+      name: conversation.patient?.user?.fullName || 'Unknown Patient',
+      avatar: conversation.patient?.user?.avatarUrl || null,
+      initials: getInitials(conversation.patient?.user?.fullName || 'Unknown'),
+    };
   };
+
+  const getLastMessage = (conversation: Conversation) => {
+    if (conversation.messages && conversation.messages.length > 0) {
+      return conversation.messages[0].content;
+    }
+    return 'No messages yet';
+  };
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading conversations...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="h-190 lg:h-180 md:h-190 bg-gray-50 flex flex-col">
-      <div className="flex-1 flex overflow-hidden ">
-        <div className={`${showMobileChat ? 'hidden lg:flex' : 'flex'} flex-col w-full lg:w-80 bg-white border-r border-gray-200`}>
-          <div className="p-4 border-b border-gray-200">
-            <h1 className="text-xl font-bold text-gray-900 mb-3">Patient Consultations</h1>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search patients..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto">
-            {filteredConversations.length > 0 ? (
-              filteredConversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  className={`group relative p-4 border-b border-gray-100 cursor-pointer transition-colors ${
-                    selectedConversation.id === conv.id
-                      ? 'bg-blue-50 border-l-4 border-l-blue-600'
-                      : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <div
-                    onClick={() => {
-                      setSelectedConversation(conv);
-                      setShowMobileChat(true);
-                    }}
-                    className="flex items-start gap-3"
-                  >
-                    <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-semibold text-sm">{conv.patientAvatar}</span>
-                      </div>
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-1">
-                        <h3 className="font-semibold text-gray-900 text-sm truncate">{conv.patientName}</h3>
-                        <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{conv.timestamp}</span>
-                      </div>
-                      <p className="text-xs text-blue-600 mb-1">{conv.patientAge} • {conv.condition}</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-600 truncate">{conv.lastMessage}</p>
-                        {conv.unread > 0 && (
-                          <span className="ml-2 bg-blue-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0">
-                            {conv.unread}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => handleCloseChat(e, conv.id)}
-                    className="absolute top-4 right-4 p-1.5 bg-white hover:bg-red-50 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Close chat"
-                  >
-                    <X className="w-4 h-4 text-gray-600 hover:text-red-600" />
-                  </button>
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <Search className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No patients found</h3>
-                <p className="text-sm text-gray-500">Try adjusting your search</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className={`${showMobileChat ? 'flex' : 'hidden lg:flex'} flex-1 flex-col bg-gray-50`}>
-          <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+    <>
+      <StartConversationModal
+        isOpen={showStartConversationModal}
+        onClose={() => {
+          setShowStartConversationModal(false);
+          fetchConversations(); // Refresh conversations after starting a new one
+        }}
+        userRole="DOCTOR"
+      />
+      {showVideoCall && appointmentIdForCall && (
+        <VideoCall
+          appointmentId={appointmentIdForCall}
+          onClose={() => {
+            setShowVideoCall(false);
+            setAppointmentIdForCall(null);
+          }}
+          isVideoEnabled={true}
+        />
+      )}
+      <div className="h-190 lg:h-180 md:h-190 bg-gray-50 flex flex-col">
+        <div className="flex-1 flex overflow-hidden">
+          <div
+            className={`${showMobileChat ? 'hidden lg:flex' : 'flex'} flex-col w-full lg:w-80 bg-white border-r border-gray-200`}
+          >
+            <div className="p-4 border-b border-gray-200 space-y-3">
+              <h1 className="text-xl font-bold text-gray-900">Patient Consultations</h1>
               <button
-                onClick={() => setShowMobileChat(false)}
-                className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={() => setShowStartConversationModal(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
+                <Plus className="w-4 h-4" />
+                <span className="font-medium">New Conversation</span>
               </button>
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">{selectedConversation.patientAvatar}</span>
-              </div>
-              <div>
-                <h2 className="font-semibold text-gray-900">{selectedConversation.patientName}</h2>
-                <p className="text-xs text-gray-500">{selectedConversation.patientAge} • {selectedConversation.condition}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={startVoiceCall}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
-                title="Voice call"
-              >
-                <Phone className="w-5 h-5 text-gray-600 group-hover:text-blue-600" />
-              </button>
-              <button
-                onClick={startVideoCall}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
-                title="Video call"
-              >
-                <Video className="w-5 h-5 text-gray-600 group-hover:text-blue-600" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <MoreVertical className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {selectedConversation.messages.map((message, index) => {
-              const showDate = index === 0 || selectedConversation.messages[index - 1].date !== message.date;
-              
-              return (
-                <div key={message.id}>
-                  {showDate && (
-                    <div className="flex items-center justify-center my-4">
-                      <div className="bg-gray-200 text-gray-600 text-xs font-medium px-3 py-1 rounded-full">
-                        {message.date}
-                      </div>
-                    </div>
-                  )}
-                  <div className={`flex ${message.sender === 'doctor' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex items-end gap-2 max-w-[70%] ${message.sender === 'doctor' ? 'flex-row-reverse' : 'flex-row'}`}>
-                      {message.sender === 'patient' && (
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-white font-semibold text-xs">{selectedConversation.patientAvatar}</span>
-                        </div>
-                      )}
-                      <div>
-                        <div className={`rounded-2xl px-4 py-2 ${
-                          message.sender === 'doctor'
-                            ? 'bg-blue-600 text-white rounded-br-none'
-                            : 'bg-white text-gray-900 rounded-bl-none shadow-sm'
-                        }`}>
-                          <p className="text-sm leading-relaxed">{message.text}</p>
-                        </div>
-                        <p className={`text-xs text-gray-500 mt-1 ${message.sender === 'doctor' ? 'text-right' : 'text-left'}`}>
-                          {message.timestamp}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="flex items-end gap-2 max-w-[70%]">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-white font-semibold text-xs">{selectedConversation.patientAvatar}</span>
-                  </div>
-                  <div className="bg-white rounded-2xl rounded-bl-none shadow-sm px-4 py-3">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="bg-white border-t border-gray-200 p-4">
-            <div className="flex items-end gap-2">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Attach file"
-                >
-                  <Paperclip className="w-5 h-5 text-gray-600" />
-                </button>
-                <button
-                  type="button"
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Add image"
-                >
-                  <Image className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
-              <div className="flex-1 relative">
-                <textarea
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage(e);
-                    }
-                  }}
-                  placeholder="Type your message to patient..."
-                  className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={1}
-                  style={{ minHeight: '44px', maxHeight: '120px' }}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search patients..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded transition-colors"
-                >
-                  <Smile className="w-5 h-5 text-gray-600" />
-                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleSendMessage}
-                disabled={!messageInput.trim()}
-                className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Send className="w-5 h-5" />
-              </button>
             </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {filteredConversations.length > 0 ? (
+                filteredConversations.map((conv) => {
+                  const patientInfo = getPatientInfo(conv);
+                  const isSelected = selectedConversation?.id === conv.id;
+                  return (
+                    <div
+                      key={conv.id}
+                      onClick={() => {
+                        setSelectedConversation(conv);
+                        setShowMobileChat(true);
+                      }}
+                      className={`group relative p-4 border-b border-gray-100 cursor-pointer transition-colors ${
+                        isSelected ? 'bg-blue-50 border-l-4 border-l-blue-600' : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="relative">
+                          {patientInfo.avatar ? (
+                            <img
+                              src={patientInfo.avatar}
+                              alt={patientInfo.name}
+                              className="w-12 h-12 rounded-full"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                              <span className="text-white font-semibold text-sm">{patientInfo.initials}</span>
+                            </div>
+                          )}
+                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between mb-1">
+                            <h3 className="font-semibold text-gray-900 text-sm truncate">{patientInfo.name}</h3>
+                            <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                              {formatConversationTime(conv.lastMessageAt)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 truncate">{getLastMessage(conv)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <Search className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No patients found</h3>
+                  <p className="text-sm text-gray-500">Try adjusting your search</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className={`${showMobileChat ? 'flex' : 'hidden lg:flex'} flex-1 flex-col bg-gray-50`}>
+            {selectedConversation ? (
+              <>
+                <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setShowMobileChat(false)}
+                      className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <ArrowLeft className="w-5 h-5 text-gray-600" />
+                    </button>
+                    {(() => {
+                      const patientInfo = getPatientInfo(selectedConversation);
+                      return (
+                        <>
+                          {patientInfo.avatar ? (
+                            <img
+                              src={patientInfo.avatar}
+                              alt={patientInfo.name}
+                              className="w-10 h-10 rounded-full"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                              <span className="text-white font-semibold text-sm">{patientInfo.initials}</span>
+                            </div>
+                          )}
+                          <div>
+                            <h2 className="font-semibold text-gray-900">{patientInfo.name}</h2>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={startVoiceCall}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
+                      title="Voice call"
+                    >
+                      <Phone className="w-5 h-5 text-gray-600 group-hover:text-blue-600" />
+                    </button>
+                    <button
+                      onClick={startVideoCall}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
+                      title="Video call"
+                    >
+                      <Video className="w-5 h-5 text-gray-600 group-hover:text-blue-600" />
+                    </button>
+                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <MoreVertical className="w-5 h-5 text-gray-600" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {isLoadingMessages ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                  ) : (
+                    <>
+                      {messages.map((message, index) => {
+                        const isOwnMessage = message.senderId === state.user?.id;
+                        const showDate =
+                          index === 0 ||
+                          new Date(message.createdAt).toDateString() !==
+                            new Date(messages[index - 1].createdAt).toDateString();
+                        const messageDate = new Date(message.createdAt);
+
+                        return (
+                          <div key={message.id}>
+                            {showDate && (
+                              <div className="flex items-center justify-center my-4">
+                                <div className="bg-gray-200 text-gray-600 text-xs font-medium px-3 py-1 rounded-full">
+                                  {isToday(messageDate)
+                                    ? 'Today'
+                                    : isYesterday(messageDate)
+                                    ? 'Yesterday'
+                                    : format(messageDate, 'MMM d, yyyy')}
+                                </div>
+                              </div>
+                            )}
+                            <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                              <div
+                                className={`flex items-end gap-2 max-w-[70%] ${
+                                  isOwnMessage ? 'flex-row-reverse' : 'flex-row'
+                                }`}
+                              >
+                                {!isOwnMessage && (
+                                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span className="text-white font-semibold text-xs">
+                                      {getInitials(message.sender.fullName)}
+                                    </span>
+                                  </div>
+                                )}
+                                <div>
+                                  <div
+                                    className={`rounded-2xl px-4 py-2 ${
+                                      isOwnMessage
+                                        ? 'bg-blue-600 text-white rounded-br-none'
+                                        : 'bg-white text-gray-900 rounded-bl-none shadow-sm'
+                                    }`}
+                                  >
+                                    <p className="text-sm leading-relaxed">{message.content}</p>
+                                  </div>
+                                  <p
+                                    className={`text-xs text-gray-500 mt-1 ${
+                                      isOwnMessage ? 'text-right' : 'text-left'
+                                    }`}
+                                  >
+                                    {formatMessageTime(message.createdAt)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div ref={messagesEndRef} />
+                    </>
+                  )}
+                </div>
+
+                <div className="bg-white border-t border-gray-200 p-4">
+                  <form onSubmit={handleSendMessage} className="flex items-end gap-2">
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Attach file"
+                      >
+                        <Paperclip className="w-5 h-5 text-gray-600" />
+                      </button>
+                      <button
+                        type="button"
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Add image"
+                      >
+                        <Image className="w-5 h-5 text-gray-600" />
+                      </button>
+                    </div>
+                    <div className="flex-1 relative">
+                      <textarea
+                        value={messageInput}
+                        onChange={(e) => setMessageInput(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage(e);
+                          }
+                        }}
+                        placeholder="Type your message to patient..."
+                        className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        rows={1}
+                        style={{ minHeight: '44px', maxHeight: '120px' }}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded transition-colors"
+                      >
+                        <Smile className="w-5 h-5 text-gray-600" />
+                      </button>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={!messageInput.trim()}
+                      className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Send className="w-5 h-5" />
+                    </button>
+                  </form>
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-gray-500">Select a conversation to start chatting</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

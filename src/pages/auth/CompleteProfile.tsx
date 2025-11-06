@@ -114,7 +114,7 @@ const CompleteProfilePage: React.FC = () => {
       };
 
       await axios.post(
-        "http://localhost:5002/auth/complete-invitation",
+        "http://localhost:5003/auth/complete-invitation",
         payload
       );
 

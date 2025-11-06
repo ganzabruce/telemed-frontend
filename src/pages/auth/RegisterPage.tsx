@@ -56,7 +56,7 @@ const RegisterPage: React.FC = () => {
     try {
       const { fullName, email, phone, password } = formData;
       await axios.post(
-        "http://localhost:5002/auth/register-patient",
+        "http://localhost:5003/auth/register-patient",
         { fullName, email, phone, password },
         { headers: { "Content-Type": "application/json" } }
       );

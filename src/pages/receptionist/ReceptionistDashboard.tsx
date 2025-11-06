@@ -61,7 +61,7 @@ interface AppointmentStat {
 type StatusType = 'COMPLETED' | 'PAID' | 'PENDING' | 'CANCELLED' | 'FAILED' | string;
 
 // API Base URL
-const API_BASE_URL = 'http://localhost:5002';
+const API_BASE_URL = 'http://localhost:5003';
 
 const ReceptionistDashboard = () => {
   const [loading, setLoading] = useState(true);

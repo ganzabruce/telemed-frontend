@@ -1,7 +1,7 @@
 import  { useState, useEffect } from 'react';
 import { FileText, Calendar, Pill, Download, Eye, AlertCircle, Search } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5002';
+const API_BASE_URL = 'http://localhost:5003';
 
 const RecordsPage = () => {
   const [consultations, setConsultations] = useState<any[]>([]);
