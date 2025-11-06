@@ -143,7 +143,7 @@ export const StaffManagement = () => {
                 Invite Staff
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-lg overflow-hidden p-0">
+            <DialogContent className="sm:max-w-lg overflow-hidden p-0 bg-white">
               {/* Decorative header background */}
               <div className="bg-blue-500 p-6 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black opacity-5"></div>
@@ -166,7 +166,7 @@ export const StaffManagement = () => {
               <div className="p-6 space-y-5 bg-white">
                 <div>
                   <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <UserCog className="w-4 h-4 text-purple-600" />
+                    <UserCog className="w-4 h-4 text-blue-600" />
                     Staff Type
                   </Label>
                   <div className="mt-2 p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
@@ -186,7 +186,7 @@ export const StaffManagement = () => {
                   <div>
                     <Label className="text-sm font-semibold text-gray-700">Full Name</Label>
                     <Input
-                      className="mt-2 h-11 border-2 focus:border-purple-500 bg-white transition-colors"
+                      className="mt-2 h-11 outline-none bg-white transition-colors"
                       placeholder="e.g., Dr. John Doe"
                       value={inviteForm.fullName}
                       onChange={(e) => setInviteForm({...inviteForm, fullName: e.target.value})}
@@ -198,7 +198,7 @@ export const StaffManagement = () => {
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <Input
                         type="email"
-                        className="pl-10 h-11 border-2 focus:border-purple-500 bg-white transition-colors"
+                        className="pl-10 h-11 outline-no bg-white transition-colors"
                         placeholder="john.doe@example.com"
                         value={inviteForm.email}
                         onChange={(e) => setInviteForm({...inviteForm, email: e.target.value})}
@@ -210,7 +210,7 @@ export const StaffManagement = () => {
                     <div className="relative mt-2">
                       <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <Input
-                        className="pl-10 h-11 border-2 focus:border-purple-500 bg-white transition-colors"
+                        className="pl-10 h-11 outline-no bg-white transition-colors"
                         placeholder="+250 XXX XXX XXX"
                         value={inviteForm.phone}
                         onChange={(e) => setInviteForm({...inviteForm, phone: e.target.value})}
@@ -230,7 +230,7 @@ export const StaffManagement = () => {
                   </Button>
                   <Button 
                     onClick={handleInviteStaff}
-                    className="flex-1 h-12 bg-blue-500 hover:from-blue-700 hover:to-purple-700 gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="flex-1 text-white h-12 bg-blue-500 hover:from-blue-700 hover:to-purple-700 gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     <Mail className="w-5 h-5" />
                     Send Invitation

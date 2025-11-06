@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Calendar, Clock, User, Video, Phone, MessageSquare, CheckCircle, XCircle, AlertCircle, Filter, Search, MapPin, ChevronRight, MoreVertical, RefreshCw } from 'lucide-react';
+import { Calendar, Clock, User, Video, Phone, MessageSquare, CheckCircle, XCircle, AlertCircle, Filter, Search, MapPin, ChevronRight, MoreVertical, RefreshCw, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import PrescriptionForm from '@/components/shared/PrescriptionForm';
 
 const API_BASE_URL = 'http://localhost:5003';
 
@@ -19,6 +20,8 @@ const DoctorAppointments = () => {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [prescriptionFormOpen, setPrescriptionFormOpen] = useState(false);
+  const [appointmentForPrescription, setAppointmentForPrescription] = useState(null);
   const [newStatus, setNewStatus] = useState('');
   const [updating, setUpdating] = useState(false);
   
@@ -442,6 +445,31 @@ const DoctorAppointments = () => {
                               {appointment.type === 'CHAT' && 'Open Chat'}
                             </Button>
                           )}
+                          
+                          {appointment.status === 'COMPLETED' && !appointment.consultation && (
+                            <Button 
+                              size="sm"
+                              onClick={() => {
+                                setAppointmentForPrescription(appointment);
+                                setPrescriptionFormOpen(true);
+                              }}
+                              className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
+                            >
+                              <FileText className="w-4 h-4" />
+                              Record Consultation
+                            </Button>
+                          )}
+                          
+                          {appointment.status === 'COMPLETED' && appointment.consultation && (
+                            <Button 
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 border-green-600"
+                              disabled
+                            >
+                              Consultation Recorded
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -611,6 +639,23 @@ const DoctorAppointments = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Prescription Form */}
+      {appointmentForPrescription && (
+        <PrescriptionForm
+          isOpen={prescriptionFormOpen}
+          onClose={() => {
+            setPrescriptionFormOpen(false);
+            setAppointmentForPrescription(null);
+          }}
+          appointmentId={appointmentForPrescription.id}
+          appointmentType={appointmentForPrescription.type}
+          patientName={appointmentForPrescription.patient?.user?.fullName || 'Patient'}
+          onSuccess={() => {
+            fetchAppointments();
+          }}
+        />
+      )}
     </div>
   );
 };

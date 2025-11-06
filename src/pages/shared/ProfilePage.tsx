@@ -380,14 +380,14 @@ const ProfilePage: React.FC = () => {
         {/* Profile Header Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
           {/* Cover Image */}
-          <div className="h-32 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600"></div>
+          <div className="h-32 bg-blue-500 "></div>
           
           {/* Profile Info */}
           <div className="px-6 pb-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-16 sm:-mt-12">
               {/* Avatar */}
               <div className="relative">
-                <div className="w-32 h-32 rounded-full border-4 border-white bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center overflow-hidden shadow-lg">
+                <div className="w-32 h-32 rounded-full border-4 border-white bg-blue-500 flex items-center justify-center overflow-hidden shadow-lg">
                   {profileData.avatarUrl ? (
                     <img 
                       src={profileData.avatarUrl} 

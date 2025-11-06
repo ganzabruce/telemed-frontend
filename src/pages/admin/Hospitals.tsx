@@ -405,7 +405,7 @@ export const Hospitals: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSubmit}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 font-medium shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 font-medium shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {editingHospital ? 'Update Hospital' : 'Create Hospital'}
                 </button>
