@@ -15,11 +15,6 @@ export const navigationByRole = {
     { name: "Appointments", href: "/doctor/appointments", icon: Calendar },
     { name: "Patients", href: "/doctor/patients", icon: Users },
   ],
-  RECEPTIONIST: [
-    { name: "Dashboard", href: "/receptionist-dashboard", icon: LayoutDashboard },
-    { name: "Appointments", href: "/receptionist/appointments", icon: Calendar },
-    { name: "Patients", href: "/receptionist/patients", icon: Users },
-  ],
   PATIENT: [
     { name: "Dashboard", href: "/patient-dashboard", icon: LayoutDashboard },
     { name: "My Appointments", href: "/patient/appointments", icon: Calendar },

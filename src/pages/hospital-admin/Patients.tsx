@@ -30,19 +30,27 @@ export const PatientsManagement = () => {
   const fetchPatients = async () => {
     try {
       const token = JSON.parse(localStorage.getItem('user') || '{}').token;
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
       
-      const hospitalResponse = await fetch(`${API_URL}/hospitals`, {
+      const response = await fetch(`${API_URL}/patients/hospital`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const hospitalData = await hospitalResponse.json();
-      const adminHospital = hospitalData.data.find((h: any) => h.adminId === user.id);
 
-      if (adminHospital) {
-        setPatients(adminHospital.patients || []);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to fetch patients: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'success' && data.data) {
+        setPatients(data.data);
+      } else {
+        throw new Error(data.message || 'Failed to fetch patients');
       }
     } catch (err) {
-      toast.error('Failed to fetch patients');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch patients';
+      toast.error(errorMessage);
+      console.error('Error fetching patients:', err);
     } finally {
       setLoading(false);
     }
@@ -96,7 +104,7 @@ export const PatientsManagement = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold bg-blue-500 bg-clip-text text-transparent">
             Patient Management
           </h1>
           <p className="text-gray-600 mt-2 text-lg">View and manage registered patients</p>
@@ -191,7 +199,7 @@ export const PatientsManagement = () => {
                     >
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold">
+                          <div className="w-10 h-10 rounded-full bg-blue-500  flex items-center justify-center text-white font-semibold">
                             {patient.user?.fullName?.charAt(0) || 'P'}
                           </div>
                           <span className="font-medium text-gray-900">{patient.user?.fullName}</span>

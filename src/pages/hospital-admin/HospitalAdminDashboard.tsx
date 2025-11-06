@@ -41,7 +41,6 @@ const HospitalAdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState({
     totalStaff: 0,
     totalDoctors: 0,
-    totalReceptionists: 0,
     totalPatients: 0,
     totalAppointments: 0,
     totalRevenue: 0,
@@ -78,20 +77,17 @@ const HospitalAdminDashboard = () => {
       const [
         hospitalsResponse,
         doctorsResponse,
-        receptionistsResponse,
         appointmentsResponse,
         paymentsResponse
       ] = await Promise.all([
         fetch(`${API_BASE_URL}/hospitals`, { headers }),
         fetch(`${API_BASE_URL}/doctors`, { headers }),
-        fetch(`${API_BASE_URL}/receptionists`, { headers }),
         fetch(`${API_BASE_URL}/appointments`, { headers }),
         fetch(`${API_BASE_URL}/payments`, { headers })
       ]);
 
       const hospitalsData = await hospitalsResponse.json();
       const doctorsData = await doctorsResponse.json();
-      const receptionistsData = await receptionistsResponse.json();
       const appointmentsData = await appointmentsResponse.json();
       const paymentsData = await paymentsResponse.json();
 
@@ -107,7 +103,6 @@ const HospitalAdminDashboard = () => {
 
       // Filter data for this hospital
       const hospitalDoctors = (doctorsData.data || []).filter(d => d.hospitalId === myHospital.id);
-      const hospitalReceptionists = (receptionistsData.data || []).filter(r => r.hospitalId === myHospital.id);
       const hospitalAppointments = (appointmentsData.data || []).filter(a => a.hospitalId === myHospital.id);
       const hospitalPayments = (paymentsData.data || []).filter(p => 
         hospitalAppointments.some(a => a.id === p.appointmentId)
@@ -146,19 +141,11 @@ const HospitalAdminDashboard = () => {
           status: d.status,
           email: d.user?.email
         })),
-        ...hospitalReceptionists.map(r => ({
-          id: r.id,
-          name: r.user?.fullName || 'Unknown',
-          role: 'Receptionist',
-          status: 'ACTIVE',
-          email: r.user?.email
-        }))
       ];
 
       setDashboardData({
         totalStaff: staffList.length,
         totalDoctors: hospitalDoctors.length,
-        totalReceptionists: hospitalReceptionists.length,
         totalPatients,
         totalAppointments: hospitalAppointments.length,
         totalRevenue,

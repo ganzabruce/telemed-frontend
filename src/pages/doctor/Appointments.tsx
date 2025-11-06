@@ -360,7 +360,7 @@ const DoctorAppointments = () => {
                     <div className="flex items-start gap-6">
                       {/* Date Badge */}
                       <div className="flex-shrink-0">
-                        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex flex-col items-center justify-center text-white shadow-lg">
+                        <div className="w-20 h-20 bg-blue-500 rounded-2xl flex flex-col items-center justify-center text-white shadow-lg">
                           <span className="text-2xl font-bold">
                             {new Date(appointment.appointmentDate).getDate()}
                           </span>
@@ -374,7 +374,7 @@ const DoctorAppointments = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600  flex items-center justify-center text-white font-bold text-lg">
+                            <div className="w-12 h-12 rounded-full bg-blue-500  flex items-center justify-center text-white font-bold text-lg">
                               {appointment.patient?.user?.fullName?.charAt(0) || 'P'}
                             </div>
                             <div>
@@ -426,7 +426,7 @@ const DoctorAppointments = () => {
                             <Button
                               size="sm"
                               onClick={() => openStatusDialog(appointment)}
-                              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                              className="bg-blue-600  hover:from-blue-700 hover:to-indigo-700 text-white"
                             >
                               Update Status
                             </Button>
@@ -435,7 +435,7 @@ const DoctorAppointments = () => {
                           {appointment.status === 'CONFIRMED' && (
                             <Button 
                               size="sm"
-                              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                              className="bg-green-600  hover:from-green-700 hover:to-emerald-700 text-white"
                             >
                               {appointment.type === 'VIDEO' && 'Join Video'}
                               {appointment.type === 'AUDIO' && 'Join Call'}
@@ -496,7 +496,7 @@ const DoctorAppointments = () => {
           {selectedAppointment && (
             <div className="space-y-6 py-4">
               <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
                   {selectedAppointment.patient?.user?.fullName?.charAt(0) || 'P'}
                 </div>
                 <div>
@@ -563,7 +563,7 @@ const DoctorAppointments = () => {
           <DialogFooter>
             <Button
               onClick={() => setDetailsDialogOpen(false)}
-              className="bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-indigo-700"
+              className="bg-blue-500 text-white hover:from-blue-700 hover:to-indigo-700"
             >
               Close
             </Button>
@@ -604,7 +604,7 @@ const DoctorAppointments = () => {
             <Button 
               onClick={handleStatusUpdate} 
               disabled={updating}
-              className="bg-gradient-to-r from-blue-600 text-white to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              className="bg-blue-500 text-white  hover:from-blue-700 hover:to-indigo-700"
             >
               {updating ? 'Updating...' : 'Update Status'}
             </Button>

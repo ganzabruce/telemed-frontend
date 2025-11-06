@@ -255,7 +255,7 @@ const DoctorPatientsPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-blue-500  flex items-center justify-center">
               <User className="w-6 h-6 text-white" />
             </div>
             <span className="text-3xl font-bold text-gray-900">{stats.total}</span>
@@ -265,7 +265,7 @@ const DoctorPatientsPage: React.FC = () => {
 
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-green-500  flex items-center justify-center">
               <Activity className="w-6 h-6 text-white" />
             </div>
             <span className="text-3xl font-bold text-gray-900">{stats.active}</span>
@@ -275,7 +275,7 @@ const DoctorPatientsPage: React.FC = () => {
 
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-orange-500  flex items-center justify-center">
               <Clock className="w-6 h-6 text-white" />
             </div>
             <span className="text-3xl font-bold text-gray-900">{stats.pending}</span>
@@ -365,7 +365,7 @@ const DoctorPatientsPage: React.FC = () => {
                       className="w-16 h-16 rounded-full object-cover ring-4 ring-blue-50 group-hover:ring-blue-100 transition-all"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center ring-4 ring-blue-50 group-hover:ring-blue-100 transition-all">
+                    <div className="w-16 h-16 rounded-full bg-blue-500  flex items-center justify-center ring-4 ring-blue-50 group-hover:ring-blue-100 transition-all">
                       <span className="text-white font-bold text-xl">
                         {getInitials(patient.user.fullName)}
                       </span>

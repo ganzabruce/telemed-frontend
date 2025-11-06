@@ -143,7 +143,7 @@ export const InviteAdmin = () => {
                 <strong>Note:</strong> The invited admin will be able to:
               </p>
               <ul className="list-disc list-inside text-sm text-blue-800 mt-2 space-y-1">
-                <li>Manage their hospital's staff (doctors, receptionists)</li>
+                <li>Manage their hospital's staff (doctors)</li>
                 <li>View and manage patients</li>
                 <li>Access hospital-specific reports</li>
               </ul>

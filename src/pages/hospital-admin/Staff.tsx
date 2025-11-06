@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { Plus, Mail, UserCog, Users, Edit, Search, Stethoscope, Phone, DollarSign, FileText, Filter, Download } from 'lucide-react';
+import { Plus, Mail, UserCog, Edit, Search, Stethoscope, Phone, DollarSign, FileText, Filter, Download } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import {
   Dialog,
@@ -21,13 +21,6 @@ import {
   TableHeader,
   TableRow
 } from '../../components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
@@ -38,7 +31,6 @@ export const StaffManagement = () => {
   const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [inviteType, setInviteType] = useState<'DOCTOR' | 'RECEPTIONIST'>('DOCTOR');
   const [inviteForm, setInviteForm] = useState({ email: '', fullName: '', phone: '' });
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -50,13 +42,9 @@ export const StaffManagement = () => {
     try {
       const token = JSON.parse(localStorage.getItem('user') || '{}').token;
       
-      const [doctorsRes] = await Promise.all([
-        fetch(`${API_URL}/doctors`, { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
-
+      const doctorsRes = await fetch(`${API_URL}/doctors`, { headers: { Authorization: `Bearer ${token}` } });
       const doctorsData = await doctorsRes.json();
 
-      
       setStaff(doctorsData.data || []);
     } catch (err) {
       toast.error('Failed to fetch staff');
@@ -75,7 +63,7 @@ export const StaffManagement = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ ...inviteForm, role: inviteType })
+        body: JSON.stringify({ ...inviteForm, role: 'DOCTOR' })
       });
 
       if (response.ok) {
@@ -102,15 +90,15 @@ export const StaffManagement = () => {
   const stats = [
     {
       label: 'Total Doctors',
-      value: staff.length,
+      value: filteredStaff.length,
       icon: Stethoscope,
       color: 'bg-blue-500',
       textColor: 'text-blue-600',
       bgColor: 'bg-blue-50'
     },
     {
-      label: 'Available',
-      value: staff.filter(d => d.status === 'AVAILABLE').length,
+      label: 'Available Doctors',
+      value: filteredStaff.filter(d => d.status === 'AVAILABLE').length,
       icon: UserCog,
       color: 'bg-green-500',
       textColor: 'text-green-600',
@@ -137,7 +125,7 @@ export const StaffManagement = () => {
           <h1 className="text-4xl font-bold bg-blue-600 bg-clip-text text-transparent">
             Staff Management
           </h1>
-          <p className="text-gray-600 mt-2 text-lg">Manage doctors and receptionists</p>
+          <p className="text-gray-600 mt-2 text-lg">Manage doctors</p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" className="gap-2">
@@ -157,7 +145,7 @@ export const StaffManagement = () => {
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg overflow-hidden p-0">
               {/* Decorative header background */}
-              <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 p-6 relative overflow-hidden">
+              <div className="bg-blue-500 p-6 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black opacity-5"></div>
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full opacity-10"></div>
                 <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white rounded-full opacity-10"></div>
@@ -181,35 +169,17 @@ export const StaffManagement = () => {
                     <UserCog className="w-4 h-4 text-purple-600" />
                     Staff Type
                   </Label>
-                  <Select value={inviteType} onValueChange={(value: any) => setInviteType(value)}>
-                    <SelectTrigger className="mt-2 h-12 border-2 focus:border-purple-500 transition-colors">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="DOCTOR">
-                        <div className="flex items-center gap-2 py-1 bg-white">
-                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Stethoscope className="w-4 h-4 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Doctor</p>
-                            <p className="text-xs text-gray-500">Medical practitioner</p>
-                          </div>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="RECEPTIONIST" >
-                        <div className="flex items-center gap-2 py-1 bg-white">
-                          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <Users className="w-4 h-4 text-purple-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Receptionist</p>
-                            <p className="text-xs text-gray-500">Front desk staff</p>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="mt-2 p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Stethoscope className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">Doctor</p>
+                        <p className="text-sm text-gray-600">Medical practitioner</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-4 bg-gray-50 rounded-xl p-4">
@@ -260,7 +230,7 @@ export const StaffManagement = () => {
                   </Button>
                   <Button 
                     onClick={handleInviteStaff}
-                    className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="flex-1 h-12 bg-blue-500 hover:from-blue-700 hover:to-purple-700 gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     <Mail className="w-5 h-5" />
                     Send Invitation
@@ -327,7 +297,7 @@ export const StaffManagement = () => {
 
       {/* Doctors Table */}
       <Card className="border-none shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+        <CardHeader className="bg-gradient-blue-600 to-blue-700 text-white">
           <CardTitle className="flex items-center gap-2 text-2xl">
             <Stethoscope className="w-6 h-6" />
             Doctors ({filteredStaff.length})
@@ -361,7 +331,7 @@ export const StaffManagement = () => {
                     <TableRow key={doctor.id} className="hover:bg-blue-50 transition-colors duration-150">
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                          <div className="w-10 h-10 rounded-full bg-blue-500  flex items-center justify-center text-white font-semibold">
                             {doctor.user?.fullName?.charAt(0) || 'D'}
                           </div>
                           <span className="font-medium text-gray-900">{doctor.user?.fullName}</span>
@@ -426,7 +396,6 @@ export const StaffManagement = () => {
         </CardContent>
       </Card>
 
-    
     </div>
   );
 };

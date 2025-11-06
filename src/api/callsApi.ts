@@ -42,7 +42,8 @@ export const createCallRoom = async (
   appointmentId: string
 ): Promise<{ roomId: string }> => {
   const response = await api.post("/calls/create", { appointmentId });
-  return response.data;
+  // Backend returns { success: true, roomId }
+  return { roomId: response.data.roomId };
 };
 
 /**

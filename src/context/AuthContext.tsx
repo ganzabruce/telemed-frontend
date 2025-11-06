@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react"
 import type { ReactNode } from 'react'
 
-export type UserRole = "ADMIN" | "HOSPITAL_ADMIN" | "DOCTOR" | "RECEPTIONIST" | "PATIENT"
+export type UserRole = "ADMIN" | "HOSPITAL_ADMIN" | "DOCTOR" | "PATIENT"
 
 export type UserStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED"
 

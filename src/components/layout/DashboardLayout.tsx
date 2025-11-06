@@ -4,12 +4,16 @@ import Sidebar from "./Sidebar"
 import { Outlet, useNavigate } from "react-router-dom"
 import { Bell, Search, User, Settings, LogOut, Menu } from "lucide-react"
 import { useAuth } from "../../context/AuthContext"
+import { useSocket } from "../../context/SocketContext"
+import { getNotifications, type Notification } from "../../api/notificationsApi"
 
 const DashboardLayout: React.FC = () => {
   const { state, dispatch } = useAuth()
+  const { socket } = useSocket()
   const navigate = useNavigate()
   const [isProfileOpen, setIsProfileOpen] = React.useState(false)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false)
+  const [unreadNotifications, setUnreadNotifications] = React.useState(0)
 
   const handleLogout = () => {
     dispatch({ type: "LOGOUT" })
@@ -30,11 +34,46 @@ const DashboardLayout: React.FC = () => {
       "ADMIN": "Admin",
       "HOSPITAL_ADMIN": "Hospital Admin",
       "DOCTOR": "Doctor",
-      "RECEPTIONIST": "Receptionist",
       "PATIENT": "Patient"
     }
     return roleMap[role] || role
   }
+
+  // Fetch unread notifications count
+  React.useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const notifications = await getNotifications()
+        const unread = notifications.filter(n => n.status === 'SENT').length
+        setUnreadNotifications(unread)
+      } catch (error) {
+        console.error('Error fetching notifications:', error)
+      }
+    }
+
+    if (state.user) {
+      fetchUnreadCount()
+      
+      // Subscribe to user notifications via socket
+      if (socket && state.user.id) {
+        socket.emit('subscribeToUserNotifications', state.user.id)
+        
+        // Listen for new notifications
+        const handleNewNotification = () => {
+          fetchUnreadCount()
+        }
+        
+        socket.on('newNotification', handleNewNotification)
+        
+        return () => {
+          socket.off('newNotification', handleNewNotification)
+          if (state.user?.id) {
+            socket.emit('unsubscribeFromUserNotifications', state.user.id)
+          }
+        }
+      }
+    }
+  }, [socket, state.user])
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -102,9 +141,16 @@ const DashboardLayout: React.FC = () => {
                 </button>
 
                 {/* Notifications */}
-                <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <button 
+                  onClick={() => navigate('/notifications')}
+                  className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
                   <Bell className="w-5 h-5" />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                  {unreadNotifications > 0 && (
+                    <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-semibold">
+                      {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                    </span>
+                  )}
                 </button>
 
                 {/* Profile Dropdown */}
