@@ -12,6 +12,11 @@ import {
   MoreVertical,
   RefreshCw
 } from 'lucide-react';
+import DashboardHeader from '../../components/shared/DashboardHeader';
+import StatsGrid from '../../components/shared/StatsGrid';
+import StatCard from '../../components/shared/StatCard';
+import ChartCard from '../../components/shared/ChartCard';
+import ListCard from '../../components/shared/ListCard';
 
 // API Base URL
 const API_BASE_URL = 'http://localhost:5003';
@@ -272,157 +277,124 @@ const DoctorDashboard = () => {
 
   const currentSchedule = activeTab === 'today' ? dashboardData.todaySchedule : dashboardData.upcomingSchedule;
 
+  const stats = [
+    {
+      icon: Calendar,
+      value: dashboardData.totalAppointments,
+      label: 'Total Appointments',
+      gradient: 'from-blue-500 to-blue-600'
+    },
+    {
+      icon: Clock,
+      value: dashboardData.pendingCount,
+      label: 'Pending Review',
+      gradient: 'from-orange-500 to-orange-600'
+    },
+    {
+      icon: CheckCircle,
+      value: dashboardData.confirmedCount,
+      label: 'Confirmed',
+      gradient: 'from-blue-500 to-indigo-600'
+    },
+    {
+      icon: CheckCircle,
+      value: dashboardData.completedAppointments,
+      label: 'Completed',
+      gradient: 'from-green-500 to-emerald-600'
+    }
+  ];
+
+  const consultationStats = [
+    {
+      icon: Video,
+      value: dashboardData.consultationBreakdown.video,
+      label: 'Video Calls',
+      gradient: 'from-purple-500 to-purple-600'
+    },
+    {
+      icon: Phone,
+      value: dashboardData.consultationBreakdown.audio,
+      label: 'Audio Calls',
+      gradient: 'from-blue-500 to-blue-600'
+    },
+    {
+      icon: MessageSquare,
+      value: dashboardData.consultationBreakdown.chat,
+      label: 'Chat',
+      gradient: 'from-green-500 to-green-600'
+    }
+  ];
+
+  const statusBadge = (
+    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+      dashboardData.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' :
+      dashboardData.status === 'BUSY' ? 'bg-orange-100 text-orange-700' :
+      'bg-gray-100 text-gray-700'
+    }`}>
+      {dashboardData.status}
+    </span>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-3 rounded-xl">
-              <Stethoscope className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Doctor Dashboard</h1>
-              <p className="text-gray-600 mt-1">{dashboardData.specialization || 'Specialization'}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-              dashboardData.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' :
-              dashboardData.status === 'BUSY' ? 'bg-orange-100 text-orange-700' :
-              'bg-gray-100 text-gray-700'
-            }`}>
-              {dashboardData.status}
-            </span>
-            <button 
-              onClick={fetchDashboardData}
-              className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-              title="Refresh"
-            >
-              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        icon={Stethoscope}
+        title="Doctor Dashboard"
+        subtitle={dashboardData.specialization || 'Specialization'}
+        onRefresh={fetchDashboardData}
+        loading={loading}
+        actionButton={statusBadge}
+      />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-gray-900">{dashboardData.totalAppointments}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Total Appointments</h3>
-        </div>
+      <StatsGrid stats={stats} columns={4} />
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-orange-600">{dashboardData.pendingCount}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Pending Review</h3>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-blue-600">{dashboardData.confirmedCount}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Confirmed</h3>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-green-600">{dashboardData.completedAppointments}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Completed</h3>
-        </div>
-      </div>
-
-      {/* Consultation Type Breakdown */}
       <div className="grid grid-cols-3 gap-4 md:gap-6 mb-6">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-purple-50 p-2 rounded-lg">
-              <Video className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Video Calls</p>
-              <p className="text-xl font-bold text-gray-900">{dashboardData.consultationBreakdown.video}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-50 p-2 rounded-lg">
-              <Phone className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Audio Calls</p>
-              <p className="text-xl font-bold text-gray-900">{dashboardData.consultationBreakdown.audio}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-green-50 p-2 rounded-lg">
-              <MessageSquare className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Chat</p>
-              <p className="text-xl font-bold text-gray-900">{dashboardData.consultationBreakdown.chat}</p>
-            </div>
-          </div>
-        </div>
+        {consultationStats.map((stat, index) => (
+          <StatCard
+            key={index}
+            icon={stat.icon}
+            value={stat.value}
+            label={stat.label}
+            gradient={stat.gradient}
+          />
+        ))}
       </div>
 
       {/* Main Content Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Schedule - Takes 2 columns */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Schedule</h3>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setActiveTab('today')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'today'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  Today ({dashboardData.todayAppointments})
-                </button>
-                <button
-                  onClick={() => setActiveTab('upcoming')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'upcoming'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  Upcoming ({dashboardData.upcomingAppointments})
-                </button>
-              </div>
+        <ListCard
+          title="Schedule"
+          className="lg:col-span-2"
+          headerAction={
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveTab('today')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'today'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Today ({dashboardData.todayAppointments})
+              </button>
+              <button
+                onClick={() => setActiveTab('upcoming')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'upcoming'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Upcoming ({dashboardData.upcomingAppointments})
+              </button>
             </div>
-          </div>
-
-          <div className="p-6">
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {currentSchedule.length > 0 ? (
-                currentSchedule.map((appointment) => (
+          }
+          emptyMessage="No appointments scheduled"
+          emptyIcon={<Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />}
+        >
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {currentSchedule.length > 0 && currentSchedule.map((appointment) => (
                   <div key={appointment.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
                     <div className="flex-shrink-0">
                       <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -462,23 +434,17 @@ const DoctorDashboard = () => {
                       </button>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-12">
-                  <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No appointments scheduled</p>
-                </div>
-              )}
-            </div>
+                ))}
           </div>
-        </div>
+        </ListCard>
 
         {/* Recent Patients */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Patients</h3>
+        <ListCard
+          title="Recent Patients"
+          emptyMessage="No recent patients"
+        >
           <div className="space-y-3">
-            {dashboardData.recentPatients.length > 0 ? (
-              dashboardData.recentPatients.map((patient) => (
+            {dashboardData.recentPatients.length > 0 && dashboardData.recentPatients.map((patient) => (
                 <div key={patient.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-semibold text-sm">
@@ -493,17 +459,13 @@ const DoctorDashboard = () => {
                     {getTypeIcon(patient.type)}
                   </div>
                 </div>
-              ))
-            ) : (
-              <p className="text-gray-500 text-center py-8 text-sm">No recent patients</p>
-            )}
+              ))}
           </div>
-        </div>
+        </ListCard>
       </div>
 
       {/* Weekly Activity Chart */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">This Week's Activity</h3>
+      <ChartCard title="This Week's Activity">
         <div className="h-48 flex items-end justify-between gap-3">
           {dashboardData.weeklyAppointments.map((data, index) => {
             const maxValue = Math.max(...dashboardData.weeklyAppointments.map(d => d.count), 1);
@@ -529,7 +491,7 @@ const DoctorDashboard = () => {
             );
           })}
         </div>
-      </div>
+      </ChartCard>
     </div>
   );
 };

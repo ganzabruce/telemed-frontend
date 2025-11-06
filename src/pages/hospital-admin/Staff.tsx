@@ -284,21 +284,30 @@ export const StaffManagement = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat, index) => (
-          <Card key={index} className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">{stat.label}</p>
-                  <p className={`text-3xl font-bold ${stat.textColor}`}>{stat.value}</p>
+        {stats.map((stat, index) => {
+          // Map colors to gradient backgrounds
+          const gradientMap: Record<string, string> = {
+            'bg-blue-50': 'from-blue-500 to-blue-600',
+            'bg-green-50': 'from-green-500 to-green-600',
+            'bg-gray-50': 'from-gray-500 to-gray-600',
+            'bg-purple-50': 'from-purple-500 to-purple-600',
+            'bg-orange-50': 'from-orange-500 to-orange-600',
+            'bg-indigo-50': 'from-indigo-500 to-indigo-600',
+          };
+          const gradient = gradientMap[stat.bgColor] || 'from-blue-500 to-blue-600';
+          
+          return (
+            <div key={index} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                  <stat.icon className="w-6 h-6 text-white" />
                 </div>
-                <div className={`${stat.bgColor} p-4 rounded-full`}>
-                  <stat.icon className={`w-6 h-6 ${stat.textColor}`} />
-                </div>
+                <span className="text-3xl font-bold text-gray-900">{stat.value}</span>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              <h3 className="text-sm font-medium text-gray-600">{stat.label}</h3>
+            </div>
+          );
+        })}
       </div>
 
       {/* Search Bar */}

@@ -17,6 +17,17 @@ import {
   ClipboardList,
   User
 } from 'lucide-react';
+import {
+  DashboardHeader,
+  StatsGrid,
+  StatCard,
+  ChartCard,
+  ListCard,
+  PageContainer,
+  LoadingState,
+  StatusBadge,
+  SearchBar
+} from '../../components/shared';
 
 // Types moved to top so they can be used in useState generics and helper signatures
 interface User {
@@ -279,128 +290,87 @@ const ReceptionistDashboard = () => {
     return matchesSearch && matchesFilter;
   });
 
+  const stats = [
+    {
+      icon: Calendar,
+      value: dashboardData.todayAppointments,
+      label: "Today's Appointments",
+      gradient: 'from-blue-500 to-blue-600'
+    },
+    {
+      icon: Clock,
+      value: dashboardData.pendingAppointments,
+      label: 'Pending Review',
+      gradient: 'from-orange-500 to-orange-600'
+    },
+    {
+      icon: Users,
+      value: dashboardData.totalPatients,
+      label: 'Total Patients',
+      gradient: 'from-green-500 to-green-600'
+    },
+    {
+      icon: DollarSign,
+      value: formatCurrency(dashboardData.totalPayments),
+      label: 'Total Payments',
+      gradient: 'from-purple-500 to-purple-600'
+    }
+  ];
+
+  const statusStats = [
+    {
+      icon: CheckCircle,
+      value: dashboardData.confirmedAppointments,
+      label: 'Confirmed',
+      gradient: 'from-green-500 to-green-600'
+    },
+    {
+      icon: CheckCircle,
+      value: dashboardData.completedAppointments,
+      label: 'Completed',
+      gradient: 'from-blue-500 to-blue-600'
+    },
+    {
+      icon: Calendar,
+      value: dashboardData.totalAppointments,
+      label: 'Total',
+      gradient: 'from-gray-500 to-gray-600'
+    }
+  ];
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-center">
-          <RefreshCw className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
-          <p className="text-gray-600 font-medium text-lg">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Loading dashboard..." fullScreen />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-3 rounded-xl">
-              <ClipboardList className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Receptionist Dashboard</h1>
-              <p className="text-gray-600 mt-1">Manage appointments, patients, and payments</p>
-            </div>
-          </div>
-          <button 
-            onClick={fetchDashboardData}
-            className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-      </div>
+    <PageContainer>
+      <DashboardHeader
+        icon={ClipboardList}
+        title="Receptionist Dashboard"
+        subtitle="Manage appointments, patients, and payments"
+        onRefresh={fetchDashboardData}
+        loading={loading}
+      />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-gray-900">{dashboardData.todayAppointments}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Today's Appointments</h3>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-orange-600">{dashboardData.pendingAppointments}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Pending Review</h3>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-green-600">{dashboardData.totalPatients}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Total Patients</h3>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-purple-600">{formatCurrency(dashboardData.totalPayments)}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Total Payments</h3>
-        </div>
-      </div>
+      <StatsGrid stats={stats} columns={4} />
 
       {/* Appointment Status Overview */}
       <div className="grid grid-cols-3 gap-4 md:gap-6 mb-6">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-green-50 p-2 rounded-lg">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Confirmed</p>
-              <p className="text-xl font-bold text-gray-900">{dashboardData.confirmedAppointments}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-50 p-2 rounded-lg">
-              <CheckCircle className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Completed</p>
-              <p className="text-xl font-bold text-gray-900">{dashboardData.completedAppointments}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-gray-50 p-2 rounded-lg">
-              <Calendar className="w-5 h-5 text-gray-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Total</p>
-              <p className="text-xl font-bold text-gray-900">{dashboardData.totalAppointments}</p>
-            </div>
-          </div>
-        </div>
+        {statusStats.map((stat, index) => (
+          <StatCard
+            key={index}
+            icon={stat.icon}
+            value={stat.value}
+            label={stat.label}
+            gradient={stat.gradient}
+          />
+        ))}
       </div>
 
       {/* Charts and Lists Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Appointment Trends */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Appointment Trends</h3>
+        <ChartCard title="Appointment Trends">
           <div className="h-48 flex items-end justify-between gap-3">
             {dashboardData.appointmentStats.map((data, index) => {
               const maxValue = Math.max(...dashboardData.appointmentStats.map(d => d.count), 1);
@@ -421,68 +391,55 @@ const ReceptionistDashboard = () => {
               );
             })}
           </div>
-        </div>
+        </ChartCard>
 
         {/* Upcoming Appointments */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Appointments</h3>
+        <ListCard
+          title="Upcoming Appointments"
+          emptyMessage="No upcoming appointments"
+          emptyIcon={<Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />}
+        >
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {dashboardData.upcomingAppointments.length > 0 ? (
-              dashboardData.upcomingAppointments.map((appointment, index) => (
-                <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                      <User className="w-6 h-6 text-blue-600" />
-                    </div>
+            {dashboardData.upcomingAppointments.map((appointment, index) => (
+              <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <User className="w-6 h-6 text-blue-600" />
                   </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold text-gray-900 truncate">
-                        {appointment.patient?.user?.fullName || 'Unknown Patient'}
-                      </p>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
-                        {appointment.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>{formatDate(appointment.appointmentDate)}</span>
-                      </div>
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-semibold text-gray-900 truncate">
+                      {appointment.patient?.user?.fullName || 'Unknown Patient'}
+                    </p>
+                    <StatusBadge status={appointment.status} size="sm" />
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{formatDate(appointment.appointmentDate)}</span>
                     </div>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No upcoming appointments</p>
               </div>
-            )}
+            ))}
           </div>
-        </div>
+        </ListCard>
       </div>
 
       {/* Recent Appointments Section */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Appointments</h3>
-          
+      <ListCard
+        title="Recent Appointments"
+        className="mb-6"
+        headerAction={
           <div className="flex flex-col sm:flex-row gap-2">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search patient..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-full sm:w-auto"
-              />
-            </div>
-
-            {/* Filter */}
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search patient..."
+              className="w-full sm:w-auto"
+            />
             <div className="relative">
               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <select
@@ -498,99 +455,82 @@ const ReceptionistDashboard = () => {
               </select>
             </div>
           </div>
-        </div>
-
-        {/* Appointments List */}
+        }
+        emptyMessage="No appointments found"
+        emptyIcon={<Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />}
+      >
         <div className="space-y-3 max-h-96 overflow-y-auto">
-          {filteredAppointments.length > 0 ? (
-            filteredAppointments.map((appointment, index) => (
-              <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <User className="w-6 h-6 text-blue-600" />
-                  </div>
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold text-gray-900 truncate">
-                      {appointment.patient?.user?.fullName || 'Unknown Patient'}
-                    </p>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
-                      {appointment.status}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>{formatDate(appointment.appointmentDate)}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span>Dr. {appointment.doctor?.user?.fullName || 'Unknown'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                    <MoreVertical className="w-5 h-5" />
-                  </button>
+          {filteredAppointments.map((appointment, index) => (
+            <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                  <User className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="text-center py-12">
-              <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No appointments found</p>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="font-semibold text-gray-900 truncate">
+                    {appointment.patient?.user?.fullName || 'Unknown Patient'}
+                  </p>
+                  <StatusBadge status={appointment.status} size="sm" />
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>{formatDate(appointment.appointmentDate)}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span>Dr. {appointment.doctor?.user?.fullName || 'Unknown'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                  <MoreVertical className="w-5 h-5" />
+                </button>
+              </div>
             </div>
-          )}
+          ))}
         </div>
-      </div>
+      </ListCard>
 
       {/* Recent Payments Section */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Payments</h3>
+      <ListCard
+        title="Recent Payments"
+        emptyMessage="No recent payments"
+        emptyIcon={<DollarSign className="w-12 h-12 text-gray-300 mx-auto mb-3" />}
+      >
         <div className="space-y-3">
-          {dashboardData.recentPayments.length > 0 ? (
-            dashboardData.recentPayments.map((payment, index) => (
-              <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
-                <div className="flex-shrink-0">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    payment.status === 'PAID' ? 'bg-green-100' : 'bg-yellow-100'
-                  }`}>
-                    <DollarSign className={`w-6 h-6 ${payment.status === 'PAID' ? 'text-green-600' : 'text-yellow-600'}`} />
-                  </div>
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold text-gray-900 truncate">
-                      {payment.patient?.user?.fullName || 'Unknown Patient'}
-                    </p>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
-                      payment.status === 'PAID' ? 'text-green-600 bg-green-50 border-green-200' :
-                      'text-yellow-600 bg-yellow-50 border-yellow-200'
-                    }`}>
-                      {payment.status}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <span>{formatCurrency(payment.amount)}</span>
-                    <span>•</span>
-                    <span>{payment.method}</span>
-                  </div>
+          {dashboardData.recentPayments.map((payment, index) => (
+            <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
+              <div className="flex-shrink-0">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  payment.status === 'PAID' ? 'bg-green-100' : 'bg-yellow-100'
+                }`}>
+                  <DollarSign className={`w-6 h-6 ${payment.status === 'PAID' ? 'text-green-600' : 'text-yellow-600'}`} />
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="text-center py-12">
-              <DollarSign className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No recent payments</p>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="font-semibold text-gray-900 truncate">
+                    {payment.patient?.user?.fullName || 'Unknown Patient'}
+                  </p>
+                  <StatusBadge status={payment.status} size="sm" />
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <span>{formatCurrency(payment.amount)}</span>
+                  <span>•</span>
+                  <span>{payment.method}</span>
+                </div>
+              </div>
             </div>
-          )}
+          ))}
         </div>
-      </div>
-    </div>
+      </ListCard>
+    </PageContainer>
   );
 };
 

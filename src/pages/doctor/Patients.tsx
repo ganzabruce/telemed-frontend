@@ -252,48 +252,36 @@ const DoctorPatientsPage: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Card className="border-none shadow-sm hover:shadow-md transition-shadow bg-white">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Total Patients</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <User className="w-6 h-6 text-blue-600" />
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+              <User className="w-6 h-6 text-white" />
             </div>
-          </CardContent>
-        </Card>
+            <span className="text-3xl font-bold text-gray-900">{stats.total}</span>
+          </div>
+          <h3 className="text-sm font-medium text-gray-600">Total Patients</h3>
+        </div>
 
-        <Card className="border-none shadow-sm hover:shadow-md transition-shadow bg-white">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Active Patients</p>
-                <p className="text-3xl font-bold text-green-600">{stats.active}</p>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <Activity className="w-6 h-6 text-green-600" />
-              </div>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+              <Activity className="w-6 h-6 text-white" />
             </div>
-          </CardContent>
-        </Card>
+            <span className="text-3xl font-bold text-gray-900">{stats.active}</span>
+          </div>
+          <h3 className="text-sm font-medium text-gray-600">Active Patients</h3>
+        </div>
 
-        <Card className="border-none shadow-sm hover:shadow-md transition-shadow bg-white">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Pending</p>
-                <p className="text-3xl font-bold text-amber-600">{stats.pending}</p>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-amber-600" />
-              </div>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+              <Clock className="w-6 h-6 text-white" />
             </div>
-          </CardContent>
-        </Card>
+            <span className="text-3xl font-bold text-gray-900">{stats.pending}</span>
+          </div>
+          <h3 className="text-sm font-medium text-gray-600">Pending</h3>
+        </div>
       </div>
 
       {error && (

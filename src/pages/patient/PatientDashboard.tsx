@@ -29,6 +29,15 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StartConversationModal from '../../components/shared/StartConversationModal';
+import DashboardHeader from '../../components/shared/DashboardHeader';
+import StatsGrid from '../../components/shared/StatsGrid';
+import StatCard from '../../components/shared/StatCard';
+import ChartCard from '../../components/shared/ChartCard';
+import ListCard from '../../components/shared/ListCard';
+import PageContainer from '../../components/shared/PageContainer';
+import LoadingState from '../../components/shared/LoadingState';
+import EmptyState from '../../components/shared/EmptyState';
+import StatusBadge from '../../components/shared/StatusBadge';
 
 // API Base URL
 const API_BASE_URL = 'http://localhost:5003';
@@ -248,15 +257,56 @@ const PatientDashboard = () => {
     return 'soon';
   };
 
+  const stats = [
+    {
+      icon: Activity,
+      value: dashboardData.totalAppointments,
+      label: 'Total Visits',
+      gradient: 'from-blue-500 to-blue-600'
+    },
+    {
+      icon: Calendar,
+      value: dashboardData.upcomingCount,
+      label: 'Upcoming',
+      gradient: 'from-green-500 to-green-600'
+    },
+    {
+      icon: CreditCard,
+      value: formatCurrency(dashboardData.totalSpent),
+      label: 'Total Spent',
+      gradient: 'from-purple-500 to-purple-600'
+    },
+    {
+      icon: CheckCircle,
+      value: dashboardData.completedAppointments,
+      label: 'Completed',
+      gradient: 'from-orange-500 to-orange-600'
+    }
+  ];
+
+  const consultationStats = [
+    {
+      icon: Video,
+      value: dashboardData.consultationHistory.video,
+      label: 'Video Calls',
+      gradient: 'from-purple-500 to-purple-600'
+    },
+    {
+      icon: Phone,
+      value: dashboardData.consultationHistory.audio,
+      label: 'Audio Calls',
+      gradient: 'from-blue-500 to-blue-600'
+    },
+    {
+      icon: MessageSquare,
+      value: dashboardData.consultationHistory.chat,
+      label: 'Chat',
+      gradient: 'from-green-500 to-green-600'
+    }
+  ];
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-center">
-          <RefreshCw className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
-          <p className="text-gray-600 font-medium text-lg">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Loading dashboard..." fullScreen />;
   }
 
   return (
@@ -270,178 +320,88 @@ const PatientDashboard = () => {
         userRole="PATIENT"
         preselectedUserId={selectedDoctorId || undefined}
       />
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-3 rounded-xl">
-              <Heart className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Patient Dashboard</h1>
-              <p className="text-gray-600 mt-1">Your health dashboard</p>
-            </div>
-          </div>
-          <button 
-            onClick={fetchDashboardData}
-            className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-            title="Refresh"
+      <PageContainer>
+        <DashboardHeader
+          icon={Heart}
+          title="Patient Dashboard"
+          subtitle="Your health dashboard"
+          onRefresh={fetchDashboardData}
+          loading={loading}
+        />
+
+        <StatsGrid stats={stats} columns={4} />
+
+        <div className="grid grid-cols-3 gap-4 md:gap-6 mb-6">
+          {consultationStats.map((stat, index) => (
+            <StatCard
+              key={index}
+              icon={stat.icon}
+              value={stat.value}
+              label={stat.label}
+              gradient={stat.gradient}
+            />
+          ))}
+        </div>
+
+        {/* Main Content Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Appointments List - 2 columns */}
+          <ListCard
+            title="Upcoming Appointments"
+            className="lg:col-span-2"
+            emptyMessage="No appointments scheduled"
+            emptyIcon={<Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />}
           >
-            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-              <Activity className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-gray-900">{dashboardData.totalAppointments}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Total Visits</h3>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-green-600">{dashboardData.upcomingCount}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Upcoming</h3>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-              <CreditCard className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-purple-600">{formatCurrency(dashboardData.totalSpent)}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Total Spent</h3>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-orange-600">{dashboardData.completedAppointments}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Completed</h3>
-        </div>
-      </div>
-
-      {/* Consultation Type Breakdown */}
-      <div className="grid grid-cols-3 gap-4 md:gap-6 mb-6">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-purple-50 p-2 rounded-lg">
-              <Video className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Video Calls</p>
-              <p className="text-xl font-bold text-gray-900">{dashboardData.consultationHistory.video}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-50 p-2 rounded-lg">
-              <Phone className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Audio Calls</p>
-              <p className="text-xl font-bold text-gray-900">{dashboardData.consultationHistory.audio}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="bg-green-50 p-2 rounded-lg">
-              <MessageSquare className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-600">Chat</p>
-              <p className="text-xl font-bold text-gray-900">{dashboardData.consultationHistory.chat}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Appointments List - 2 columns */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Upcoming Appointments</h3>
-          </div>
-          <div className="p-6">
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {dashboardData.upcomingAppointments.length > 0 ? (
-                dashboardData.upcomingAppointments.map((appointment, index) => {
-                  const dateTime = formatDateTime(appointment.appointmentDate);
-                  return (
-                    <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
-                      <div className="flex-shrink-0">
-                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                          <User className="w-6 h-6 text-blue-600" />
-                        </div>
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-semibold text-gray-900 truncate">
-                            Dr. {appointment.doctor?.user?.fullName || 'Unknown'}
-                          </p>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
-                            {appointment.status}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" />
-                            <span>{dateTime.time}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {getTypeIcon(appointment.type)}
-                            <span>{appointment.type}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {appointment.status === 'CONFIRMED' && (
-                          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-                            Join
-                          </button>
-                        )}
+              {dashboardData.upcomingAppointments.map((appointment, index) => {
+                const dateTime = formatDateTime(appointment.appointmentDate);
+                return (
+                  <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                        <User className="w-6 h-6 text-blue-600" />
                       </div>
                     </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-12">
-                  <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No appointments scheduled</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold text-gray-900 truncate">
+                          Dr. {appointment.doctor?.user?.fullName || 'Unknown'}
+                        </p>
+                        <StatusBadge status={appointment.status} size="sm" />
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>{dateTime.time}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {getTypeIcon(appointment.type)}
+                          <span>{appointment.type}</span>
+                        </div>
+                      </div>
+                    </div>
 
-        {/* Recent Doctors */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Doctors</h3>
-          <div className="space-y-3">
-            {dashboardData.recentDoctors.length > 0 ? (
-              dashboardData.recentDoctors.map((doctor, index) => (
+                    <div className="flex items-center gap-2">
+                      {appointment.status === 'CONFIRMED' && (
+                        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                          Join
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ListCard>
+
+          {/* Recent Doctors */}
+          <ListCard
+            title="Your Doctors"
+            emptyMessage="No doctors yet"
+          >
+            <div className="space-y-3">
+              {dashboardData.recentDoctors.map((doctor, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-semibold text-sm">
@@ -464,44 +424,40 @@ const PatientDashboard = () => {
                     <MessageSquare className="w-4 h-4" />
                   </button>
                 </div>
-              ))
-            ) : (
-              <p className="text-gray-500 text-center py-8 text-sm">No recent patients</p>
-            )}
-          </div>
+              ))}
+            </div>
+          </ListCard>
         </div>
-      </div>
 
-      {/* Monthly Activity Chart */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">This Month's Activity</h3>
-        <div className="h-48 flex items-end justify-between gap-3">
-          {dashboardData.monthlyAppointments.map((data, index) => {
-            const maxValue = Math.max(...dashboardData.monthlyAppointments.map(d => d.count), 1);
-            const height = (data.count / maxValue) * 100;
-            const isCurrentMonth = index === new Date().getMonth();
-            
-            return (
-              <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                <div 
-                  className={`w-full rounded-t-lg transition-all cursor-pointer relative group ${
-                    isCurrentMonth ? 'bg-blue-600' : 'bg-blue-400 hover:bg-blue-500'
-                  }`}
-                  style={{ height: `${height}%`, minHeight: data.count > 0 ? '12px' : '0' }}
-                >
-                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    {data.count} visits
+        {/* Monthly Activity Chart */}
+        <ChartCard title="This Month's Activity">
+          <div className="h-48 flex items-end justify-between gap-3">
+            {dashboardData.monthlyAppointments.map((data, index) => {
+              const maxValue = Math.max(...dashboardData.monthlyAppointments.map(d => d.count), 1);
+              const height = (data.count / maxValue) * 100;
+              const isCurrentMonth = index === new Date().getMonth();
+              
+              return (
+                <div key={index} className="flex-1 flex flex-col items-center gap-2">
+                  <div 
+                    className={`w-full rounded-t-lg transition-all cursor-pointer relative group ${
+                      isCurrentMonth ? 'bg-blue-600' : 'bg-blue-400 hover:bg-blue-500'
+                    }`}
+                    style={{ height: `${height}%`, minHeight: data.count > 0 ? '12px' : '0' }}
+                  >
+                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                      {data.count} visits
+                    </div>
                   </div>
+                  <span className={`text-xs font-medium ${isCurrentMonth ? 'text-blue-600' : 'text-gray-600'}`}>
+                    {data.month}
+                  </span>
                 </div>
-                <span className={`text-xs font-medium ${isCurrentMonth ? 'text-blue-600' : 'text-gray-600'}`}>
-                  {data.month}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+              );
+            })}
+          </div>
+        </ChartCard>
+      </PageContainer>
     </>
   );
 };

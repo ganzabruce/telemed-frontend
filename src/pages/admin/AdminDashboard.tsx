@@ -14,6 +14,15 @@ import {
   User,
   Clock
 } from 'lucide-react';
+import {
+  DashboardHeader,
+  StatsGrid,
+  ChartCard,
+  ListCard,
+  PageContainer,
+  LoadingState,
+  StatusBadge
+} from '../../components/shared';
 
 // API Base URL
 const API_BASE_URL = 'http://localhost:5003';
@@ -137,89 +146,53 @@ const AdminDashboard = () => {
     return new Intl.NumberFormat('en-US').format(num);
   };
 
+  const stats = [
+    {
+      icon: Users,
+      value: formatNumber(dashboardData.totalPatients),
+      label: 'Total Patients',
+      gradient: 'from-blue-500 to-blue-600'
+    },
+    {
+      icon: Building2,
+      value: formatNumber(dashboardData.totalProviders),
+      label: 'Healthcare Providers',
+      gradient: 'from-indigo-500 to-indigo-600'
+    },
+    {
+      icon: Calendar,
+      value: formatNumber(dashboardData.totalAppointments),
+      label: 'Total Appointments',
+      gradient: 'from-green-500 to-green-600'
+    },
+    {
+      icon: DollarSign,
+      value: formatCurrency(dashboardData.totalRevenue),
+      label: 'Total Revenue',
+      gradient: 'from-purple-500 to-purple-600'
+    }
+  ];
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-center">
-          <RefreshCw className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
-          <p className="text-gray-600 font-medium text-lg">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Loading dashboard..." fullScreen />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-3 rounded-xl">
-              <Shield className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600 mt-1">System overview and management</p>
-            </div>
-          </div>
-          <button 
-            onClick={fetchDashboardData}
-            className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-      </div>
+    <PageContainer>
+      <DashboardHeader
+        icon={Shield}
+        title="Admin Dashboard"
+        subtitle="System overview and management"
+        onRefresh={fetchDashboardData}
+        loading={loading}
+      />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-gray-900">{formatNumber(dashboardData.totalPatients)}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Total Patients</h3>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-indigo-600">{formatNumber(dashboardData.totalProviders)}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Healthcare Providers</h3>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-green-600">{formatNumber(dashboardData.totalAppointments)}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Total Appointments</h3>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-3xl font-bold text-purple-600">{formatCurrency(dashboardData.totalRevenue)}</span>
-          </div>
-          <h3 className="text-sm font-medium text-gray-600">Total Revenue</h3>
-        </div>
-      </div>
+      <StatsGrid stats={stats} columns={4} />
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Monthly Activity Chart */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Activity</h3>
+        <ChartCard title="Monthly Activity">
           <div className="h-48 flex items-end justify-between gap-3">
             {dashboardData.monthlyActivity.map((data, index) => {
               const maxValue = Math.max(...dashboardData.monthlyActivity.map(d => d.count), 1);
@@ -245,60 +218,48 @@ const AdminDashboard = () => {
               );
             })}
           </div>
-        </div>
+        </ChartCard>
 
         {/* Recent Consultations */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Appointments</h3>
+        <ListCard
+          title="Recent Appointments"
+          emptyMessage="No recent appointments"
+          emptyIcon={<Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />}
+        >
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {dashboardData.recentConsultations.length > 0 ? (
-              dashboardData.recentConsultations.map((consultation, index) => (
-                <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                      <User className="w-6 h-6 text-blue-600" />
-                    </div>
+            {dashboardData.recentConsultations.map((consultation, index) => (
+              <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <User className="w-6 h-6 text-blue-600" />
                   </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold text-gray-900 truncate">
-                        {consultation.patient?.user?.fullName || 'Patient Name'}
-                      </p>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
-                        consultation.status === 'COMPLETED' ? 'text-green-600 bg-green-50 border-green-200' :
-                        consultation.status === 'CONFIRMED' ? 'text-blue-600 bg-blue-50 border-blue-200' :
-                        consultation.status === 'PENDING' ? 'text-yellow-600 bg-yellow-50 border-yellow-200' :
-                        'text-gray-600 bg-gray-50 border-gray-200'
-                      }`}>
-                        {consultation.status}
-                      </span>
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-semibold text-gray-900 truncate">
+                      {consultation.patient?.user?.fullName || 'Patient Name'}
+                    </p>
+                    <StatusBadge status={consultation.status} size="sm" />
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{new Date(consultation.appointmentDate).toLocaleDateString()}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>{new Date(consultation.appointmentDate).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span>{consultation.type}</span>
-                      </div>
+                    <div className="flex items-center gap-1">
+                      <span>{consultation.type}</span>
                     </div>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No recent appointments</p>
               </div>
-            )}
+            ))}
           </div>
-        </div>
+        </ListCard>
       </div>
 
       {/* System Notifications */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">System Notifications</h3>
+      <ListCard title="System Notifications">
         <div className="space-y-3">
           {[
             { user: 'System Admin', message: 'New hospital registration pending approval', time: '2h ago' },
@@ -322,8 +283,8 @@ const AdminDashboard = () => {
             </div>
           ))}
         </div>
-      </div>
-    </div>
+      </ListCard>
+    </PageContainer>
   );
 };
 

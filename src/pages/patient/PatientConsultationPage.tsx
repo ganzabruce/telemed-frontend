@@ -35,7 +35,30 @@ const ConsultationPage = () => {
 
     const handleReceiveMessage = (newMessage: Message) => {
       if (selectedConversation && newMessage.conversationId === selectedConversation.id) {
-        setMessages((prev) => [...prev, newMessage]);
+        setMessages((prev) => {
+          // Check if this is a message from the current user (optimistic update)
+          const isFromCurrentUser = newMessage.senderId === state.user?.id;
+          
+          if (isFromCurrentUser) {
+            // Replace temp message with real message if it exists
+            const hasTempMessage = prev.some(msg => msg.id.startsWith('temp-') && msg.content === newMessage.content);
+            if (hasTempMessage) {
+              return prev.map(msg => 
+                msg.id.startsWith('temp-') && msg.content === newMessage.content 
+                  ? newMessage 
+                  : msg
+              );
+            }
+          }
+          
+          // Check if message already exists (prevent duplicates)
+          const messageExists = prev.some(msg => msg.id === newMessage.id);
+          if (messageExists) {
+            return prev;
+          }
+          
+          return [...prev, newMessage];
+        });
         scrollToBottom();
       }
       // Update conversation list with new last message
@@ -60,7 +83,7 @@ const ConsultationPage = () => {
       socket.off('receiveChatMessage', handleReceiveMessage);
       socket.off('messageRead', handleMessageRead);
     };
-  }, [socket, selectedConversation]);
+  }, [socket, selectedConversation, state.user?.id]);
 
   // Join conversation room when conversation is selected
   useEffect(() => {
@@ -332,7 +355,7 @@ const ConsultationPage = () => {
                               className="w-12 h-12 rounded-full"
                             />
                           ) : (
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 bg-blue-500  rounded-full flex items-center justify-center flex-shrink-0">
                               <span className="text-white font-semibold text-sm">{doctorInfo.initials}</span>
                             </div>
                           )}
@@ -385,7 +408,7 @@ const ConsultationPage = () => {
                               className="w-10 h-10 rounded-full"
                             />
                           ) : (
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <div className="w-10 h-10 bg-blue-500  rounded-full flex items-center justify-center">
                               <span className="text-white font-semibold text-sm">{doctorInfo.initials}</span>
                             </div>
                           )}
@@ -452,7 +475,7 @@ const ConsultationPage = () => {
                                 }`}
                               >
                                 {!isOwnMessage && (
-                                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <div className="w-8 h-8 bg-blue-500  rounded-full flex items-center justify-center flex-shrink-0">
                                     <span className="text-white font-semibold text-xs">
                                       {getInitials(message.sender.fullName)}
                                     </span>

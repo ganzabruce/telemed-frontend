@@ -232,42 +232,42 @@ const UsersManagement = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
             </div>
-            <Users className="text-blue-600" size={32} />
+            <span className="text-3xl font-bold text-gray-900">{stats.total}</span>
           </div>
+          <h3 className="text-sm font-medium text-gray-600">Total Users</h3>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Verified</p>
-              <p className="text-2xl font-bold text-green-600">{stats.verified}</p>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-white" />
             </div>
-            <CheckCircle className="text-green-600" size={32} />
+            <span className="text-3xl font-bold text-gray-900">{stats.verified}</span>
           </div>
+          <h3 className="text-sm font-medium text-gray-600">Verified</h3>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Doctors</p>
-              <p className="text-2xl font-bold text-green-600">{stats.doctors}</p>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
+              <Stethoscope className="w-6 h-6 text-white" />
             </div>
-            <Stethoscope className="text-green-600" size={32} />
+            <span className="text-3xl font-bold text-gray-900">{stats.doctors}</span>
           </div>
+          <h3 className="text-sm font-medium text-gray-600">Doctors</h3>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Patients</p>
-              <p className="text-2xl font-bold text-gray-600">{stats.patients}</p>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
             </div>
-            <Users className="text-gray-600" size={32} />
+            <span className="text-3xl font-bold text-gray-900">{stats.patients}</span>
           </div>
+          <h3 className="text-sm font-medium text-gray-600">Patients</h3>
         </div>
       </div>
 
