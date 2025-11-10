@@ -14,10 +14,9 @@ import {
   Filter,
   SortAsc,
   ChevronRight,
-  MapPin,
   Heart
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,9 +24,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 
 const API_BASE_URL = 'http://localhost:5003';
@@ -67,7 +63,6 @@ const DoctorPatientsPage: React.FC = () => {
   const [patientAppointments, setPatientAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING'>('ALL');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     fetchPatients();
@@ -421,11 +416,12 @@ const DoctorPatientsPage: React.FC = () => {
       )}
 
       {/* Patient Details Dialog */}
-      <Dialog open={!!selectedPatient} onOpenChange={() => setSelectedPatient(null)} className="bg-transparent shadow-lg shadow-black/20 rounded-lg border border-gray-200 backdrop-blur-sm bg-opacity-50" >
+      <Dialog open={!!selectedPatient} onOpenChange={() => setSelectedPatient(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 bg-white">
           {selectedPatient && (
-            <div>
+            <>
               {/* Dialog Header with gradient */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-6 text-white">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-6 text-white relative">
                 <button
                   onClick={() => setSelectedPatient(null)}
                   className="absolute right-4 top-4 rounded-full p-1 hover:bg-white/20 transition-colors"
@@ -572,7 +568,7 @@ const DoctorPatientsPage: React.FC = () => {
                   )}
                 </div>
               </div>
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>

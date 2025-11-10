@@ -8,7 +8,6 @@ import {
   UserPlus,
   UserCog,
   Calendar,
-  DollarSign,
   ClipboardList,
   Bell,
   ChevronLeft,
@@ -47,6 +46,7 @@ const navigationByRole: Record<string, NavItem[]> = {
   ],
   PATIENT: [
     { name: "Dashboard", href: "/patient-dashboard", icon: LayoutDashboard },
+    { name: "Browse Hospitals", href: "/patient/browse-hospitals", icon: Building2 },
     { name: "My Appointments", href: "/patient/appointments", icon: Calendar },
     { name: "My Consultations", href: "/patient/consultations", icon: Stethoscope },
     { name: "Medical Records", href: "/patient/records", icon: ClipboardList },
@@ -95,7 +95,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 bg-transparent backdrop-blur-xs bg-opacity-50 z-40 md:hidden"
           onClick={onMobileClose}
         />
       )}
