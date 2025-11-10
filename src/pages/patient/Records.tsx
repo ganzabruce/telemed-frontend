@@ -1,5 +1,7 @@
 import  { useState, useEffect } from 'react';
 import { FileText, Calendar, Pill, Download, Eye, AlertCircle, Search } from 'lucide-react';
+import jsPDF from 'jspdf';
+import toast from 'react-hot-toast';
 
 const API_BASE_URL = 'http://localhost:5003';
 
@@ -26,7 +28,7 @@ const RecordsPage = () => {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/appointments?status=COMPLETED`, {
+      const response = await fetch(`${API_BASE_URL}/appointments?status=COMPLETED&orderBy=appointmentDate&order=desc`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -57,6 +59,146 @@ const RecordsPage = () => {
       day: 'numeric',
       year: 'numeric'
     });
+  };
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const downloadPDF = async (record: any) => {
+    try {
+      toast.loading('Generating PDF...', { id: 'pdf-download' });
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      let yPosition = margin;
+
+      // Helper function to add a new page if needed
+      const checkPageBreak = (requiredHeight: number) => {
+        if (yPosition + requiredHeight > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+          return true;
+        }
+        return false;
+      };
+
+      // Title
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Medical Record', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 10;
+
+      // Line separator
+      pdf.setDrawColor(200, 200, 200);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 10;
+
+      // Doctor Information
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Doctor Information', margin, yPosition);
+      yPosition += 8;
+
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Name: Dr. ${record.doctor?.user?.fullName || 'Unknown Doctor'}`, margin, yPosition);
+      yPosition += 6;
+      pdf.text(`Specialization: ${record.doctor?.specialization || 'General Practice'}`, margin, yPosition);
+      yPosition += 6;
+      pdf.text(`Hospital: ${record.hospital?.name || 'Unknown Hospital'}`, margin, yPosition);
+      yPosition += 10;
+
+      // Appointment Details
+      checkPageBreak(25);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Appointment Details', margin, yPosition);
+      yPosition += 8;
+
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Date: ${formatDateTime(record.appointmentDate)}`, margin, yPosition);
+      yPosition += 6;
+      pdf.text(`Type: ${record.type}`, margin, yPosition);
+      yPosition += 6;
+      pdf.text(`Status: ${record.status}`, margin, yPosition);
+      yPosition += 10;
+
+      // Doctor's Notes
+      if (record.consultation?.doctorNotes) {
+        checkPageBreak(30);
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Doctor\'s Notes', margin, yPosition);
+        yPosition += 8;
+
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        const notesLines = pdf.splitTextToSize(record.consultation.doctorNotes, pageWidth - 2 * margin);
+        notesLines.forEach((line: string) => {
+          checkPageBreak(6);
+          pdf.text(line, margin, yPosition);
+          yPosition += 6;
+        });
+        yPosition += 5;
+      }
+
+      // Prescription
+      if (record.consultation?.prescription) {
+        checkPageBreak(30);
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Prescription', margin, yPosition);
+        yPosition += 8;
+
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        const prescriptionLines = pdf.splitTextToSize(record.consultation.prescription, pageWidth - 2 * margin);
+        prescriptionLines.forEach((line: string) => {
+          checkPageBreak(6);
+          pdf.text(line, margin, yPosition);
+          yPosition += 6;
+        });
+        yPosition += 5;
+      }
+
+      // Footer
+      const totalPages = pdf.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setFont('helvetica', 'italic');
+        pdf.text(
+          `Generated on ${new Date().toLocaleDateString()} - Page ${i} of ${totalPages}`,
+          pageWidth / 2,
+          pageHeight - 10,
+          { align: 'center' }
+        );
+      }
+
+      // Generate filename
+      const doctorName = record.doctor?.user?.fullName?.replace(/\s+/g, '_') || 'Unknown';
+      const dateStr = new Date(record.appointmentDate).toISOString().split('T')[0];
+      const filename = `Medical_Record_${doctorName}_${dateStr}.pdf`;
+
+      // Save PDF
+      pdf.save(filename);
+      
+      toast.success('PDF downloaded successfully!', { id: 'pdf-download' });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF. Please try again.', { id: 'pdf-download' });
+    }
   };
 
   const filteredRecords = consultations.filter(record => {
@@ -170,10 +312,10 @@ const RecordsPage = () => {
             </div>
           ))
         )}
-      </div>
+      </div>  
 
       {selectedRecord && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedRecord(null)}>
+        <div className="fixed inset-0 bg-transparent shadow-lg shadow-black/20 rounded-lg border border-gray-200 backdrop-blur-sm bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedRecord(null)}>
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
               <div className="flex items-center justify-between">
@@ -247,7 +389,10 @@ const RecordsPage = () => {
               )}
 
               <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => downloadPDF(selectedRecord)}
+                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
+                >
                   <Download className="w-4 h-4" />
                   Download PDF
                 </button>

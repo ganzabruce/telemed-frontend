@@ -34,9 +34,12 @@ export interface Notification {
   createdAt: string;
 }
 
-export const getNotifications = async (): Promise<Notification[]> => {
+export const getNotifications = async (limit?: number): Promise<Notification[]> => {
+  // Note: limit parameter is for backward compatibility but backend returns all notifications
   const response = await api.get("/notifications");
-  return response.data.data || [];
+  const notifications = response.data.data || [];
+  // If limit is specified, return only that many (client-side filtering for dropdown)
+  return limit ? notifications.slice(0, limit) : notifications;
 };
 
 export const markNotificationAsRead = async (notificationId: string): Promise<Notification> => {

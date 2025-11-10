@@ -77,7 +77,7 @@ const DoctorDashboard = () => {
 
       // Fetch appointments and doctors data
       const [appointmentsResponse, doctorsResponse] = await Promise.all([
-        axios.get(`${API_BASE_URL}/appointments`, { headers }),
+        axios.get(`${API_BASE_URL}/appointments?orderBy=appointmentDate&order=desc`, { headers }),
         axios.get(`${API_BASE_URL}/doctors`, { headers })
       ]);
 

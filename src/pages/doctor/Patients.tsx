@@ -92,7 +92,7 @@ const DoctorPatientsPage: React.FC = () => {
       setError(null);
       const token = JSON.parse(localStorage.getItem('user') || '{}').token;
       
-      const response = await fetch(`${API_BASE_URL}/appointments`, {
+      const response = await fetch(`${API_BASE_URL}/appointments?orderBy=appointmentDate&order=desc`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -125,7 +125,7 @@ const DoctorPatientsPage: React.FC = () => {
       const token = JSON.parse(localStorage.getItem('user') || '{}').token;
       
       const response = await fetch(
-        `${API_BASE_URL}/appointments?patientId=${patientId}`,
+        `${API_BASE_URL}/appointments?patientId=${patientId}&orderBy=appointmentDate&order=desc`,
         {
           headers: { 
             'Authorization': `Bearer ${token}`,
@@ -421,8 +421,7 @@ const DoctorPatientsPage: React.FC = () => {
       )}
 
       {/* Patient Details Dialog */}
-      <Dialog open={!!selectedPatient} onOpenChange={() => setSelectedPatient(null)} >
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 bg-white">
+      <Dialog open={!!selectedPatient} onOpenChange={() => setSelectedPatient(null)} className="bg-transparent shadow-lg shadow-black/20 rounded-lg border border-gray-200 backdrop-blur-sm bg-opacity-50" >
           {selectedPatient && (
             <div>
               {/* Dialog Header with gradient */}

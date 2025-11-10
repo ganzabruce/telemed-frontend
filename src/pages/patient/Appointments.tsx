@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, Video, Phone, MessageSquare, Search, Plus, AlertCircle, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { getOrCreateConversation } from '../../api/chatApi';
+import toast from 'react-hot-toast';
 
 const API_BASE_URL = 'http://localhost:5003';
 const APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
@@ -166,6 +169,7 @@ const BookingModal = ({ isOpen, onClose, onAppointmentBooked }) => {
 };
 
 const AppointmentsPage = () => {
+  const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -191,7 +195,7 @@ const AppointmentsPage = () => {
         return;
       }
       
-      const response = await fetch(`${API_BASE_URL}/appointments`, {
+      const response = await fetch(`${API_BASE_URL}/appointments?orderBy=appointmentDate&order=desc`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
         }
@@ -351,6 +355,28 @@ const AppointmentsPage = () => {
                   <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
                     {appointment.status}
                   </span>
+                  {appointment.status === 'CONFIRMED' && appointment.type === 'CHAT' && (
+                    <button 
+                      onClick={async () => {
+                        try {
+                          if (appointment.doctor?.user?.id) {
+                            await getOrCreateConversation(appointment.doctor.user.id);
+                            navigate('/patient/consultations');
+                            toast.success('Opening chat with doctor...');
+                          } else {
+                            toast.error('Doctor information not available');
+                          }
+                        } catch (err) {
+                          toast.error('Failed to open chat. Please try again.');
+                          console.error('Error opening chat:', err);
+                        }
+                      }}
+                      className="px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors font-medium text-sm flex items-center gap-2"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      Open Chat
+                    </button>
+                  )}
                   <button onClick={() => setSelectedAppointment(appointment)} className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium text-sm">
                     View Details
                   </button>
@@ -394,6 +420,25 @@ const AppointmentsPage = () => {
               </div>
             </div>
             <div className="flex justify-end gap-3 p-6 bg-gray-50 rounded-b-xl">
+              {selectedAppointment.status === 'CONFIRMED' && selectedAppointment.type === 'CHAT' && selectedAppointment.doctor?.user?.id && (
+                <button 
+                  onClick={async () => {
+                    try {
+                      await getOrCreateConversation(selectedAppointment.doctor.user.id);
+                      setSelectedAppointment(null);
+                      navigate('/patient/consultations');
+                      toast.success('Opening chat with doctor...');
+                    } catch (err) {
+                      toast.error('Failed to open chat. Please try again.');
+                      console.error('Error opening chat:', err);
+                    }
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors font-medium flex items-center gap-2"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Open Chat
+                </button>
+              )}
               <button onClick={() => setSelectedAppointment(null)} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium">Close</button>
             </div>
           </div>

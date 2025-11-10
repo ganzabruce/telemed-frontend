@@ -82,7 +82,7 @@ const HospitalAdminDashboard = () => {
       ] = await Promise.all([
         fetch(`${API_BASE_URL}/hospitals`, { headers }),
         fetch(`${API_BASE_URL}/doctors`, { headers }),
-        fetch(`${API_BASE_URL}/appointments`, { headers }),
+        fetch(`${API_BASE_URL}/appointments?orderBy=appointmentDate&order=desc`, { headers }),
         fetch(`${API_BASE_URL}/payments`, { headers })
       ]);
 

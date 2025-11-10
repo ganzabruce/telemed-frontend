@@ -1,5 +1,5 @@
 // src/App.tsx
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router-dom"
 import { AuthProvider, useAuth } from "./context/AuthContext"
 import { SocketProvider } from "./context/SocketContext"
 import LoginPage from "./pages/auth/LoginPage"
@@ -13,6 +13,8 @@ import ProfilePage from "./pages/shared/ProfilePage"
 import CompleteProfilePage from "./pages/auth/CompleteProfile"
 import RegisterPage from "./pages/auth/RegisterPage"
 import NotificationsPage from "./pages/user/NotificationsPage"
+import DashboardLayout from "./components/layout/DashboardLayout"
+import ProtectedRoute from "./routes/ProtectedRoute"
 
 // Separate component that uses useAuth
 const AppRoutes = () => {
@@ -44,10 +46,6 @@ const AppRoutes = () => {
         element={<ProfilePage />}
       />
       <Route
-        path="/notifications"
-        element={<NotificationsPage />}
-      />
-      <Route
         path="/login"
         element={
           state.user ? (
@@ -57,6 +55,13 @@ const AppRoutes = () => {
           )
         }
       />
+
+      {/* Shared Routes - Accessible to all authenticated users */}
+      <Route element={<ProtectedRoute><Outlet /></ProtectedRoute>}>
+        <Route element={<DashboardLayout />}>
+          <Route path="/notifications" element={<NotificationsPage />} />
+        </Route>
+      </Route>
 
       {/* Role-based Routes */}
       {AdminRoutes}

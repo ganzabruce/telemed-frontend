@@ -66,10 +66,6 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
     }
   }, [searchQuery, users]);
 
-  // Debug: Log when selectedUserId changes
-  useEffect(() => {
-    console.log('selectedUserId changed:', selectedUserId);
-  }, [selectedUserId]);
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -80,57 +76,49 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
         throw new Error('Authentication required');
       }
 
-      const API_BASE_URL = 'http://localhost:5003';
-      let endpoint = '';
-
-      if (userRole === 'PATIENT') {
-        // Fetch doctors for patients
-        endpoint = `${API_BASE_URL}/doctors`;
-      } else if (userRole === 'DOCTOR') {
-        // Fetch patients for doctors
-        // We'll need to get patients from appointments or a patients endpoint
-        // Increase limit to get more appointments (and thus more unique patients)
-        endpoint = `${API_BASE_URL}/appointments?limit=100`;
-      }
-
-      const response = await fetch(endpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-
-      const data = await response.json();
       let userList: UserOption[] = [];
 
       if (userRole === 'PATIENT') {
-        // Extract doctors from response
-        userList = (data.data || [])
-          .filter((doctor: any) => doctor.user?.id) // Only include doctors with valid user IDs
-          .map((doctor: any) => ({
-            id: doctor.user.id, // Use user.id directly since we filtered
-            fullName: doctor.user.fullName || 'Unknown Doctor',
-            email: doctor.user.email || '',
-            avatarUrl: doctor.user.avatarUrl,
-            specialization: doctor.specialization,
-            hospital: doctor.hospital?.name,
-          }));
+        // Fetch doctors for patients using the doctorsApi
+        try {
+          const { getDoctors } = await import('../../api/doctorsApi');
+          const doctors = await getDoctors();
+          
+          // Extract doctors from response - ensure we only include doctors with valid user data
+          userList = doctors
+            .filter((doctor) => doctor.user?.id) // Only include doctors with valid user IDs
+            .map((doctor) => ({
+              id: doctor.user!.id,
+              fullName: doctor.user!.fullName || 'Unknown Doctor',
+              email: doctor.user!.email || '',
+              avatarUrl: doctor.user!.avatarUrl || null,
+              specialization: doctor.specialization,
+              hospital: doctor.hospital?.name,
+            }));
+        } catch (apiError: any) {
+          const errorMessage = apiError?.response?.data?.message || apiError?.message || 'Failed to fetch doctors';
+          throw new Error(errorMessage);
+        }
       } else if (userRole === 'DOCTOR') {
+        // Fetch patients for doctors from appointments
+        const API_BASE_URL = 'http://localhost:5003';
+        const response = await fetch(`${API_BASE_URL}/appointments?limit=100`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch appointments');
+        }
+
+        const data = await response.json();
         // Extract unique patients from appointments
         const appointments = data.data || [];
         const patientMap = new Map<string, UserOption>();
 
-        console.log('Appointments data:', appointments);
-        
         appointments.forEach((appt: any) => {
-          console.log('Processing appointment:', appt);
-          console.log('Patient data:', appt.patient);
-          console.log('Patient user data:', appt.patient?.user);
-          
           if (appt.patient?.user?.id) {
             const userId = appt.patient.user.id;
             if (!patientMap.has(userId)) {
@@ -141,18 +129,12 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
                 avatarUrl: appt.patient.user.avatarUrl,
               });
             }
-          } else {
-            console.warn('Appointment missing patient.user.id:', appt);
           }
         });
 
         userList = Array.from(patientMap.values());
-        console.log('Extracted patient list:', userList);
       }
       
-      console.log('Fetched users:', userList);
-      console.log('Selected user ID:', selectedUserId);
-
       setUsers(userList);
       setFilteredUsers(userList);
       
@@ -203,7 +185,7 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent backdrop-blur-sm bg-opacity-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -257,9 +239,14 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
             ) : filteredUsers.length === 0 ? (
               <div className="text-center py-12">
                 <User className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500">
+                <p className="text-gray-500 mb-2">
                   {searchQuery ? 'No users found matching your search' : `No ${userRole === 'PATIENT' ? 'doctors' : 'patients'} available`}
                 </p>
+                {userRole === 'PATIENT' && !searchQuery && (
+                  <p className="text-xs text-gray-400">
+                    Doctors will appear here once they are registered in the system.
+                  </p>
+                )}
               </div>
             ) : (
               <div className="space-y-2">
@@ -272,9 +259,7 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      console.log('Selecting user:', user.id, user.fullName);
                       setSelectedUserId(user.id);
-                      console.log('Selected user ID set to:', user.id);
                     }}
                     className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
                       isSelected
