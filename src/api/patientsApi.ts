@@ -59,18 +59,32 @@ export const getAppointments = async (
 /**
  * Fetches a list of all doctors.
  */
-export const getDoctors = async (): Promise<ApiDoctor[]> => {
-  const response = await api.get("/doctors")
-  return response.data.data
-}
+export const getDoctors = async (hospitalId?: string, specialization?: string, includeAvailability: boolean = false): Promise<ApiDoctor[]> => {
+  const params: any = {};
+  if (hospitalId) {
+    params.hospitalId = hospitalId;
+  }
+  if (specialization) {
+    params.specialization = specialization;
+  }
+  if (includeAvailability) {
+    params.includeAvailability = 'true';
+  }
+  const response = await api.get("/doctors", { params });
+  return response.data.data;
+};
 
 /**
  * Fetches a list of all hospitals.
  */
-export const getHospitals = async (): Promise<ApiHospital[]> => {
-  const response = await api.get("/hospitals")
-  return response.data.data
-}
+export const getHospitals = async (includeDoctors: boolean = false): Promise<ApiHospital[]> => {
+  const params: any = {};
+  if (includeDoctors) {
+    params.includeDoctors = 'true';
+  }
+  const response = await api.get("/hospitals", { params });
+  return response.data.data;
+};
 
 /**
  * Books a new appointment for the current patient.

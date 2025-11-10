@@ -6,19 +6,46 @@ export interface ApiUser {
   avatarUrl?: string
 }
 
+// Availability slot
+export interface ApiAvailabilitySlot {
+  id: string
+  dayOfWeek: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'
+  startTime: string
+  endTime: string
+  isActive: boolean
+}
+
 // Doctor details
 export interface ApiDoctor {
   id: string
   specialization: string
   consultationFee: number
-  user: ApiUser
+  user: ApiUser & {
+    id?: string
+    email?: string
+    phone?: string
+  }
   hospitalId: string
+  hospital?: {
+    id: string
+    name: string
+  }
+  availabilitySlots?: ApiAvailabilitySlot[]
+  status?: string
 }
 
 // Hospital details
 export interface ApiHospital {
   id: string
   name: string
+  address?: string
+  contactEmail?: string
+  contactPhone?: string
+  licenseNumber?: string
+  doctors?: ApiDoctor[]
+  admin?: {
+    fullName: string
+  }
 }
 
 // Consultation details (for Medical Records)

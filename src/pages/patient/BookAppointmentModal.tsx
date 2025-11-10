@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useAuth } from "@/context/AuthContext"
-import { ApiDoctor, ApiHospital, ApiAppointment } from "@/types/api"
+import type { ApiDoctor, ApiHospital, ApiAppointment } from "@/types/api"
+
 import { bookAppointment, getDoctors, getHospitals, initiatePayment } from "@/api/patientsApi"
 import { toast } from "react-hot-toast"
 import { InitiatePaymentModal } from "./InitiatePaymentModal"
@@ -29,20 +30,24 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   onAppointmentBooked: () => void
+  preselectedDoctorId?: string
+  preselectedHospitalId?: string
 }
 
 export const BookAppointmentModal: React.FC<Props> = ({
   isOpen,
   onClose,
   onAppointmentBooked,
+  preselectedDoctorId,
+  preselectedHospitalId,
 }) => {
   const { state } = useAuth()
   const [hospitals, setHospitals] = useState<ApiHospital[]>([])
   const [doctors, setDoctors] = useState<ApiDoctor[]>([])
   const [filteredDoctors, setFilteredDoctors] = useState<ApiDoctor[]>([])
 
-  const [selectedHospital, setSelectedHospital] = useState("")
-  const [selectedDoctor, setSelectedDoctor] = useState("")
+  const [selectedHospital, setSelectedHospital] = useState(preselectedHospitalId || "")
+  const [selectedDoctor, setSelectedDoctor] = useState(preselectedDoctorId || "")
   const [appointmentDate, setAppointmentDate] = useState("")
   const [appointmentType, setAppointmentType] = useState<
     "VIDEO" | "AUDIO" | "CHAT"
@@ -62,11 +67,27 @@ export const BookAppointmentModal: React.FC<Props> = ({
           setIsLoading(true)
           const [hospitalsData, doctorsData] = await Promise.all([
             getHospitals(),
-            getDoctors(),
+            getDoctors(undefined, undefined, true), // Include availability
           ])
           setHospitals(hospitalsData)
           setDoctors(doctorsData)
-          setFilteredDoctors(doctorsData) // Show all doctors initially
+          
+          // If preselected values are provided, set them
+          if (preselectedHospitalId) {
+            setSelectedHospital(preselectedHospitalId)
+            setFilteredDoctors(doctorsData.filter((doc) => doc.hospitalId === preselectedHospitalId))
+          } else {
+            setFilteredDoctors(doctorsData)
+          }
+          
+          if (preselectedDoctorId) {
+            setSelectedDoctor(preselectedDoctorId)
+            const doctor = doctorsData.find((doc) => doc.id === preselectedDoctorId)
+            if (doctor) {
+              setSelectedDoctorData(doctor)
+            }
+          }
+          
           setError(null)
         } catch (err) {
           setError("Failed to load booking data. Please try again.")
@@ -75,8 +96,18 @@ export const BookAppointmentModal: React.FC<Props> = ({
         }
       }
       fetchData()
+    } else {
+      // Reset form when modal closes
+      setSelectedHospital(preselectedHospitalId || "")
+      setSelectedDoctor(preselectedDoctorId || "")
+      setAppointmentDate("")
+      setAppointmentType("VIDEO")
+      setError(null)
+      setBookedAppointment(null)
+      setShowPaymentModal(false)
+      setSelectedDoctorData(null)
     }
-  }, [isOpen])
+  }, [isOpen, preselectedDoctorId, preselectedHospitalId])
 
   // Filter doctors when hospital changes
   useEffect(() => {

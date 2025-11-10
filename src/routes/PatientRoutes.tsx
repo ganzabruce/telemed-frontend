@@ -7,12 +7,14 @@ import PatientDashboard from "../pages/patient/PatientDashboard"
 import AppointmentsPage from "../pages/patient/Appointments"
 import RecordsPage from "../pages/patient/Records"
 import PatientConsultationPage from "@/pages/patient/PatientConsultationPage"
+import BrowseHospitalsPage from "../pages/patient/BrowseHospitals"
 
 
 const PatientRoutes = (
   <Route element={<ProtectedRoute allowedRoles={["PATIENT"]}><Outlet /></ProtectedRoute>}>
     <Route element={<DashboardLayout />}>
       <Route path="/patient-dashboard" element={<PatientDashboard />} />
+      <Route path="/patient/browse-hospitals" element={<BrowseHospitalsPage />} />
       <Route path="/patient/appointments" element={<AppointmentsPage />} />
       <Route path="/patient/consultations" element={<PatientConsultationPage />} />
       <Route path="/patient/records" element={<RecordsPage />} />
