@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-
 import { AuthProvider, useAuth } from "./context/AuthContext"
 import { SocketProvider } from "./context/SocketContext"
 import LoginPage from "./pages/auth/LoginPage"
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage"
 import Loading from "./components/common/Loading"
 import AdminRoutes from "./routes/AdminRoutes"
 import HospitalAdminRoutes from "./routes/HospitalAdminRoutes"
@@ -13,6 +14,7 @@ import ProfilePage from "./pages/shared/ProfilePage"
 import CompleteProfilePage from "./pages/auth/CompleteProfile"
 import RegisterPage from "./pages/auth/RegisterPage"
 import NotificationsPage from "./pages/user/NotificationsPage"
+import SettingsPage from "./pages/user/SettingsPage"
 import DashboardLayout from "./components/layout/DashboardLayout"
 import ProtectedRoute from "./routes/ProtectedRoute"
 
@@ -55,11 +57,22 @@ const AppRoutes = () => {
           )
         }
       />
+      <Route
+        path="/forgot-password"
+        element={
+          state.user ? (
+            <Navigate to={`/${state.user.role.toLowerCase().replace('_', '-')}-dashboard`} replace />
+          ) : (
+            <ForgotPasswordPage />
+          )
+        }
+      />
 
       {/* Shared Routes - Accessible to all authenticated users */}
       <Route element={<ProtectedRoute><Outlet /></ProtectedRoute>}>
         <Route element={<DashboardLayout />}>
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>
 

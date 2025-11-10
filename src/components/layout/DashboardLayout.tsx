@@ -333,6 +333,18 @@ const DashboardLayout: React.FC = () => {
                             Profile
                           </button>
                         </div>
+                        <div className="py-1">
+                          <button 
+                            onClick={() => {
+                              setIsProfileOpen(false)
+                              navigate("/settings")
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                          >
+                            <Settings className="w-4 h-4" />
+                            Settings
+                          </button>
+                        </div>
 
                         <hr className="my-1 border-gray-200" />
                         
