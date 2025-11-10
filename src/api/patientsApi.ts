@@ -11,7 +11,7 @@ import {
 
 // Create an Axios instance
 const api = axios.create({
-  baseURL: "http://localhost/5003", // From your swagger.json
+  baseURL: "http://localhost:5003",
 })
 
 // Function to get the auth token

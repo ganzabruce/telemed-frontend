@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Pill, FileText, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { recordConsultation } from '../../api/consultationsApi';
 
 interface PrescriptionFormProps {
   isOpen: boolean;
@@ -23,19 +24,20 @@ const PrescriptionForm: React.FC<PrescriptionFormProps> = ({
   const [prescription, setPrescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const getAuthToken = () => {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      const user = JSON.parse(stored);
-      return user?.token;
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setDoctorNotes('');
+      setPrescription('');
+      setIsSubmitting(false);
     }
-    return null;
-  };
+  }, [isOpen, appointmentId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!doctorNotes.trim() || doctorNotes.trim().length < 10) {
+    const trimmedNotes = doctorNotes.trim();
+    if (!trimmedNotes || trimmedNotes.length < 10) {
       toast.error('Doctor notes must be at least 10 characters long');
       return;
     }
@@ -43,25 +45,12 @@ const PrescriptionForm: React.FC<PrescriptionFormProps> = ({
     setIsSubmitting(true);
     
     try {
-      const token = getAuthToken();
-      const response = await fetch('http://localhost:5003/consultations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          appointmentId,
-          doctorNotes: doctorNotes.trim(),
-          prescription: prescription.trim() || undefined,
-          consultationType: appointmentType,
-        }),
+      await recordConsultation({
+        appointmentId,
+        doctorNotes: trimmedNotes,
+        prescription: prescription.trim() || undefined,
+        consultationType: appointmentType,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to save consultation');
-      }
 
       toast.success('Consultation and prescription saved successfully!');
       setDoctorNotes('');
@@ -70,8 +59,8 @@ const PrescriptionForm: React.FC<PrescriptionFormProps> = ({
       if (onSuccess) {
         onSuccess();
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save consultation';
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save consultation';
       toast.error(errorMessage);
       console.error('Error saving consultation:', error);
     } finally {
@@ -112,8 +101,17 @@ const PrescriptionForm: React.FC<PrescriptionFormProps> = ({
               required
               minLength={10}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Minimum 10 characters. {doctorNotes.length}/10
+            <p className={`text-xs mt-1 ${
+              doctorNotes.trim().length >= 10 
+                ? 'text-green-600' 
+                : doctorNotes.trim().length > 0 
+                  ? 'text-orange-600' 
+                  : 'text-gray-500'
+            }`}>
+              Minimum 10 characters required. {doctorNotes.trim().length}/10
+              {doctorNotes.trim().length > 0 && doctorNotes.trim().length < 10 && (
+                <span className="ml-1">({10 - doctorNotes.trim().length} more needed)</span>
+              )}
             </p>
           </div>
 
@@ -134,32 +132,53 @@ const PrescriptionForm: React.FC<PrescriptionFormProps> = ({
             </p>
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || !doctorNotes.trim() || doctorNotes.trim().length < 10}
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Save Consultation
-                </>
-              )}
-            </button>
+          <div className="pt-4 border-t border-gray-200 space-y-3">
+            {/* Helper message when button is disabled */}
+            {(!doctorNotes.trim() || doctorNotes.trim().length < 10) && !isSubmitting && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>Note:</strong> Please enter at least 10 characters in the doctor's notes field to enable the save button.
+                  {doctorNotes.trim().length > 0 && doctorNotes.trim().length < 10 && (
+                    <span className="block mt-1">You need {10 - doctorNotes.trim().length} more character{10 - doctorNotes.trim().length !== 1 ? 's' : ''}.</span>
+                  )}
+                </p>
+              </div>
+            )}
+            
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                disabled={isSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || !doctorNotes.trim() || doctorNotes.trim().length < 10}
+                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:hover:bg-gray-400"
+                title={
+                  !doctorNotes.trim() 
+                    ? 'Please enter doctor notes (minimum 10 characters)' 
+                    : doctorNotes.trim().length < 10 
+                      ? `Please enter at least ${10 - doctorNotes.trim().length} more characters`
+                      : 'Save consultation'
+                }
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save Consultation
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

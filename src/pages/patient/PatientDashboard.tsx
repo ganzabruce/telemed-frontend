@@ -81,7 +81,7 @@ const PatientDashboard = () => {
 
       // Fetch appointments and payments
       const [appointmentsResponse, paymentsResponse, doctorsResponse, hospitalsResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/appointments`, { headers }),
+        fetch(`${API_BASE_URL}/appointments?orderBy=appointmentDate&order=desc`, { headers }),
         fetch(`${API_BASE_URL}/payments`, { headers }),
         fetch(`${API_BASE_URL}/doctors`, { headers }),
         fetch(`${API_BASE_URL}/hospitals`, { headers })

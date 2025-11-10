@@ -20,14 +20,51 @@ const DoctorConsultationsPage = () => {
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingMoreMessages, setIsLoadingMoreMessages] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [appointmentIdForCall, setAppointmentIdForCall] = useState<string | null>(null);
   const [showStartConversationModal, setShowStartConversationModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Pagination states
+  const [conversationsPage, setConversationsPage] = useState(1);
+  const [conversationsTotal, setConversationsTotal] = useState(0);
+  const [conversationsLimit] = useState(20);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [messagesOffset, setMessagesOffset] = useState(0);
+  const messagesLimit = 50;
+
+  const fetchConversations = async (showLoading: boolean = true, page: number = 1, append: boolean = false) => {
+    try {
+      if (showLoading) {
+        setIsLoading(true);
+      }
+      const offset = (page - 1) * conversationsLimit;
+      const result = await listConversations(conversationsLimit, offset);
+      
+      if (append) {
+        setConversations(prev => [...prev, ...result.data]);
+      } else {
+        setConversations(result.data);
+        if (result.data.length > 0 && !selectedConversation) {
+          setSelectedConversation(result.data[0]);
+        }
+      }
+      setConversationsTotal(result.total);
+      setConversationsPage(page);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    } finally {
+      if (showLoading) {
+        setIsLoading(false);
+      }
+    }
+  };
 
   // Fetch conversations on mount
   useEffect(() => {
-    fetchConversations();
+    fetchConversations(true, 1, false); // Show loading on initial load
   }, []);
 
   // Handle socket events
@@ -62,13 +99,24 @@ const DoctorConsultationsPage = () => {
         });
         scrollToBottom();
       }
-      // Update conversation list with new last message
+      // Update conversation list with new last message and increment unread count
       setConversations((prev) =>
-        prev.map((conv) =>
-          conv.id === newMessage.conversationId
-            ? { ...conv, lastMessageAt: newMessage.createdAt }
-            : conv
-        )
+        prev.map((conv) => {
+          if (conv.id === newMessage.conversationId) {
+            // If message is from other user and conversation is not currently selected, increment unread count
+            const isFromOtherUser = newMessage.senderId !== state.user?.id;
+            const isNotSelected = selectedConversation?.id !== conv.id;
+            
+            return {
+              ...conv,
+              lastMessageAt: newMessage.createdAt,
+              unreadCount: isFromOtherUser && isNotSelected 
+                ? (conv.unreadCount || 0) + 1 
+                : conv.unreadCount || 0,
+            };
+          }
+          return conv;
+        })
       );
     };
 
@@ -125,7 +173,7 @@ const DoctorConsultationsPage = () => {
   useEffect(() => {
     if (selectedConversation) {
       joinConversation(selectedConversation.id);
-      fetchMessages(selectedConversation.id);
+      fetchMessages(selectedConversation.id, false);
     }
 
     return () => {
@@ -135,39 +183,114 @@ const DoctorConsultationsPage = () => {
     };
   }, [selectedConversation?.id]);
 
-  const fetchConversations = async () => {
-    try {
-      setIsLoading(true);
-      const data = await listConversations();
-      setConversations(data);
-      if (data.length > 0 && !selectedConversation) {
-        setSelectedConversation(data[0]);
-      }
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Refresh conversations periodically to update unread counts
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchConversations(false, conversationsPage, false); // Don't show loading on refresh
+    }, 30000); // Refresh every 30 seconds
 
-  const fetchMessages = async (conversationId: string) => {
+    // Also refresh when window gains focus
+    const handleFocus = () => {
+      fetchConversations(false, conversationsPage, false); // Don't show loading on focus
+    };
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [conversationsPage]);
+
+  const fetchMessages = async (conversationId: string, loadMore: boolean = false) => {
     try {
-      setIsLoadingMessages(true);
-      const data = await getConversationMessages(conversationId);
-      setMessages(data);
-      scrollToBottom();
+      if (loadMore) {
+        setIsLoadingMoreMessages(true);
+      } else {
+        setIsLoadingMessages(true);
+        setMessagesOffset(0);
+        setHasMoreMessages(false);
+      }
       
-      // Mark messages as read
-      if (data.length > 0) {
+      // Messages are ordered by createdAt ASC (oldest first)
+      // When loading more, we need to load older messages (increase offset)
+      const offset = loadMore ? messagesOffset + messagesLimit : 0;
+      const data = await getConversationMessages(conversationId, messagesLimit, offset);
+      
+      if (loadMore) {
+        // Prepend older messages to the beginning (maintain scroll position)
+        const previousScrollHeight = messagesContainerRef.current?.scrollHeight || 0;
+        // Don't reverse - data is already in ascending order (oldest first)
+        setMessages(prev => [...data, ...prev]);
+        setMessagesOffset(offset);
+        setHasMoreMessages(data.length === messagesLimit);
+        
+        // Restore scroll position after prepending
+        setTimeout(() => {
+          if (messagesContainerRef.current) {
+            const newScrollHeight = messagesContainerRef.current.scrollHeight;
+            messagesContainerRef.current.scrollTop = newScrollHeight - previousScrollHeight;
+          }
+        }, 0);
+      } else {
+        setMessages(data);
+        setMessagesOffset(0);
+        setHasMoreMessages(data.length === messagesLimit);
+        scrollToBottom();
+      }
+      
+      // Mark messages as read (only if there are unread messages from the other party)
+      if (data.length > 0 && !loadMore) {
         const lastMessage = data[data.length - 1];
-        if (lastMessage.senderId !== state.user?.id) {
-          await markMessagesAsRead(conversationId, lastMessage.id);
+        const hasUnreadMessages = data.some(msg => msg.senderId !== state.user?.id);
+        
+        if (hasUnreadMessages && lastMessage.senderId !== state.user?.id) {
+          try {
+            await markMessagesAsRead(conversationId, lastMessage.id);
+          } catch (error) {
+            console.error('Error marking messages as read:', error);
+          }
         }
+        
+        // Reset unread count for this conversation when messages are loaded
+        setConversations((prev) =>
+          prev.map((conv) =>
+            conv.id === conversationId
+              ? { ...conv, unreadCount: 0 }
+              : conv
+          )
+        );
+      } else if (!loadMore) {
+        // No messages, ensure unread count is 0
+        setConversations((prev) =>
+          prev.map((conv) =>
+            conv.id === conversationId
+              ? { ...conv, unreadCount: 0 }
+              : conv
+          )
+        );
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
       setIsLoadingMessages(false);
+      setIsLoadingMoreMessages(false);
+    }
+  };
+  
+  const loadMoreMessages = () => {
+    if (selectedConversation && hasMoreMessages && !isLoadingMoreMessages) {
+      fetchMessages(selectedConversation.id, true);
+    }
+  };
+  
+  const handleConversationsScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 100;
+    const hasMoreConversations = conversations.length < conversationsTotal;
+    
+    if (isNearBottom && hasMoreConversations && !isLoading) {
+      const nextPage = conversationsPage + 1;
+      fetchConversations(false, nextPage, true);
     }
   };
 
@@ -346,7 +469,7 @@ const DoctorConsultationsPage = () => {
         isOpen={showStartConversationModal}
         onClose={() => {
           setShowStartConversationModal(false);
-          fetchConversations(); // Refresh conversations after starting a new one
+          fetchConversations(false, 1, false); // Refresh conversations after starting a new one
         }}
         userRole="DOCTOR"
       />
@@ -386,7 +509,10 @@ const DoctorConsultationsPage = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div 
+              className="flex-1 overflow-y-auto"
+              onScroll={handleConversationsScroll}
+            >
               {filteredConversations.length > 0 ? (
                 filteredConversations.map((conv) => {
                   const patientInfo = getPatientInfo(conv);
@@ -420,11 +546,20 @@ const DoctorConsultationsPage = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between mb-1">
                             <h3 className="font-semibold text-gray-900 text-sm truncate">{patientInfo.name}</h3>
-                            <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-                              {formatConversationTime(conv.lastMessageAt)}
-                            </span>
+                            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                              {(conv.unreadCount ?? 0) > 0 && (
+                                <span className="px-2 py-0.5 bg-blue-600 text-white text-xs font-bold rounded-full min-w-[20px] text-center">
+                                  {conv.unreadCount! > 99 ? '99+' : conv.unreadCount}
+                                </span>
+                              )}
+                              <span className="text-xs text-gray-500">
+                                {formatConversationTime(conv.lastMessageAt)}
+                              </span>
+                            </div>
                           </div>
-                          <p className="text-sm text-gray-600 truncate">{getLastMessage(conv)}</p>
+                          <p className={`text-sm truncate ${(conv.unreadCount ?? 0) > 0 ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>
+                            {getLastMessage(conv)}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -437,6 +572,11 @@ const DoctorConsultationsPage = () => {
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">No patients found</h3>
                   <p className="text-sm text-gray-500">Try adjusting your search</p>
+                </div>
+              )}
+              {isLoading && conversations.length > 0 && (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                 </div>
               )}
             </div>
@@ -496,13 +636,34 @@ const DoctorConsultationsPage = () => {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div 
+                  className="flex-1 overflow-y-auto p-4 space-y-4"
+                  ref={messagesContainerRef}
+                >
                   {isLoadingMessages ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     </div>
                   ) : (
                     <>
+                      {hasMoreMessages && (
+                        <div className="flex justify-center py-2">
+                          <button
+                            onClick={loadMoreMessages}
+                            disabled={isLoadingMoreMessages}
+                            className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isLoadingMoreMessages ? (
+                              <span className="flex items-center gap-2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                Loading...
+                              </span>
+                            ) : (
+                              'Load older messages'
+                            )}
+                          </button>
+                        </div>
+                      )}
                       {messages.map((message, index) => {
                         const isOwnMessage = message.senderId === state.user?.id;
                         const showDate =

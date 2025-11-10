@@ -62,7 +62,7 @@ const AdminDashboard = () => {
       const reportData = await reportResponse.json();
 
       // Fetch all appointments for monthly activity
-      const appointmentsResponse = await fetch(`${API_BASE_URL}/appointments`, { headers });
+      const appointmentsResponse = await fetch(`${API_BASE_URL}/appointments?orderBy=appointmentDate&order=desc`, { headers });
       const appointmentsData = await appointmentsResponse.json();
 
       // Fetch all consultations

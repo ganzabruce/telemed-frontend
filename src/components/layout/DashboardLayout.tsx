@@ -2,18 +2,21 @@
 import React from "react"
 import Sidebar from "./Sidebar"
 import { Outlet, useNavigate } from "react-router-dom"
-import { Bell, Search, User, Settings, LogOut, Menu } from "lucide-react"
+import { Bell, Search, User, Settings, LogOut, Menu, Info, AlertTriangle, XCircle, CheckCircle, ArrowRight, Clock } from "lucide-react"
 import { useAuth } from "../../context/AuthContext"
 import { useSocket } from "../../context/SocketContext"
-import { getNotifications, type Notification } from "../../api/notificationsApi"
+import { getNotifications, markNotificationAsRead, type Notification } from "../../api/notificationsApi"
 
 const DashboardLayout: React.FC = () => {
   const { state, dispatch } = useAuth()
   const { socket } = useSocket()
   const navigate = useNavigate()
   const [isProfileOpen, setIsProfileOpen] = React.useState(false)
+  const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false)
   const [unreadNotifications, setUnreadNotifications] = React.useState(0)
+  const [recentNotifications, setRecentNotifications] = React.useState<Notification[]>([])
+  const [isLoadingNotifications, setIsLoadingNotifications] = React.useState(false)
 
   const handleLogout = () => {
     dispatch({ type: "LOGOUT" })
@@ -39,20 +42,24 @@ const DashboardLayout: React.FC = () => {
     return roleMap[role] || role
   }
 
-  // Fetch unread notifications count
-  React.useEffect(() => {
-    const fetchUnreadCount = async () => {
-      try {
-        const notifications = await getNotifications()
-        const unread = notifications.filter(n => n.status === 'SENT').length
-        setUnreadNotifications(unread)
-      } catch (error) {
-        console.error('Error fetching notifications:', error)
-      }
+  // Fetch notifications
+  const fetchNotifications = React.useCallback(async () => {
+    if (!state.user) return;
+    
+    try {
+      const notifications = await getNotifications(20) // Get last 20 notifications
+      setRecentNotifications(notifications)
+      const unread = notifications.filter(n => n.status === 'SENT').length
+      setUnreadNotifications(unread)
+    } catch (error) {
+      console.error('Error fetching notifications:', error)
     }
+  }, [state.user])
 
+  // Fetch unread notifications count and recent notifications
+  React.useEffect(() => {
     if (state.user) {
-      fetchUnreadCount()
+      fetchNotifications()
       
       // Subscribe to user notifications via socket
       if (socket && state.user.id) {
@@ -60,7 +67,7 @@ const DashboardLayout: React.FC = () => {
         
         // Listen for new notifications
         const handleNewNotification = () => {
-          fetchUnreadCount()
+          fetchNotifications()
         }
         
         socket.on('newNotification', handleNewNotification)
@@ -73,25 +80,77 @@ const DashboardLayout: React.FC = () => {
         }
       }
     }
-  }, [socket, state.user])
+  }, [socket, state.user, fetchNotifications])
 
-  // Close dropdown when clicking outside
+  // Fetch notifications when dropdown is opened
+  React.useEffect(() => {
+    if (isNotificationsOpen) {
+      setIsLoadingNotifications(true)
+      fetchNotifications().finally(() => setIsLoadingNotifications(false))
+    }
+  }, [isNotificationsOpen, fetchNotifications])
+
+  // Close dropdowns when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
       if (!target.closest('.profile-dropdown')) {
         setIsProfileOpen(false)
       }
+      if (!target.closest('.notifications-dropdown')) {
+        setIsNotificationsOpen(false)
+      }
     }
 
-    if (isProfileOpen) {
+    if (isProfileOpen || isNotificationsOpen) {
       document.addEventListener('click', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('click', handleClickOutside)
     }
-  }, [isProfileOpen])
+  }, [isProfileOpen, isNotificationsOpen])
+
+  const handleNotificationClick = async (notification: Notification) => {
+    if (notification.status === 'SENT') {
+      try {
+        await markNotificationAsRead(notification.id)
+        setRecentNotifications(prev =>
+          prev.map(n => n.id === notification.id ? { ...n, status: 'READ' as const } : n)
+        )
+        setUnreadNotifications(prev => Math.max(0, prev - 1))
+      } catch (error) {
+        console.error('Error marking notification as read:', error)
+      }
+    }
+  }
+
+  const getNotificationIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'INFO':
+        return <Info className="w-4 h-4 text-blue-500" />
+      case 'WARNING':
+        return <AlertTriangle className="w-4 h-4 text-yellow-500" />
+      case 'ERROR':
+        return <XCircle className="w-4 h-4 text-red-500" />
+      case 'SUCCESS':
+        return <CheckCircle className="w-4 h-4 text-green-500" />
+      default:
+        return <Bell className="w-4 h-4 text-gray-500" />
+    }
+  }
+
+  const formatNotificationTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    
+    if (diffInSeconds < 60) return 'Just now'
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
+    return date.toLocaleDateString()
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
@@ -140,18 +199,96 @@ const DashboardLayout: React.FC = () => {
                   <Search className="w-5 h-5" />
                 </button>
 
-                {/* Notifications */}
-                <button 
-                  onClick={() => navigate('/notifications')}
-                  className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <Bell className="w-5 h-5" />
-                  {unreadNotifications > 0 && (
-                    <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-semibold">
-                      {unreadNotifications > 9 ? '9+' : unreadNotifications}
-                    </span>
+                {/* Notifications Dropdown */}
+                <div className="relative notifications-dropdown">
+                  <button 
+                    onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                    className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <Bell className="w-5 h-5" />
+                    {unreadNotifications > 0 && (
+                      <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-semibold">
+                        {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Notifications Dropdown Menu */}
+                  {isNotificationsOpen && (
+                    <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[32rem] flex flex-col">
+                      {/* Header */}
+                      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                        {unreadNotifications > 0 && (
+                          <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                            {unreadNotifications} new
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Notifications List */}
+                      <div className="flex-1 overflow-y-auto">
+                        {isLoadingNotifications ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                          </div>
+                        ) : recentNotifications.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-8 px-4">
+                            <Bell className="w-12 h-12 text-gray-300 mb-2" />
+                            <p className="text-gray-500 text-sm font-medium">No notifications</p>
+                            <p className="text-gray-400 text-xs mt-1">You're all caught up!</p>
+                          </div>
+                        ) : (
+                          <div className="divide-y divide-gray-100">
+                            {recentNotifications.map((notification) => (
+                              <button
+                                key={notification.id}
+                                onClick={() => handleNotificationClick(notification)}
+                                className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
+                                  notification.status === 'SENT' ? 'bg-blue-50/50' : ''
+                                }`}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-shrink-0 mt-0.5">
+                                    {getNotificationIcon(notification.type)}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm text-gray-900 font-medium line-clamp-2">
+                                      {notification.message}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <Clock className="w-3 h-3 text-gray-400" />
+                                      <span className="text-xs text-gray-500">
+                                        {formatNotificationTime(notification.createdAt)}
+                                      </span>
+                                      {notification.status === 'SENT' && (
+                                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer with View All button */}
+                      <div className="px-4 py-3 border-t border-gray-200">
+                        <button
+                          onClick={() => {
+                            setIsNotificationsOpen(false)
+                            navigate('/notifications')
+                          }}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          View All Notifications
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   )}
-                </button>
+                </div>
 
                 {/* Profile Dropdown */}
                 {state.user && (

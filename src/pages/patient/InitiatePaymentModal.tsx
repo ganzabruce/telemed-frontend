@@ -1,6 +1,6 @@
 // new/src/components/patient/InitiatePaymentModal.tsx
 
-import React, { useState } in "react"
+import React, { useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -12,9 +12,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import type{ ApiAppointment } from "@/types/api"
-import * as patientService from "@/api/patientService"
-import { toast } from "@/hooks/use-toast"
+import type { ApiAppointment } from "@/types/api"
+import { initiatePayment } from "@/api/patientsApi"
+import { toast } from "react-hot-toast"
 import { useAuth } from "@/context/AuthContext"
 
 interface Props {
@@ -46,25 +46,26 @@ export const InitiatePaymentModal: React.FC<Props> = ({
     setError(null)
 
     try {
-      const data = await patientService.initiatePayment({
+      const data = await initiatePayment({
         appointmentId: appointment.id,
         phoneNumber,
       })
-      toast({
-        title: "Payment Initiated",
-        description:
-          "Please check your phone and enter your PIN to confirm payment.",
-      })
+      toast.success("Payment initiated! Please check your phone and enter your PIN to confirm payment.")
       // You could start polling for payment status here or use WebSockets
       console.log("Payment initiated, paymentId:", data.paymentId)
       onClose()
     } catch (err: any) {
       if (err.response?.status === 409) {
-        setError("This appointment has already been paid for.")
+        const errorMsg = "This appointment has already been paid for."
+        setError(errorMsg)
+        toast.error(errorMsg)
       } else if (err.response?.data?.message) {
         setError(err.response.data.message)
+        toast.error(err.response.data.message)
       } else {
-        setError("An error occurred. Please try again.")
+        const errorMsg = "An error occurred. Please try again."
+        setError(errorMsg)
+        toast.error(errorMsg)
       }
     } finally {
       setIsLoading(false)

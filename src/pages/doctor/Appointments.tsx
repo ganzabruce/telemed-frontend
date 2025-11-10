@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Calendar, Clock, User, Video, Phone, MessageSquare, CheckCircle, XCircle, AlertCircle, Filter, Search, MapPin, ChevronRight, MoreVertical, RefreshCw, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, User, Video, Phone, MessageSquare, CheckCircle, XCircle, AlertCircle, Filter, Search, MapPin, ChevronRight, MoreVertical, RefreshCw, FileText, Pill } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,10 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import PrescriptionForm from '@/components/shared/PrescriptionForm';
+import { getOrCreateConversation } from '@/api/chatApi';
+import toast from 'react-hot-toast';
 
 const API_BASE_URL = 'http://localhost:5003';
 
 const DoctorAppointments = () => {
+  const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -436,17 +440,42 @@ const DoctorAppointments = () => {
                           )}
                           
                           {appointment.status === 'CONFIRMED' && (
-                            <Button 
-                              size="sm"
-                              className="bg-green-600  hover:from-green-700 hover:to-emerald-700 text-white"
-                            >
-                              {appointment.type === 'VIDEO' && 'Join Video'}
-                              {appointment.type === 'AUDIO' && 'Join Call'}
-                              {appointment.type === 'CHAT' && 'Open Chat'}
-                            </Button>
+                            <>
+                              {appointment.type === 'CHAT' ? (
+                                <Button 
+                                  size="sm"
+                                  onClick={async () => {
+                                    try {
+                                      if (appointment.patient?.user?.id) {
+                                        await getOrCreateConversation(appointment.patient.user.id);
+                                        navigate('/doctor/consultations');
+                                        toast.success('Opening chat with patient...');
+                                      } else {
+                                        toast.error('Patient information not available');
+                                      }
+                                    } catch (err) {
+                                      toast.error('Failed to open chat. Please try again.');
+                                      console.error('Error opening chat:', err);
+                                    }
+                                  }}
+                                  className="bg-green-600 hover:from-green-700 hover:to-emerald-700 text-white flex items-center gap-2"
+                                >
+                                  <MessageSquare className="w-4 h-4" />
+                                  Open Chat
+                                </Button>
+                              ) : (
+                                <Button 
+                                  size="sm"
+                                  className="bg-green-600  hover:from-green-700 hover:to-emerald-700 text-white"
+                                >
+                                  {appointment.type === 'VIDEO' && 'Join Video'}
+                                  {appointment.type === 'AUDIO' && 'Join Call'}
+                                </Button>
+                              )}
+                            </>
                           )}
                           
-                          {appointment.status === 'COMPLETED' && !appointment.consultation && (
+                          {(appointment.status === 'CONFIRMED' || appointment.status === 'COMPLETED') && !appointment.consultation && (
                             <Button 
                               size="sm"
                               onClick={() => {
@@ -460,14 +489,14 @@ const DoctorAppointments = () => {
                             </Button>
                           )}
                           
-                          {appointment.status === 'COMPLETED' && appointment.consultation && (
+                          {appointment.consultation && (
                             <Button 
                               size="sm"
                               variant="outline"
-                              className="text-green-600 border-green-600"
-                              disabled
+                              onClick={() => openDetailsDialog(appointment)}
+                              className="text-green-600 border-green-600 hover:bg-green-50"
                             >
-                              Consultation Recorded
+                              View Consultation
                             </Button>
                           )}
                         </div>
@@ -586,9 +615,67 @@ const DoctorAppointments = () => {
                   {selectedAppointment.hospital?.name || 'Unknown Hospital'}
                 </p>
               </div>
+
+              {/* Consultation Details */}
+              {selectedAppointment.consultation && (
+                <>
+                  <div className="border-t border-gray-200 pt-6 mt-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Consultation Details</h3>
+                    
+                    {selectedAppointment.consultation.doctorNotes && (
+                      <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 mb-4">
+                        <div className="flex items-center gap-2 text-blue-700 mb-2">
+                          <FileText className="w-4 h-4" />
+                          <span className="text-sm font-medium">Doctor's Notes</span>
+                        </div>
+                        <p className="text-gray-700 whitespace-pre-wrap">
+                          {selectedAppointment.consultation.doctorNotes}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedAppointment.consultation.prescription && (
+                      <div className="p-4 bg-green-50 rounded-xl border border-green-100">
+                        <div className="flex items-center gap-2 text-green-700 mb-2">
+                          <Pill className="w-4 h-4" />
+                          <span className="text-sm font-medium">Prescription</span>
+                        </div>
+                        <p className="text-gray-700 whitespace-pre-wrap">
+                          {selectedAppointment.consultation.prescription}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="mt-4 text-sm text-gray-500">
+                      Consultation recorded on: {new Date(selectedAppointment.consultation.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="flex items-center justify-between gap-2">
+            <div className="flex-1">
+              {selectedAppointment?.status === 'CONFIRMED' && selectedAppointment?.type === 'CHAT' && selectedAppointment?.patient?.user?.id && (
+                <Button
+                  onClick={async () => {
+                    try {
+                      await getOrCreateConversation(selectedAppointment.patient.user.id);
+                      setDetailsDialogOpen(false);
+                      navigate('/doctor/consultations');
+                      toast.success('Opening chat with patient...');
+                    } catch (err) {
+                      toast.error('Failed to open chat. Please try again.');
+                      console.error('Error opening chat:', err);
+                    }
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Open Chat
+                </Button>
+              )}
+            </div>
             <Button
               onClick={() => setDetailsDialogOpen(false)}
               className="bg-blue-500 text-white hover:from-blue-700 hover:to-indigo-700"

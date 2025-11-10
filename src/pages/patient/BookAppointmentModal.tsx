@@ -20,9 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useAuth } from "@/context/AuthContext"
-import { ApiDoctor, ApiHospital } from "@/types/api"
-import * as patientService from "@/api/patientService"
-import { toast } from "@/hooks/use-toast"
+import { ApiDoctor, ApiHospital, ApiAppointment } from "@/types/api"
+import { bookAppointment, getDoctors, getHospitals, initiatePayment } from "@/api/patientsApi"
+import { toast } from "react-hot-toast"
+import { InitiatePaymentModal } from "./InitiatePaymentModal"
 
 interface Props {
   isOpen: boolean
@@ -49,6 +50,9 @@ export const BookAppointmentModal: React.FC<Props> = ({
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [bookedAppointment, setBookedAppointment] = useState<ApiAppointment | null>(null)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [selectedDoctorData, setSelectedDoctorData] = useState<ApiDoctor | null>(null)
 
   // Fetch hospitals and doctors on modal open
   useEffect(() => {
@@ -57,8 +61,8 @@ export const BookAppointmentModal: React.FC<Props> = ({
         try {
           setIsLoading(true)
           const [hospitalsData, doctorsData] = await Promise.all([
-            patientService.getHospitals(),
-            patientService.getDoctors(),
+            getHospitals(),
+            getDoctors(),
           ])
           setHospitals(hospitalsData)
           setDoctors(doctorsData)
@@ -84,7 +88,18 @@ export const BookAppointmentModal: React.FC<Props> = ({
       setFilteredDoctors(doctors)
     }
     setSelectedDoctor("") // Reset doctor selection
+    setSelectedDoctorData(null)
   }, [selectedHospital, doctors])
+
+  // Update selected doctor data when doctor selection changes
+  useEffect(() => {
+    if (selectedDoctor) {
+      const doctor = doctors.find((doc) => doc.id === selectedDoctor)
+      setSelectedDoctorData(doctor || null)
+    } else {
+      setSelectedDoctorData(null)
+    }
+  }, [selectedDoctor, doctors])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -105,23 +120,31 @@ export const BookAppointmentModal: React.FC<Props> = ({
 
     try {
       // Backend automatically finds patient profile from user ID, so we don't need to send patientId
-      await patientService.bookAppointment({
+      const appointment = await bookAppointment({
         doctorId: selectedDoctor,
         hospitalId: selectedHospital,
         appointmentDate: new Date(appointmentDate).toISOString(),
         type: appointmentType,
       })
-      toast({
-        title: "Appointment Booked!",
-        description: "Your appointment request has been sent.",
-      })
-      onAppointmentBooked()
-      onClose()
+      
+      toast.success("Appointment booked successfully!")
+      setBookedAppointment(appointment)
+      
+      // Show payment modal if doctor has consultation fee
+      if (selectedDoctorData && selectedDoctorData.consultationFee > 0) {
+        setShowPaymentModal(true)
+      } else {
+        onAppointmentBooked()
+        onClose()
+      }
     } catch (err: any) {
       if (err.response?.data?.message) {
         setError(err.response.data.message)
+        toast.error(err.response.data.message)
       } else {
-        setError("An error occurred while booking. Please try again.")
+        const errorMsg = "An error occurred while booking. Please try again."
+        setError(errorMsg)
+        toast.error(errorMsg)
       }
     } finally {
       setIsLoading(false)
@@ -221,10 +244,24 @@ export const BookAppointmentModal: React.FC<Props> = ({
               onChange={(e) => setAppointmentDate(e.target.value)}
               className="col-span-3"
               disabled={isLoading}
+              min={new Date().toISOString().slice(0, 16)}
             />
           </div>
+          {selectedDoctorData && selectedDoctorData.consultationFee > 0 && (
+            <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
+              <div className="text-sm text-blue-700 font-medium">
+                Consultation Fee: {selectedDoctorData.consultationFee.toLocaleString("en-RW", {
+                  style: "currency",
+                  currency: "RWF",
+                })}
+              </div>
+              <div className="text-xs text-blue-600 mt-1">
+                Payment will be requested after booking
+              </div>
+            </div>
+          )}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
@@ -233,6 +270,19 @@ export const BookAppointmentModal: React.FC<Props> = ({
           </DialogFooter>
         </form>
       </DialogContent>
+      
+      {/* Payment Modal */}
+      {bookedAppointment && (
+        <InitiatePaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false)
+            onAppointmentBooked()
+            onClose()
+          }}
+          appointment={bookedAppointment}
+        />
+      )}
     </Dialog>
   )
 }

@@ -28,6 +28,10 @@ const CompleteProfilePage: React.FC = () => {
     // Patient specific
     dateOfBirth: "",
     gender: "",
+    bloodType: "UNKNOWN",
+    medicalHistory: "",
+    insuranceProvider: "",
+    insuranceNumber: "",
   })
   const [loading, setLoading] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
@@ -88,6 +92,10 @@ const CompleteProfilePage: React.FC = () => {
         ...(decodedToken?.role === "PATIENT" && {
           dateOfBirth: formData.dateOfBirth,
           gender: formData.gender,
+          bloodType: formData.bloodType,
+          medicalHistory: formData.medicalHistory || undefined,
+          insuranceProvider: formData.insuranceProvider || undefined,
+          insuranceNumber: formData.insuranceNumber || undefined,
         }),
       }
 
@@ -420,7 +428,7 @@ const CompleteProfilePage: React.FC = () => {
                   </div>
 
                   {/* Gender */}
-                  <div>
+                  <div className="mb-4">
                     <label htmlFor="gender" className="block text-sm font-semibold text-gray-700 mb-2">
                       Gender
                     </label>
@@ -448,6 +456,111 @@ const CompleteProfilePage: React.FC = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Blood Type */}
+                  <div className="mb-4">
+                    <label htmlFor="bloodType" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Blood Type
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                        </svg>
+                      </div>
+                      <select
+                        id="bloodType"
+                        name="bloodType"
+                        value={formData.bloodType}
+                        onChange={handleChange}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 appearance-none bg-white"
+                      >
+                        <option value="UNKNOWN">Unknown</option>
+                        <option value="A_POSITIVE">A+</option>
+                        <option value="A_NEGATIVE">A-</option>
+                        <option value="B_POSITIVE">B+</option>
+                        <option value="B_NEGATIVE">B-</option>
+                        <option value="AB_POSITIVE">AB+</option>
+                        <option value="AB_NEGATIVE">AB-</option>
+                        <option value="O_POSITIVE">O+</option>
+                        <option value="O_NEGATIVE">O-</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Medical History */}
+                  <div className="mb-4">
+                    <label htmlFor="medicalHistory" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Medical History (Optional)
+                    </label>
+                    <div className="relative">
+                      <div className="absolute top-3 left-3 pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <textarea
+                        id="medicalHistory"
+                        name="medicalHistory"
+                        value={formData.medicalHistory}
+                        onChange={handleChange}
+                        rows={4}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 resize-none"
+                        placeholder="Enter any relevant medical history, allergies, chronic conditions, etc."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Insurance Provider */}
+                  <div className="mb-4">
+                    <label htmlFor="insuranceProvider" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Insurance Provider (Optional)
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <input
+                        id="insuranceProvider"
+                        name="insuranceProvider"
+                        type="text"
+                        value={formData.insuranceProvider}
+                        onChange={handleChange}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900"
+                        placeholder="e.g., RAMA, MMI, etc."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Insurance Number */}
+                  <div>
+                    <label htmlFor="insuranceNumber" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Insurance Number (Optional)
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                        </svg>
+                      </div>
+                      <input
+                        id="insuranceNumber"
+                        name="insuranceNumber"
+                        type="text"
+                        value={formData.insuranceNumber}
+                        onChange={handleChange}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900"
+                        placeholder="Enter your insurance policy number"
+                      />
                     </div>
                   </div>
                 </div>

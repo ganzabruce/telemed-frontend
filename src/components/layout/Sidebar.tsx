@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Stethoscope,
   X,
+  Clock,
 } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import {  motion } from "framer-motion"
@@ -42,6 +43,7 @@ const navigationByRole: Record<string, NavItem[]> = {
     { name: "Appointments", href: "/doctor/appointments", icon: Calendar },
     { name: "Consultations", href: "/doctor/consultations", icon: Stethoscope },
     { name: "Patients", href: "/doctor/patients", icon: Users },
+    { name: "Availability", href: "/doctor/availability", icon: Clock },
   ],
   PATIENT: [
     { name: "Dashboard", href: "/patient-dashboard", icon: LayoutDashboard },

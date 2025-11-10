@@ -1,16 +1,31 @@
 import { useState, useEffect } from 'react';
-import { Bell, Check, CheckCheck, Trash2, Info, AlertTriangle, XCircle, CheckCircle } from 'lucide-react';
+import { Bell, Check, CheckCheck, Trash2, Info, AlertTriangle, XCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, type Notification } from '../../api/notificationsApi';
 import { useSocket } from '../../context/SocketContext';
+import { useAuth } from '../../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 
 const NotificationsPage = () => {
+  const navigate = useNavigate();
+  const { state } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const { socket } = useSocket();
+  
+  const handleGoBack = () => {
+    // Navigate to appropriate dashboard based on user role
+    if (state.user?.role) {
+      const role = state.user.role.toLowerCase().replace('_', '-');
+      navigate(`/${role}-dashboard`);
+    } else {
+      // Fallback to home if user is not available
+      navigate('/');
+    }
+  };
 
   useEffect(() => {
     fetchNotifications();
@@ -120,8 +135,16 @@ const NotificationsPage = () => {
 
   return (
     <div className="space-y-6 p-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <div>
+      {/* Back Button and Header */}
+      <div className="flex items-center gap-4 mb-4">
+        <button
+          onClick={handleGoBack}
+          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          title="Go back"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <div className="flex-1">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
             Notifications
           </h1>
@@ -129,6 +152,9 @@ const NotificationsPage = () => {
             {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up!'}
           </p>
         </div>
+      </div>
+
+      <div className="flex flex-col md:flex-row md:justify-end gap-4">
         {unreadCount > 0 && (
           <Button onClick={handleMarkAllAsRead} variant="outline" className="gap-2">
             <CheckCheck className="w-4 h-4" />
