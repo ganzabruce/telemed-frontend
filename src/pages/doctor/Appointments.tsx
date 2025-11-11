@@ -71,13 +71,13 @@ const DoctorAppointments = () => {
   const typeConfig = {
     VIDEO: {
       icon: Video,
-      color: 'text-purple-600',
-      bg: 'bg-purple-100'
+      color: 'text-black',
+      bg: 'bg-gray-100'
     },
     AUDIO: {
       icon: Phone,
-      color: 'text-green-600',
-      bg: 'bg-green-100'
+      color: 'text-black',
+      bg: 'bg-gray-100'
     },
     CHAT: {
       icon: MessageSquare,
@@ -466,7 +466,7 @@ const DoctorAppointments = () => {
                               ) : (
                                 <Button 
                                   size="sm"
-                                  className="bg-green-600  hover:from-green-700 hover:to-emerald-700 text-white"
+                                  className="bg-gray-50 text-black border border-gray-200 hover:from-green-700 hover:to-emerald-700 "
                                 >
                                   {appointment.type === 'VIDEO' && 'Join Video'}
                                   {appointment.type === 'AUDIO' && 'Join Call'}
@@ -482,7 +482,7 @@ const DoctorAppointments = () => {
                                 setAppointmentForPrescription(appointment);
                                 setPrescriptionFormOpen(true);
                               }}
-                              className="bg-gray-500  text-white flex items-center gap-2"
+                              className="bg-gray-50  text-black border border-gray-200 flex items-center gap-2"
                             >
                               <FileText className="w-4 h-4" />
                               Record Consultation

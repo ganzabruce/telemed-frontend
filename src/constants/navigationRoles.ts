@@ -9,6 +9,7 @@ export const navigationByRole = {
     { name: "Dashboard", href: "/hospital-admin-dashboard", icon: LayoutDashboard },
     { name: "Staff", href: "/hospital-admin/staff", icon: UserCog },
     { name: "Patients", href: "/hospital-admin/patients", icon: Users },
+    { name: "Payments", href: "/hospital-admin/payments", icon: DollarSign },
   ],
   DOCTOR: [
     { name: "Dashboard", href: "/doctor-dashboard", icon: LayoutDashboard },

@@ -17,7 +17,8 @@ import {
   Building2,
   RefreshCw,
   CheckCircle,
-  Clock
+  Clock,
+  DollarSign
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
@@ -280,13 +281,13 @@ const ProfilePage: React.FC = () => {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'DOCTOR':
-        return <Stethoscope className="w-6 h-6" />;
+        return <Stethoscope className="w-6 h-6 text-white " />;
       case 'PATIENT':
-        return <Heart className="w-6 h-6" />;
+        return <Heart className="w-6 h-6 text-white" />;
       case 'HOSPITAL_ADMIN':
-        return <Building2 className="w-6 h-6" />;
+        return <Building2 className="w-6 h-6 text-white" />;
       case 'ADMIN':
-        return <Shield className="w-6 h-6" />;
+        return <Shield className="w-6 h-6 text-white" />;
       default:
         return <User className="w-6 h-6" />;
     }
@@ -339,7 +340,7 @@ const ProfilePage: React.FC = () => {
         <div className="mb-6">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-600 p-3 rounded-xl">
+              <div className="bg-gray-500 p-3 rounded-xl">
                 {getRoleIcon(profileData.role)}
               </div>
               <div>
@@ -557,8 +558,8 @@ const ProfilePage: React.FC = () => {
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
               <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <Mail className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <Mail className="w-6 h-6 text-gray-600" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-500 mb-1">Email</p>
@@ -567,8 +568,8 @@ const ProfilePage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
-                <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
-                  <Phone className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <Phone className="w-6 h-6 text-gray-600" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-500 mb-1">Phone</p>
@@ -673,8 +674,8 @@ const ProfilePage: React.FC = () => {
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
-                    <Briefcase className="w-6 h-6 text-purple-600" />
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="w-6 h-6 text-gray-600" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1">Specialization</p>
@@ -685,8 +686,8 @@ const ProfilePage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-6 h-6 text-orange-600" />
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-6 h-6 text-gray-600" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1">Availability</p>
@@ -697,8 +698,8 @@ const ProfilePage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                    <User className="w-6 h-6 text-indigo-600" />
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-gray-600" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1">License Number</p>
@@ -709,8 +710,8 @@ const ProfilePage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl">💰</span>
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-2xl"><DollarSign /></span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1">Consultation Fee</p>
@@ -758,8 +759,8 @@ const ProfilePage: React.FC = () => {
             <div className="grid md:grid-cols-2 gap-4">
               {profileData.roleSpecific.dateOfBirth && (
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-6 h-6 text-blue-600" />
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-6 h-6 text-gray-600" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1">Date of Birth</p>
@@ -817,8 +818,8 @@ const ProfilePage: React.FC = () => {
             </div>
             <div className="flex justify-between items-center py-3 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-gray-600" />
                 </div>
                 <span className="text-sm font-medium text-gray-600">Member Since</span>
               </div>
@@ -832,8 +833,8 @@ const ProfilePage: React.FC = () => {
             </div>
             <div className="flex justify-between items-center py-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-gray-600" />
                 </div>
                 <span className="text-sm font-medium text-gray-600">Last Updated</span>
               </div>

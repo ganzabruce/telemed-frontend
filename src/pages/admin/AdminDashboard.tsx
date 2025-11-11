@@ -151,25 +151,25 @@ const AdminDashboard = () => {
       icon: Users,
       value: formatNumber(dashboardData.totalPatients),
       label: 'Total Patients',
-      gradient: 'from-blue-500 to-blue-600'
+      gradient: 'bg-blue-500'
     },
     {
       icon: Building2,
       value: formatNumber(dashboardData.totalProviders),
       label: 'Healthcare Providers',
-      gradient: 'from-indigo-500 to-indigo-600'
+      gradient: 'bg-indigo-500'
     },
     {
       icon: Calendar,
       value: formatNumber(dashboardData.totalAppointments),
       label: 'Total Appointments',
-      gradient: 'from-green-500 to-green-600'
+      gradient: 'bg-green-500'
     },
     {
       icon: DollarSign,
       value: formatCurrency(dashboardData.totalRevenue),
       label: 'Total Revenue',
-      gradient: 'from-purple-500 to-purple-600'
+      gradient: 'bg-gray-500'
     }
   ];
 

@@ -3,6 +3,7 @@ import { Calendar, Clock, Video, Phone, MessageSquare, Search, Plus, AlertCircle
 import { useNavigate } from 'react-router-dom';
 import { getOrCreateConversation } from '../../api/chatApi';
 import toast from 'react-hot-toast';
+import { InitiatePaymentModal } from './InitiatePaymentModal';
 
 const API_BASE_URL = 'http://localhost:5003';
 const APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
@@ -177,6 +178,8 @@ const AppointmentsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentAppointment, setPaymentAppointment] = useState(null);
 
   useEffect(() => {
     fetchAppointments();
@@ -215,10 +218,10 @@ const AppointmentsPage = () => {
   
   const getStatusColor = (status) => {
     const colors = {
-      PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      CONFIRMED: 'bg-blue-100 text-blue-800 border-blue-200',
-      COMPLETED: 'bg-green-100 text-green-800 border-green-200',
-      CANCELLED: 'bg-red-100 text-red-800 border-red-200'
+      PENDING: 'bg-gray-100 text-gray-800 border-gray-200',
+      CONFIRMED: 'bg-gray-100 text-gray-800 border-gray-200',
+      COMPLETED: 'bg-gray-100 text-gray-800 border-gray-200',
+      CANCELLED: 'bg-gray-100 text-gray-800 border-gray-200'
     };
     return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
@@ -355,6 +358,17 @@ const AppointmentsPage = () => {
                   <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
                     {appointment.status}
                   </span>
+                  {appointment.status === 'PENDING' && (
+                    <button
+                      onClick={() => {
+                        setPaymentAppointment(appointment);
+                        setIsPaymentModalOpen(true);
+                      }}
+                      className="px-4 py-2 bg-gray-600 text-white hover:bg-gray-700 rounded-lg transition-colors font-medium text-sm"
+                    >
+                      Pay
+                    </button>
+                  )}
                   {appointment.status === 'CONFIRMED' && appointment.type === 'CHAT' && (
                     <button 
                       onClick={async () => {
@@ -371,13 +385,13 @@ const AppointmentsPage = () => {
                           console.error('Error opening chat:', err);
                         }
                       }}
-                      className="px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors font-medium text-sm flex items-center gap-2"
+                      className="px-4 py-2 bg-gray-600 text-white hover:bg-gray-700 rounded-lg transition-colors font-medium text-sm flex items-center gap-2"
                     >
                       <MessageSquare className="w-4 h-4" />
                       Open Chat
                     </button>
                   )}
-                  <button onClick={() => setSelectedAppointment(appointment)} className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium text-sm">
+                  <button onClick={() => setSelectedAppointment(appointment)} className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors font-medium text-sm">
                     View Details
                   </button>
                 </div>
@@ -387,7 +401,7 @@ const AppointmentsPage = () => {
         )}
       </div>
 
-       {selectedAppointment && (
+      {selectedAppointment && (
         <div className="fixed inset-0 bg-transparent backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
@@ -420,6 +434,17 @@ const AppointmentsPage = () => {
               </div>
             </div>
             <div className="flex justify-end gap-3 p-6 bg-gray-50 rounded-b-xl">
+              {selectedAppointment.status === 'PENDING' && (
+                <button
+                  onClick={() => {
+                    setPaymentAppointment(selectedAppointment);
+                    setIsPaymentModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors font-medium"
+                >
+                  Pay
+                </button>
+              )}
               {selectedAppointment.status === 'CONFIRMED' && selectedAppointment.type === 'CHAT' && selectedAppointment.doctor?.user?.id && (
                 <button 
                   onClick={async () => {
@@ -451,6 +476,16 @@ const AppointmentsPage = () => {
         onAppointmentBooked={() => {
           fetchAppointments();
         }}
+      />
+      <InitiatePaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => {
+          setIsPaymentModalOpen(false);
+          setPaymentAppointment(null);
+          // After payment flow, refresh appointments to reflect updated status if webhook already processed
+          fetchAppointments();
+        }}
+        appointment={paymentAppointment}
       />
     </div>
   );

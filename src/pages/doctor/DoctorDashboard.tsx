@@ -282,25 +282,25 @@ const DoctorDashboard = () => {
       icon: Calendar,
       value: dashboardData.totalAppointments,
       label: 'Total Appointments',
-      gradient: 'from-blue-500 to-blue-600'
+
     },
     {
       icon: Clock,
       value: dashboardData.pendingCount,
       label: 'Pending Review',
-      gradient: 'from-orange-500 to-orange-600'
+      gradient: 'bg-orange-500'
     },
     {
       icon: CheckCircle,
       value: dashboardData.confirmedCount,
       label: 'Confirmed',
-      gradient: 'from-blue-500 to-indigo-600'
+
     },
     {
       icon: CheckCircle,
       value: dashboardData.completedAppointments,
       label: 'Completed',
-      gradient: 'from-green-500 to-emerald-600'
+      gradient: 'bg-green-500 '
     }
   ];
 
@@ -309,19 +309,19 @@ const DoctorDashboard = () => {
       icon: Video,
       value: dashboardData.consultationBreakdown.video,
       label: 'Video Calls',
-      gradient: 'from-purple-500 to-purple-600'
+      gradient: 'bg-gray-500 '
     },
     {
       icon: Phone,
       value: dashboardData.consultationBreakdown.audio,
       label: 'Audio Calls',
-      gradient: 'from-blue-500 to-blue-600'
+
     },
     {
       icon: MessageSquare,
       value: dashboardData.consultationBreakdown.chat,
       label: 'Chat',
-      gradient: 'from-green-500 to-green-600'
+      gradient: 'bg-green-500 '
     }
   ];
 
