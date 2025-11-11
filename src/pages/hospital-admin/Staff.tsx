@@ -33,6 +33,9 @@ export const StaffManagement = () => {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', fullName: '', phone: '' });
   const [searchTerm, setSearchTerm] = useState('');
+  const [showEditFeeDialog, setShowEditFeeDialog] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<any | null>(null);
+  const [newFee, setNewFee] = useState<string>('');
 
   useEffect(() => {
     fetchStaff();
@@ -86,6 +89,42 @@ export const StaffManagement = () => {
     s.specialization?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const openEditFee = (doctor: any) => {
+    setSelectedDoctor(doctor);
+    setNewFee(String(doctor.consultationFee || ''));
+    setShowEditFeeDialog(true);
+  };
+
+  const saveConsultationFee = async () => {
+    if (!selectedDoctor) return;
+    const parsed = Number(newFee);
+    if (isNaN(parsed) || parsed <= 0) {
+      toast.error('Please enter a valid positive fee.');
+      return;
+    }
+    try {
+      const token = JSON.parse(localStorage.getItem('user') || '{}').token;
+      const res = await fetch(`${API_URL}/doctors/${selectedDoctor.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ consultationFee: parsed })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to update fee');
+      }
+      toast.success('Consultation fee updated');
+      setStaff(prev => prev.map(d => d.id === selectedDoctor.id ? { ...d, consultationFee: parsed } : d));
+      setShowEditFeeDialog(false);
+      setSelectedDoctor(null);
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to update fee');
+    }
+  };
+
   
   const stats = [
     {
@@ -118,7 +157,7 @@ export const StaffManagement = () => {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-gray-50 to-purple-50 min-h-screen">
+    <div className="space-y-6 p-6 bg-gray-50  min-h-screen">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
@@ -138,31 +177,13 @@ export const StaffManagement = () => {
           </Button>
           <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 text-white hover:from-blue-700 hover:to-purple-700 gap-2 shadow-lg hover:shadow-xl transition-all duration-300">
+              <Button className="bg-blue-600 text-white hover:bg-blue-700 hover:to-purple-700 gap-2 shadow-lg hover:shadow-xl transition-all duration-300">
                 <Plus className="w-4 h-4" />
                 Invite Staff
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg overflow-hidden p-0 bg-white">
-              {/* Decorative header background */}
-              <div className="bg-blue-500 p-6 relative overflow-hidden">
-                <div className="absolute inset-0 bg-black opacity-5"></div>
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full opacity-10"></div>
-                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white rounded-full opacity-10"></div>
-                <DialogHeader className="relative z-10">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                      <Mail className="w-6 h-6 text-white" />
-                    </div>
-                    <DialogTitle className="text-3xl font-bold text-white">
-                      Invite Staff Member
-                    </DialogTitle>
-                  </div>
-                  <p className="text-blue-100 text-sm">Send an invitation to join your hospital team</p>
-                </DialogHeader>
-              </div>
-
-              {/* Form content */}
+                {/* Form content */}
               <div className="p-6 space-y-5 bg-white">
                 <div>
                   <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -257,14 +278,14 @@ export const StaffManagement = () => {
         {stats.map((stat, index) => {
           // Map colors to gradient backgrounds
           const gradientMap: Record<string, string> = {
-            'bg-blue-50': 'from-blue-500 to-blue-600',
-            'bg-green-50': 'from-green-500 to-green-600',
-            'bg-gray-50': 'from-gray-500 to-gray-600',
-            'bg-purple-50': 'from-purple-500 to-purple-600',
-            'bg-orange-50': 'from-orange-500 to-orange-600',
-            'bg-indigo-50': 'from-indigo-500 to-indigo-600',
+            'bg-blue-50': 'bg-blue-500',
+            'bg-green-50': 'bg-green-500',
+            'bg-gray-50': 'bg-gray-500',
+            'bg-purple-50': 'bg-purple-500',
+            'bg-orange-50': 'bg-orange-500',
+            'bg-indigo-50': 'bg-indigo-500',
           };
-          const gradient = gradientMap[stat.bgColor] || 'from-blue-500 to-blue-600';
+          const gradient = gradientMap[stat.bgColor] || 'bg-blue-500';
           
           return (
             <div key={index} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
@@ -289,7 +310,7 @@ export const StaffManagement = () => {
               placeholder="Search staff by name, email, or specialization..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-12 text-lg border-2 focus:border-purple-500 transition-colors"
+              className="pl-12 h-12 text-lg  outline-none focus:outline-none focus:border-none transition-colors"
             />
           </div>
         </CardContent>
@@ -370,8 +391,8 @@ export const StaffManagement = () => {
                         <Badge 
                           variant={doctor.status === 'AVAILABLE' ? 'default' : 'secondary'}
                           className={doctor.status === 'AVAILABLE' 
-                            ? 'bg-green-500 hover:bg-green-600' 
-                            : 'bg-gray-400 hover:bg-gray-500'
+                            ? 'bg-green-500 text-white hover:bg-green-600' 
+                            : 'bg-gray-400 text-white hover:bg-gray-500'
                           }
                         >
                           {doctor.status}
@@ -382,6 +403,7 @@ export const StaffManagement = () => {
                           variant="ghost" 
                           size="sm"
                           className="gap-2 hover:bg-blue-100 hover:text-blue-600 transition-colors"
+                          onClick={() => openEditFee(doctor)}
                         >
                           <Edit className="w-4 h-4" />
                           Edit
@@ -395,6 +417,32 @@ export const StaffManagement = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Consultation Fee Dialog */}
+      <Dialog open={showEditFeeDialog} onOpenChange={setShowEditFeeDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Update Consultation Fee</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-sm text-gray-600">
+              {selectedDoctor ? <>Doctor: <strong>{selectedDoctor.user?.fullName}</strong></> : null}
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Consultation Fee (RWF)</Label>
+              <Input
+                value={newFee}
+                onChange={(e) => setNewFee(e.target.value)}
+                placeholder="e.g., 20000"
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowEditFeeDialog(false)}>Cancel</Button>
+              <Button onClick={saveConsultationFee}>Save</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

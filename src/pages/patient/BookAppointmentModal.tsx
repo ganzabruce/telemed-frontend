@@ -184,7 +184,7 @@ export const BookAppointmentModal: React.FC<Props> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-white">
         <DialogHeader>
           <DialogTitle>Book a New Appointment</DialogTitle>
           <DialogDescription>
@@ -207,7 +207,7 @@ export const BookAppointmentModal: React.FC<Props> = ({
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select a hospital" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 {hospitals.map((hospital) => (
                   <SelectItem key={hospital.id} value={hospital.id}>
                     {hospital.name}
@@ -228,7 +228,7 @@ export const BookAppointmentModal: React.FC<Props> = ({
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select a doctor" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 {filteredDoctors.length > 0 ? (
                   filteredDoctors.map((doctor) => (
                     <SelectItem key={doctor.id} value={doctor.id}>
@@ -257,7 +257,7 @@ export const BookAppointmentModal: React.FC<Props> = ({
               <SelectTrigger className="col-span-3">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 <SelectItem value="VIDEO">Video Call</SelectItem>
                 <SelectItem value="AUDIO">Audio Call</SelectItem>
                 <SelectItem value="CHAT">Chat</SelectItem>
@@ -295,7 +295,7 @@ export const BookAppointmentModal: React.FC<Props> = ({
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="bg-gray-500 hover:bg-gray-600 text-white">
               {isLoading ? "Booking..." : "Book Appointment"}
             </Button>
           </DialogFooter>

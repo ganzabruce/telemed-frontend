@@ -15,6 +15,7 @@ import {
   Stethoscope,
   X,
   Clock,
+  DollarSign,
 } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import {  motion } from "framer-motion"
@@ -36,6 +37,7 @@ const navigationByRole: Record<string, NavItem[]> = {
     { name: "Dashboard", href: "/hospital-admin-dashboard", icon: LayoutDashboard },
     { name: "Staff", href: "/hospital-admin/staff", icon: UserCog },
     { name: "Patients", href: "/hospital-admin/patients", icon: Users },
+    { name: "Payments", href: "/hospital-admin/payments", icon: DollarSign },
   ],
   DOCTOR: [
     { name: "Dashboard", href: "/doctor-dashboard", icon: LayoutDashboard },

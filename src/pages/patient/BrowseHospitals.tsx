@@ -358,7 +358,7 @@ const BrowseHospitalsPage = () => {
                                     <h3 className="font-bold text-lg text-gray-900">
                                       {doctor.user.fullName}
                                     </h3>
-                                    <Badge className="bg-purple-100 text-purple-700 border-purple-200">
+                                    <Badge className="bg-gray-100 text-gray-700 border-gray-200">
                                       <Stethoscope className="w-3 h-3 mr-1" />
                                       {doctor.specialization}
                                     </Badge>
@@ -366,7 +366,7 @@ const BrowseHospitalsPage = () => {
                                   <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                                     {/* Consultation Fee */}
                                     <div className="flex items-center gap-2">
-                                      <DollarSign className="w-4 h-4 text-green-600" />
+                                      <DollarSign className="w-4 h-4 text-gray-600" />
                                       <span className="font-medium">
                                         {doctor.consultationFee.toLocaleString('en-RW', {
                                           style: 'currency',

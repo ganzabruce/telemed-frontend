@@ -262,25 +262,25 @@ const PatientDashboard = () => {
       icon: Activity,
       value: dashboardData.totalAppointments,
       label: 'Total Visits',
-      gradient: 'from-blue-500 to-blue-600'
+
     },
     {
       icon: Calendar,
       value: dashboardData.upcomingCount,
       label: 'Upcoming',
-      gradient: 'from-green-500 to-green-600'
+      gradient: 'bg-green-500'
     },
     {
       icon: CreditCard,
       value: formatCurrency(dashboardData.totalSpent),
       label: 'Total Spent',
-      gradient: 'from-purple-500 to-purple-600'
+      gradient: 'bg-gray-500'
     },
     {
       icon: CheckCircle,
       value: dashboardData.completedAppointments,
       label: 'Completed',
-      gradient: 'from-orange-500 to-orange-600'
+      gradient: 'bg-orange-500'
     }
   ];
 
@@ -289,19 +289,19 @@ const PatientDashboard = () => {
       icon: Video,
       value: dashboardData.consultationHistory.video,
       label: 'Video Calls',
-      gradient: 'from-purple-500 to-purple-600'
+      gradient: 'bg-gray-500'
     },
     {
       icon: Phone,
       value: dashboardData.consultationHistory.audio,
       label: 'Audio Calls',
-      gradient: 'from-blue-500 to-blue-600'
+      gradient: 'bg-blue-500'
     },
     {
       icon: MessageSquare,
       value: dashboardData.consultationHistory.chat,
       label: 'Chat',
-      gradient: 'from-green-500 to-green-600'
+      gradient: 'bg-green-500'
     }
   ];
 

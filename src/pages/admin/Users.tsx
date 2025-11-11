@@ -241,7 +241,7 @@ const UsersManagement = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center">
               <Users className="w-6 h-6 text-white" />
             </div>
             <span className="text-3xl font-bold text-gray-900">{stats.total}</span>
@@ -250,7 +250,7 @@ const UsersManagement = () => {
         </div>
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center">
               <CheckCircle className="w-6 h-6 text-white" />
             </div>
             <span className="text-3xl font-bold text-gray-900">{stats.verified}</span>
@@ -259,7 +259,7 @@ const UsersManagement = () => {
         </div>
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-indigo-500 flex items-center justify-center">
               <Stethoscope className="w-6 h-6 text-white" />
             </div>
             <span className="text-3xl font-bold text-gray-900">{stats.doctors}</span>
@@ -268,7 +268,7 @@ const UsersManagement = () => {
         </div>
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-gray-500 flex items-center justify-center">
               <Users className="w-6 h-6 text-white" />
             </div>
             <span className="text-3xl font-bold text-gray-900">{stats.patients}</span>

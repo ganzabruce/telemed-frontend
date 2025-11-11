@@ -57,6 +57,8 @@ const HospitalAdminDashboard = () => {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [hospitalInfo, setHospitalInfo] = useState(null);
+  const [paymentPhone, setPaymentPhone] = useState('');
+  const [savingPaymentPhone, setSavingPaymentPhone] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -94,6 +96,9 @@ const HospitalAdminDashboard = () => {
       // Find the hospital administered by the current user
       const myHospital = hospitalsData.data?.find(h => h.adminId === userId);
       setHospitalInfo(myHospital);
+      if (myHospital?.paymentPhone) {
+        setPaymentPhone(myHospital.paymentPhone);
+      }
 
       if (!myHospital) {
         console.error('No hospital found for this admin');
@@ -167,6 +172,7 @@ const HospitalAdminDashboard = () => {
     }
   };
 
+
   const processMonthlyActivity = (appointments) => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentYear = new Date().getFullYear();
@@ -223,25 +229,25 @@ const HospitalAdminDashboard = () => {
       icon: UserCog,
       value: formatNumber(dashboardData.totalStaff),
       label: 'Total Staff',
-      gradient: 'from-blue-500 to-blue-600'
+      gradient: 'bg-blue-500'
     },
     {
       icon: Users,
       value: formatNumber(dashboardData.totalPatients),
       label: 'Total Patients',
-      gradient: 'from-green-500 to-green-600'
+      gradient: 'bg-green-500'
     },
     {
       icon: Calendar,
       value: formatNumber(dashboardData.totalAppointments),
       label: 'Total Appointments',
-      gradient: 'from-indigo-500 to-indigo-600'
+      gradient: 'bg-indigo-500'
     },
     {
       icon: DollarSign,
       value: formatCurrency(dashboardData.totalRevenue),
       label: 'Total Revenue',
-      gradient: 'from-purple-500 to-purple-600'
+      gradient: 'bg-gray-500'
     }
   ];
 
@@ -250,19 +256,19 @@ const HospitalAdminDashboard = () => {
       icon: Clock,
       value: dashboardData.pendingAppointments,
       label: 'Pending',
-      gradient: 'from-yellow-500 to-yellow-600'
+      gradient: 'bg-gray-500'
     },
     {
       icon: CheckCircle,
       value: dashboardData.confirmedAppointments,
       label: 'Confirmed',
-      gradient: 'from-blue-500 to-blue-600'
+      gradient: 'bg-blue-500'
     },
     {
       icon: CheckCircle,
       value: dashboardData.completedAppointments,
       label: 'Completed',
-      gradient: 'from-green-500 to-green-600'
+      gradient: 'bg-green-500'
     }
   ];
 
@@ -279,6 +285,8 @@ const HospitalAdminDashboard = () => {
         onRefresh={fetchDashboardData}
         loading={loading}
       />
+
+      
 
       <StatsGrid stats={stats} columns={4} />
 

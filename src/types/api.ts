@@ -81,5 +81,4 @@ export interface BookAppointmentData {
 // Data required for initiating a payment
 export interface InitiatePaymentData {
   appointmentId: string
-  phoneNumber: string
 }
