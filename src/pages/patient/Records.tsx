@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, Calendar, Pill, Download, Eye, AlertCircle, Search } from 'lucide-react';
 import jsPDF from 'jspdf';
 import toast from 'react-hot-toast';
@@ -72,6 +72,30 @@ const RecordsPage = () => {
     });
   };
 
+  const loadImageAsBase64 = (imagePath: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const dataURL = canvas.toDataURL('image/png');
+          resolve(dataURL);
+        } else {
+          reject(new Error('Failed to get canvas context'));
+        }
+      };
+      
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = imagePath;
+    });
+  };
+
   const downloadPDF = async (record: any) => {
     try {
       toast.loading('Generating PDF...', { id: 'pdf-download' });
@@ -82,26 +106,58 @@ const RecordsPage = () => {
       const margin = 20;
       let yPosition = margin;
 
+      // Load and add logo with title
+      try {
+        const logoBase64 = await loadImageAsBase64('/telemed.png');
+        const logoSize = 15; // Size in mm
+        pdf.addImage(logoBase64, 'PNG', margin, yPosition, logoSize, logoSize);
+        
+        // Add "Telemedicine" title next to logo in blue
+        pdf.setTextColor(37, 99, 235); // Blue color (RGB)
+        pdf.setFontSize(18);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Telemedicine', margin + logoSize + 5, yPosition + (logoSize / 2) + 2);
+        pdf.setTextColor(0, 0, 0); // Reset to black
+        
+        yPosition += logoSize + 5; // Add space after logo
+      } catch (logoError) {
+        console.warn('Could not load logo:', logoError);
+        // Continue without logo if it fails to load
+      }
+
       // Helper function to add a new page if needed
       const checkPageBreak = (requiredHeight: number) => {
         if (yPosition + requiredHeight > pageHeight - margin) {
           pdf.addPage();
           yPosition = margin;
+          
+          // Add logo to new page as well
+          try {
+            loadImageAsBase64('/telemed.png').then(logoBase64 => {
+              const logoSize = 15;
+              pdf.addImage(logoBase64, 'PNG', margin, margin, logoSize, logoSize);
+            });
+          } catch (err) {
+            // Silently fail
+          }
+          
           return true;
         }
         return false;
       };
 
       // Title
-      pdf.setFontSize(20);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Medical Record', pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += 10;
+   
 
       // Line separator
       pdf.setDrawColor(200, 200, 200);
       pdf.line(margin, yPosition, pageWidth - margin, yPosition);
       yPosition += 10;
+      
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Medical Record:', margin, yPosition);
+      yPosition += 8;
 
       // Doctor Information
       pdf.setFontSize(14);
@@ -179,7 +235,7 @@ const RecordsPage = () => {
         pdf.setFontSize(8);
         pdf.setFont('helvetica', 'italic');
         pdf.text(
-          `Generated on ${new Date().toLocaleDateString()} - Page ${i} of ${totalPages}`,
+          `Generated on ${new Date().toLocaleDateString()} - using TeleMedecine - Page ${i} of ${totalPages}`,
           pageWidth / 2,
           pageHeight - 10,
           { align: 'center' }
@@ -315,8 +371,8 @@ const RecordsPage = () => {
       </div>  
 
       {selectedRecord && (
-        <div className="fixed inset-0 bg-transparent shadow-lg shadow-black/20 rounded-lg border border-gray-200 backdrop-blur-sm bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedRecord(null)}>
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-transparent shadow-lg shadow-black/20  rounded-lg border-gray-200 backdrop-blur-sm bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedRecord(null)}>
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl shadow-black/20" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">Medical Record</h2>
