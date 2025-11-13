@@ -19,7 +19,7 @@ const StatCard: React.FC<StatCardProps> = ({
   return (
     <div className={`bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow ${className}`}>
       <div className="flex items-center justify-between mb-4">
-        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+        <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${gradient} flex items-center justify-center`}>
           <Icon className="w-6 h-6 text-white" />
         </div>
         <span className="text-3xl font-bold text-gray-900">{value}</span>

@@ -22,7 +22,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
   const remoteSocketIdRef = useRef<string | null>(null);
   const [isVideoOn, setIsVideoOn] = useState(isVideoEnabled);
   const [isAudioOn, setIsAudioOn] = useState(true);
-  const [roomId, setRoomId] = useState<string | null>(null);
+  const [_roomId, setRoomId] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(true);
 
   useEffect(() => {
