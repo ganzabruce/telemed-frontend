@@ -134,7 +134,7 @@ const NotificationsPage = () => {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+    <div className="space-y-6 p-6 bg-linear-to-br from-gray-50 to-blue-50 min-h-screen">
       {/* Back Button and Header */}
       <div className="flex items-center gap-4 mb-4">
         <button
@@ -145,7 +145,7 @@ const NotificationsPage = () => {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold bg-linear-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
             Notifications
           </h1>
           <p className="text-gray-600 mt-2 text-lg">
@@ -164,7 +164,7 @@ const NotificationsPage = () => {
       </div>
 
       <Card className="border-none shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+        <CardHeader className="bg-linear-to-r from-blue-600 to-blue-700 text-white">
           <CardTitle className="flex items-center gap-2 text-2xl">
             <Bell className="w-6 h-6" />
             All Notifications ({notifications.length})

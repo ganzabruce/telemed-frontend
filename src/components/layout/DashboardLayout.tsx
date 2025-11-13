@@ -2,7 +2,7 @@
 import React from "react"
 import Sidebar from "./Sidebar"
 import { Outlet, useNavigate } from "react-router-dom"
-import { Bell, Search, User, Settings, LogOut, Menu, Info, AlertTriangle, XCircle, CheckCircle, ArrowRight, Clock } from "lucide-react"
+import { Bell, User, Settings, LogOut, Menu, Info, AlertTriangle, XCircle, CheckCircle, ArrowRight, Clock } from "lucide-react"
 import { useAuth } from "../../context/AuthContext"
 import { useSocket } from "../../context/SocketContext"
 import { getNotifications, markNotificationAsRead, type Notification } from "../../api/notificationsApi"
@@ -202,7 +202,7 @@ const DashboardLayout: React.FC = () => {
 
                   {/* Notifications Dropdown Menu */}
                   {isNotificationsOpen && (
-                    <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[32rem] flex flex-col">
+                    <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-128 flex flex-col">
                       {/* Header */}
                       <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
@@ -236,7 +236,7 @@ const DashboardLayout: React.FC = () => {
                                 }`}
                               >
                                 <div className="flex items-start gap-3">
-                                  <div className="flex-shrink-0 mt-0.5">
+                                  <div className="shrink-0 mt-0.5">
                                     {getNotificationIcon(notification.type)}
                                   </div>
                                   <div className="flex-1 min-w-0">
