@@ -275,7 +275,7 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
                           className="w-12 h-12 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shrink-0">
                           <span className="text-white font-semibold text-sm">{getInitials(user.fullName)}</span>
                         </div>
                       )}
@@ -290,7 +290,7 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
                         )}
                       </div>
                       {isSelected && (
-                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center shrink-0">
                           <div className="w-2 h-2 bg-white rounded-full"></div>
                         </div>
                       )}

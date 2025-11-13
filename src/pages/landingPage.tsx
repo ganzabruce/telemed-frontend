@@ -25,9 +25,8 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border">
-              <span className="text-blue-900 font-bold text-sm">T</span>
-            </div>
+                <img src="/telemedLanding.png" alt="TeleMed" className="w- h-8 rounded-full" />
+            
             <span className="font-bold text-xl text-blue-900">TeleMedicine</span>
           </div>
 
