@@ -1,10 +1,11 @@
 // src/App.tsx
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import LoginPage from "./pages/auth/LoginPage";
-import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
-import Loading from "./components/common/Loading";
-import AdminRoutes from "./routes/AdminRoutes";
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router-dom"
+import { AuthProvider, useAuth } from "./context/AuthContext"
+import { SocketProvider } from "./context/SocketContext"
+import LoginPage from "./pages/auth/LoginPage"
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage"
+import Loading from "./components/common/Loading"
+import AdminRoutes from "./routes/AdminRoutes"
 import HospitalAdminRoutes from "./routes/HospitalAdminRoutes"
 import DoctorRoutes from "./routes/DoctorRoutes"
 import PatientRoutes from "./routes/PatientRoutes"
@@ -138,7 +139,9 @@ const App = () => {
   return (
     <Router>
       <AuthProvider>
-        <AppRoutes />
+        <SocketProvider>
+          <AppRoutes />
+        </SocketProvider>
       </AuthProvider>
     </Router>
   )
