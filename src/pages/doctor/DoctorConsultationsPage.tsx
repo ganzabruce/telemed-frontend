@@ -537,7 +537,7 @@ const DoctorConsultationsPage = () => {
                               className="w-12 h-12 rounded-full"
                             />
                           ) : (
-                            <div className="w-12 h-12 bg-blue-500  rounded-full flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 bg-blue-500  rounded-full flex items-center justify-center shrink-0">
                               <span className="text-white font-semibold text-sm">{patientInfo.initials}</span>
                             </div>
                           )}
@@ -546,9 +546,9 @@ const DoctorConsultationsPage = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between mb-1">
                             <h3 className="font-semibold text-gray-900 text-sm truncate">{patientInfo.name}</h3>
-                            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                            <div className="flex items-center gap-2 shrink-0 ml-2">
                               {(conv.unreadCount ?? 0) > 0 && (
-                                <span className="px-2 py-0.5 bg-blue-600 text-white text-xs font-bold rounded-full min-w-[20px] text-center">
+                                <span className="px-2 py-0.5 bg-blue-600 text-white text-xs font-bold rounded-full min-w-5 text-center">
                                   {conv.unreadCount! > 99 ? '99+' : conv.unreadCount}
                                 </span>
                               )}
@@ -692,7 +692,7 @@ const DoctorConsultationsPage = () => {
                                 }`}
                               >
                                 {!isOwnMessage && (
-                                  <div className="w-8 h-8 bg-blue-500  rounded-full flex items-center justify-center flex-shrink-0">
+                                  <div className="w-8 h-8 bg-blue-500  rounded-full flex items-center justify-center shrink-0">
                                     <span className="text-white font-semibold text-xs">
                                       {getInitials(message.sender.fullName)}
                                     </span>

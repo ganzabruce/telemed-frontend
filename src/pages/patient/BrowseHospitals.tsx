@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import {
   Building2,
   Search,
@@ -153,7 +153,7 @@ const BrowseHospitalsPage = () => {
       .join(', ');
   };
 
-  const handleBookAppointment = (doctor: ApiDoctor, hospital: ApiHospital) => {
+  const handleBookAppointment = (doctor: ApiDoctor, _hospital: ApiHospital) => {
     setSelectedDoctor(doctor);
     setShowBookingModal(true);
   };
@@ -191,7 +191,7 @@ const BrowseHospitalsPage = () => {
   const specializations = getSpecializations();
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+    <div className="space-y-6 p-6 bg-linear-to-br from-gray-50 to-blue-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold  bg-clip-text text-black mb-2">
@@ -274,7 +274,7 @@ const BrowseHospitalsPage = () => {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4 flex-1">
-                      <div className="w-16 h-16 rounded-xl bg-blue-500 flex items-center justify-center flex-shrink-0">
+                      <div className="w-16 h-16 rounded-xl bg-blue-500 flex items-center justify-center shrink-0">
                         <Building2 className="w-8 h-8 text-white" />
                       </div>
                       <div className="flex-1">
@@ -336,7 +336,7 @@ const BrowseHospitalsPage = () => {
                             className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200"
                           >
                             {/* Doctor Avatar */}
-                            <div className="flex-shrink-0">
+                            <div className="shrink-0">
                               {doctor.user.avatarUrl ? (
                                 <img
                                   src={doctor.user.avatarUrl}
@@ -385,7 +385,7 @@ const BrowseHospitalsPage = () => {
                                 </div>
 
                                 {/* Book Appointment Button */}
-                                <div className="flex-shrink-0">
+                                <div className="shrink-0">
                                   <Button
                                     onClick={() => handleBookAppointment(doctor, hospital)}
                                     className="bg-blue-600 hover:bg-blue-700 text-white"

@@ -505,7 +505,7 @@ const ConsultationPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
           <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-white/20">
             <div className="text-center">
-              <div className="relative w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <div className="relative w-24 h-24 bg-linear-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <div className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-75"></div>
                 <div className="absolute inset-0 rounded-full bg-blue-500 animate-pulse"></div>
                 <Video className="w-12 h-12 text-white relative z-10" />
@@ -595,7 +595,7 @@ const ConsultationPage = () => {
                               className="w-12 h-12 rounded-full"
                             />
                           ) : (
-                            <div className="w-12 h-12 bg-blue-500  rounded-full flex items-center justify-center flex-shrink-0">
+                            <div className="w-12 h-12 bg-blue-500  rounded-full flex items-center justify-center shrink-0">
                               <span className="text-white font-semibold text-sm">{doctorInfo.initials}</span>
                             </div>
                           )}
@@ -604,9 +604,9 @@ const ConsultationPage = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between mb-1">
                             <h3 className="font-semibold text-gray-900 text-sm truncate">{doctorInfo.name}</h3>
-                            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                            <div className="flex items-center gap-2 shrink-0 ml-2">
                               {(conv.unreadCount ?? 0) > 0 && (
-                                <span className="px-2 py-0.5 bg-blue-600 text-white text-xs font-bold rounded-full min-w-[20px] text-center">
+                                <span className="px-2 py-0.5 bg-blue-600 text-white text-xs font-bold rounded-full min-w-5 text-center">
                                   {conv.unreadCount! > 99 ? '99+' : conv.unreadCount}
                                 </span>
                               )}
@@ -750,7 +750,7 @@ const ConsultationPage = () => {
                                 }`}
                               >
                                 {!isOwnMessage && (
-                                  <div className="w-8 h-8 bg-blue-500  rounded-full flex items-center justify-center flex-shrink-0">
+                                  <div className="w-8 h-8 bg-blue-500  rounded-full flex items-center justify-center shrink-0">
                                     <span className="text-white font-semibold text-xs">
                                       {getInitials(message.sender.fullName)}
                                     </span>

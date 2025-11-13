@@ -58,7 +58,9 @@ const CompleteProfilePage: React.FC = () => {
     }
   }, [searchParams])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
@@ -68,11 +70,11 @@ const CompleteProfilePage: React.FC = () => {
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setFeedback("❌ Passwords do not match.")
+      setFeedback("Passwords do not match.")
       return
     }
     if (formData.password.length < 6) {
-      setFeedback("❌ Password must be at least 6 characters long.")
+      setFeedback("Password must be at least 6 characters long.")
       return
     }
 
@@ -118,7 +120,7 @@ const CompleteProfilePage: React.FC = () => {
 
   if (feedback && !token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 px-4 py-8">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-blue-100 px-4 py-8">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
             <div className="text-center">
@@ -150,7 +152,7 @@ const CompleteProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-blue-100 px-4 py-8">
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">

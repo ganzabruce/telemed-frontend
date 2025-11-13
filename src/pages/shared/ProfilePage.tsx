@@ -12,7 +12,7 @@ import {
   X,
   Shield,
   Stethoscope,
-  ClipboardList,
+
   Heart,
   Building2,
   RefreshCw,

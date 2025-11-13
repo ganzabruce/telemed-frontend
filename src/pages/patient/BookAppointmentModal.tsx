@@ -1,5 +1,3 @@
-// new/src/components/patient/BookAppointmentModal.tsx
-
 import React, { useState, useEffect } from "react"
 import {
   Dialog,
@@ -22,7 +20,7 @@ import {
 import { useAuth } from "@/context/AuthContext"
 import type { ApiDoctor, ApiHospital, ApiAppointment } from "@/types/api"
 
-import { bookAppointment, getDoctors, getHospitals, initiatePayment } from "@/api/patientsApi"
+import { bookAppointment, getDoctors, getHospitals } from "@/api/patientsApi"
 import { toast } from "react-hot-toast"
 import { InitiatePaymentModal } from "./InitiatePaymentModal"
 

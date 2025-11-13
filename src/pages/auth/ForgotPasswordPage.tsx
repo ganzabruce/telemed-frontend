@@ -51,9 +51,7 @@ const ForgotPasswordPage = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
-        email,
-      });
+      
 
       toast.success('If an account exists with this email, an OTP has been sent.');
       setStep('otp');
@@ -152,11 +150,11 @@ const ForgotPasswordPage = () => {
   const handleResendOTP = () => {
     setStep('email');
     setOtp('');
-    toast.info('Please request a new OTP');
+    toast.success('Please request a new OTP');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <Card className="border-none shadow-2xl">
           <CardHeader className="text-center space-y-2">
@@ -422,7 +420,7 @@ const ForgotPasswordPage = () => {
         {/* Info Box */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
             <div className="text-sm text-blue-800">
               <p className="font-semibold mb-1">Didn't receive the code?</p>
               <ul className="list-disc list-inside space-y-1 text-blue-700">
