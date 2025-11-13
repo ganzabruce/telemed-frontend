@@ -1,8 +1,3 @@
-// import PagePlaceholder from "../../components/common/PagePlaceholder"
-// export default function PatientDashboard() {
-//   return <PagePlaceholder title="Patient Dashboard" description="Overview of your upcoming and past appointments." />
-// }
-
 import { useState, useEffect } from 'react';
 import { 
   Calendar,
@@ -10,24 +5,12 @@ import {
   Video,
   Phone,
   MessageSquare,
-  FileText,
   Heart,
   Activity,
-  AlertCircle,
   CheckCircle,
-  XCircle,
   User,
-  MapPin,
-  Mail,
   CreditCard,
-  Download,
-  Plus,
-  ArrowRight,
-  Stethoscope,
-  Building2,
-  RefreshCw
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import StartConversationModal from '../../components/shared/StartConversationModal';
 import DashboardHeader from '../../components/shared/DashboardHeader';
 import StatsGrid from '../../components/shared/StatsGrid';
@@ -36,18 +19,77 @@ import ChartCard from '../../components/shared/ChartCard';
 import ListCard from '../../components/shared/ListCard';
 import PageContainer from '../../components/shared/PageContainer';
 import LoadingState from '../../components/shared/LoadingState';
-import EmptyState from '../../components/shared/EmptyState';
+
 import StatusBadge from '../../components/shared/StatusBadge';
 
 // API Base URL
 const API_BASE_URL = 'http://localhost:5003';
 
+// --- Types ---
+interface UserRef {
+  id?: string;
+  fullName?: string;
+}
+
+interface Doctor {
+  id?: string;
+  user?: UserRef;
+  specialization?: string;
+}
+
+interface Appointment {
+  id?: string;
+  appointmentDate?: string;
+  status?: string;
+  type?: string;
+  doctor?: Doctor | null;
+  doctorId?: string;
+  patient?: any;
+}
+
+interface Payment {
+  id?: string;
+  amount?: string | number | null;
+  status?: string;
+}
+
+interface MonthlyData {
+  month: string;
+  count: number;
+}
+
+interface RecentDoctor {
+  id?: string;
+  userId?: string | undefined;
+  name: string;
+  specialization?: string;
+  lastVisit?: string;
+  type?: string;
+}
+
+interface DashboardData {
+  upcomingAppointments: Appointment[];
+  pastAppointments: Appointment[];
+  totalAppointments: number;
+  completedAppointments: number;
+  upcomingCount: number;
+  cancelledCount: number;
+  totalSpent: number;
+  unpaidCount: number;
+  consultationHistory: { video: number; audio: number; chat: number };
+  recentDoctors: RecentDoctor[];
+  nextAppointment: Appointment | null;
+  monthlyAppointments: MonthlyData[];
+  patientInfo: any;
+  hospitalInfo: any;
+}
+
 const PatientDashboard = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [showStartConversationModal, setShowStartConversationModal] = useState(false);
+
+  const [loading, setLoading] = useState<boolean>(true);
+  const [showStartConversationModal, setShowStartConversationModal] = useState<boolean>(false);
   const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
-  const [dashboardData, setDashboardData] = useState({
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
     upcomingAppointments: [],
     pastAppointments: [],
     totalAppointments: 0,
@@ -68,44 +110,54 @@ const PatientDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (): Promise<void> => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : null;
-      const userId = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).id : null;
-      
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
+      let token: string | null = null;
+      try {
+        const raw = localStorage.getItem('user');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          token = parsed?.token ?? null;
+        }
+      } catch (err) {
+        token = null;
+      }
 
-      // Fetch appointments and payments
-      const [appointmentsResponse, paymentsResponse, doctorsResponse, hospitalsResponse] = await Promise.all([
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Fetch appointments, payments and hospitals
+      const [appointmentsResponse, paymentsResponse, hospitalsResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/appointments?orderBy=appointmentDate&order=desc`, { headers }),
         fetch(`${API_BASE_URL}/payments`, { headers }),
-        fetch(`${API_BASE_URL}/doctors`, { headers }),
         fetch(`${API_BASE_URL}/hospitals`, { headers })
       ]);
 
-      const appointmentsData = await appointmentsResponse.json();
-      const paymentsData = await paymentsResponse.json();
-      const doctorsData = await doctorsResponse.json();
-      const hospitalsData = await hospitalsResponse.json();
+      const appointmentsData = await appointmentsResponse.json().catch(() => ({}));
+      const paymentsData = await paymentsResponse.json().catch(() => ({}));
+      const hospitalsData = await hospitalsResponse.json().catch(() => ({}));
 
       // Get patient's appointments
-      const myAppointments = (appointmentsData.data || []);
+      const myAppointments: Appointment[] = (appointmentsData?.data || []);
       
       // Separate upcoming and past appointments
       const now = new Date();
-      const upcoming = myAppointments.filter(a => {
-        const apptDate = new Date(a.appointmentDate);
-        return apptDate >= now && (a.status === 'PENDING' || a.status === 'CONFIRMED');
-      }).sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate));
+      const upcoming = myAppointments
+        .filter(a => {
+          const apptDate = new Date(a.appointmentDate ?? '');
+          return apptDate >= now && (a.status === 'PENDING' || a.status === 'CONFIRMED');
+        })
+        .sort((a, b) => new Date(a.appointmentDate ?? '').getTime() - new Date(b.appointmentDate ?? '').getTime());
 
-      const past = myAppointments.filter(a => {
-        const apptDate = new Date(a.appointmentDate);
-        return apptDate < now || a.status === 'COMPLETED' || a.status === 'CANCELLED';
-      }).sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate));
+      const past = myAppointments
+        .filter(a => {
+          const apptDate = new Date(a.appointmentDate ?? '');
+          return apptDate < now || a.status === 'COMPLETED' || a.status === 'CANCELLED';
+        })
+        .sort((a, b) => new Date(b.appointmentDate ?? '').getTime() - new Date(a.appointmentDate ?? '').getTime());
 
       // Get next appointment
       const nextAppt = upcoming[0] || null;
@@ -115,19 +167,19 @@ const PatientDashboard = () => {
       const cancelled = myAppointments.filter(a => a.status === 'CANCELLED').length;
 
       // Calculate consultation type breakdown
-      const videoCount = myAppointments.filter(a => a.type === 'VIDEO').length;
-      const audioCount = myAppointments.filter(a => a.type === 'AUDIO').length;
-      const chatCount = myAppointments.filter(a => a.type === 'CHAT').length;
+      const videoCount = myAppointments.filter(a => (a.type ?? '').toUpperCase() === 'VIDEO').length;
+      const audioCount = myAppointments.filter(a => (a.type ?? '').toUpperCase() === 'AUDIO').length;
+      const chatCount = myAppointments.filter(a => (a.type ?? '').toUpperCase() === 'CHAT').length;
 
       // Calculate payments
-      const myPayments = (paymentsData.data || []);
+      const myPayments: Payment[] = (paymentsData?.data || []);
       const totalSpent = myPayments
         .filter(p => p.status === 'PAID')
-        .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+        .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
       const unpaidCount = myPayments.filter(p => p.status === 'PENDING').length;
 
       // Get recent doctors
-      const recentDoctors = getRecentDoctors(myAppointments, doctorsData.data || []);
+      const recentDoctors = getRecentDoctors(myAppointments);
 
       // Process monthly appointments
       const monthlyActivity = processMonthlyAppointments(myAppointments);
@@ -136,7 +188,7 @@ const PatientDashboard = () => {
       const patientInfo = myAppointments[0]?.patient || null;
       
       // Get hospital info
-      const hospitalInfo = hospitalsData.data?.[0] || null;
+      const hospitalInfo = hospitalsData?.data?.[0] || null;
 
       setDashboardData({
         upcomingAppointments: upcoming.slice(0, 5),
@@ -154,26 +206,28 @@ const PatientDashboard = () => {
         patientInfo,
         hospitalInfo
       });
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
   };
 
-  const getRecentDoctors = (appointments, doctors) => {
-    const doctorMap = new Map();
-    
+  const getRecentDoctors = (appointments: Appointment[]): RecentDoctor[] => {
+     const doctorMap = new Map<string | undefined, RecentDoctor>();
+
     appointments
       .filter(a => a.doctor)
-      .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
+      .sort((a, b) => new Date(b.appointmentDate ?? '').getTime() - new Date(a.appointmentDate ?? '').getTime())
       .forEach(a => {
-        if (!doctorMap.has(a.doctorId)) {
-          doctorMap.set(a.doctorId, {
+        const key = a.doctorId;
+        if (!doctorMap.has(key)) {
+          const name = a.doctor?.user?.fullName ?? 'Dr. Unknown';
+          doctorMap.set(key, {
             id: a.doctorId,
-            userId: a.doctor.user?.id,
-            name: a.doctor.user?.fullName || 'Dr. Unknown',
-            specialization: a.doctor.specialization,
+            userId: a.doctor?.user?.id,
+            name,
+            specialization: a.doctor?.specialization,
             lastVisit: a.appointmentDate,
             type: a.type
           });
@@ -183,14 +237,14 @@ const PatientDashboard = () => {
     return Array.from(doctorMap.values()).slice(0, 4);
   };
 
-  const processMonthlyAppointments = (appointments) => {
+  const processMonthlyAppointments = (appointments: Appointment[]): MonthlyData[] => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentYear = new Date().getFullYear();
     const monthCounts = new Array(12).fill(0);
 
     appointments.forEach(apt => {
-      const date = new Date(apt.appointmentDate);
-      if (date.getFullYear() === currentYear) {
+      const date = new Date(apt.appointmentDate ?? '');
+      if (!isNaN(date.getTime()) && date.getFullYear() === currentYear) {
         monthCounts[date.getMonth()]++;
       }
     });
@@ -201,7 +255,7 @@ const PatientDashboard = () => {
     }));
   };
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-RW', {
       style: 'currency',
       currency: 'RWF',
@@ -209,31 +263,22 @@ const PatientDashboard = () => {
     }).format(amount);
   };
 
-  const formatDateTime = (dateString) => {
-    const date = new Date(dateString);
+  const formatDateTime = (dateString?: string | null) => {
+    const date = new Date(dateString ?? '');
+    if (isNaN(date.getTime())) {
+      return { date: '-', time: '-' };
+    }
+
     return {
       date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
     };
   };
 
-  const getStatusColor = (status) => {
-    switch (status?.toUpperCase()) {
-      case 'COMPLETED':
-        return 'text-green-600 bg-green-50 border-green-200';
-      case 'CONFIRMED':
-        return 'text-blue-600 bg-blue-50 border-blue-200';
-      case 'PENDING':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'CANCELLED':
-        return 'text-red-600 bg-red-50 border-red-200';
-      default:
-        return 'text-gray-600 bg-gray-50 border-gray-200';
-    }
-  };
 
-  const getTypeIcon = (type) => {
-    switch (type?.toUpperCase()) {
+
+  const getTypeIcon = (type?: string | null) => {
+    switch ((type ?? '').toUpperCase()) {
       case 'VIDEO':
         return <Video className="w-4 h-4" />;
       case 'AUDIO':
@@ -245,17 +290,6 @@ const PatientDashboard = () => {
     }
   };
 
-  const getTimeUntilAppointment = (dateString) => {
-    const now = new Date();
-    const apptDate = new Date(dateString);
-    const diffMs = apptDate - now;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffDays > 0) return `in ${diffDays} day${diffDays > 1 ? 's' : ''}`;
-    if (diffHours > 0) return `in ${diffHours} hour${diffHours > 1 ? 's' : ''}`;
-    return 'soon';
-  };
 
   const stats = [
     {
@@ -357,7 +391,7 @@ const PatientDashboard = () => {
                 const dateTime = formatDateTime(appointment.appointmentDate);
                 return (
                   <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
                         <User className="w-6 h-6 text-blue-600" />
                       </div>
@@ -368,7 +402,7 @@ const PatientDashboard = () => {
                         <p className="font-semibold text-gray-900 truncate">
                           Dr. {appointment.doctor?.user?.fullName || 'Unknown'}
                         </p>
-                        <StatusBadge status={appointment.status} size="sm" />
+                        <StatusBadge status={appointment.status ?? 'UNKNOWN'} size="sm" />
                       </div>
                       <div className="flex items-center gap-3 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
@@ -403,7 +437,7 @@ const PatientDashboard = () => {
             <div className="space-y-3">
               {dashboardData.recentDoctors.map((doctor, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
                     <span className="text-white font-semibold text-sm">
                       {doctor.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </span>
@@ -415,7 +449,7 @@ const PatientDashboard = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedDoctorId(doctor.userId);
+                      setSelectedDoctorId(doctor.userId ?? null);
                       setShowStartConversationModal(true);
                     }}
                     className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

@@ -1,24 +1,13 @@
-// import PagePlaceholder from "../../components/common/PagePlaceholder"
-// export default function HospitalAdminDashboard() {
-//   return <PagePlaceholder title="Hospital Admin Dashboard" description="View hospital stats and activities." />
-// }
-
 import { useState, useEffect } from 'react';
 import { 
   Users, 
   UserCog,
   Calendar, 
   DollarSign,
-  TrendingUp,
-  Activity,
-  AlertCircle,
   Clock,
   CheckCircle,
-  XCircle,
   MoreVertical,
-  Search,
   Building2,
-  RefreshCw,
   User
 } from 'lucide-react';
 import {
@@ -36,9 +25,42 @@ import {
 // API Base URL
 const API_BASE_URL = 'http://localhost:5003';
 
+// --- Types ---
+interface ActivityPoint {
+  month: string;
+  count: number;
+}
+
+interface StaffItem {
+  id?: string;
+  name: string;
+  role: string;
+  specialization?: string | null;
+  status?: string | null;
+  email?: string | null;
+}
+
+interface HospitalDashboardState {
+  totalStaff: number;
+  totalDoctors: number;
+  totalPatients: number;
+  totalAppointments: number;
+  totalRevenue: number;
+  pendingAppointments: number;
+  confirmedAppointments: number;
+  completedAppointments: number;
+  cancelledAppointments: number;
+  monthlyAppointments: ActivityPoint[];
+  recentAppointments: any[];
+  staffList: StaffItem[];
+  patientGrowth: number;
+  appointmentGrowth: number;
+  revenueGrowth: number;
+}
+
 const HospitalAdminDashboard = () => {
-  const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState({
+  const [loading, setLoading] = useState<boolean>(true);
+  const [dashboardData, setDashboardData] = useState<HospitalDashboardState>({
     totalStaff: 0,
     totalDoctors: 0,
     totalPatients: 0,
@@ -55,10 +77,10 @@ const HospitalAdminDashboard = () => {
     appointmentGrowth: 0,
     revenueGrowth: 0,
   });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [hospitalInfo, setHospitalInfo] = useState(null);
-  const [paymentPhone, setPaymentPhone] = useState('');
-  const [savingPaymentPhone, setSavingPaymentPhone] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [hospitalInfo, setHospitalInfo] = useState<any | null>(null);
+  const [_paymentPhone, setPaymentPhone] = useState<string>('');
+
 
   useEffect(() => {
     fetchDashboardData();
@@ -67,13 +89,24 @@ const HospitalAdminDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : null;
-      const userId = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).id : null;
-      
-      const headers = {
-        'Authorization': `Bearer ${token}`,
+      const rawUser = localStorage.getItem('user');
+      let token: string | null = null;
+      let userId: string | null = null;
+      if (rawUser) {
+        try {
+          const parsed = JSON.parse(rawUser);
+          token = parsed?.token ?? null;
+          userId = parsed?.id ?? null;
+        } catch {
+          token = null;
+          userId = null;
+        }
+      }
+
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json'
       };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       // Fetch all required data in parallel
       const [
@@ -88,13 +121,13 @@ const HospitalAdminDashboard = () => {
         fetch(`${API_BASE_URL}/payments`, { headers })
       ]);
 
-      const hospitalsData = await hospitalsResponse.json();
-      const doctorsData = await doctorsResponse.json();
-      const appointmentsData = await appointmentsResponse.json();
-      const paymentsData = await paymentsResponse.json();
+      const hospitalsData = await hospitalsResponse.json().catch(() => ({}));
+      const doctorsData = await doctorsResponse.json().catch(() => ({}));
+      const appointmentsData = await appointmentsResponse.json().catch(() => ({}));
+      const paymentsData = await paymentsResponse.json().catch(() => ({}));
 
       // Find the hospital administered by the current user
-      const myHospital = hospitalsData.data?.find(h => h.adminId === userId);
+      const myHospital = (hospitalsData.data || []).find((h: any) => h.adminId === userId);
       setHospitalInfo(myHospital);
       if (myHospital?.paymentPhone) {
         setPaymentPhone(myHospital.paymentPhone);
@@ -107,29 +140,29 @@ const HospitalAdminDashboard = () => {
       }
 
       // Filter data for this hospital
-      const hospitalDoctors = (doctorsData.data || []).filter(d => d.hospitalId === myHospital.id);
-      const hospitalAppointments = (appointmentsData.data || []).filter(a => a.hospitalId === myHospital.id);
-      const hospitalPayments = (paymentsData.data || []).filter(p => 
-        hospitalAppointments.some(a => a.id === p.appointmentId)
+      const hospitalDoctors = (doctorsData.data || []).filter((d: any) => d.hospitalId === myHospital.id);
+      const hospitalAppointments = (appointmentsData.data || []).filter((a: any) => a.hospitalId === myHospital.id);
+      const hospitalPayments = (paymentsData.data || []).filter((p: any) => 
+        hospitalAppointments.some((a: any) => a.id === p.appointmentId)
       );
 
       // Count unique patients
-      const uniquePatientIds = new Set(hospitalAppointments.map(a => a.patientId));
+      const uniquePatientIds = new Set(hospitalAppointments.map((a: any) => a.patientId));
       const totalPatients = uniquePatientIds.size;
 
       // Calculate appointment statistics
-      const pendingCount = hospitalAppointments.filter(a => a.status === 'PENDING').length;
-      const confirmedCount = hospitalAppointments.filter(a => a.status === 'CONFIRMED').length;
-      const completedCount = hospitalAppointments.filter(a => a.status === 'COMPLETED').length;
-      const cancelledCount = hospitalAppointments.filter(a => a.status === 'CANCELLED').length;
+      const pendingCount = hospitalAppointments.filter((a: any) => a.status === 'PENDING').length;
+      const confirmedCount = hospitalAppointments.filter((a: any) => a.status === 'CONFIRMED').length;
+      const completedCount = hospitalAppointments.filter((a: any) => a.status === 'COMPLETED').length;
+      const cancelledCount = hospitalAppointments.filter((a: any) => a.status === 'CANCELLED').length;
 
       // Calculate total revenue
-      const totalRevenue = hospitalPayments
-        .filter(p => p.status === 'PAID')
-        .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+      const totalRevenue = (hospitalPayments || [])
+        .filter((p: any) => p.status === 'PAID')
+        .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
 
       // Process monthly appointments
-      const monthlyActivity = processMonthlyActivity(hospitalAppointments);
+      const monthlyActivity = processMonthlyActivity(hospitalAppointments || []);
 
       // Calculate growth percentages (simulated - would need historical data)
       const patientGrowth = Math.floor(Math.random() * 10) + 1;
@@ -137,8 +170,8 @@ const HospitalAdminDashboard = () => {
       const revenueGrowth = Math.floor(Math.random() * 12) + 3;
 
       // Combine staff list
-      const staffList = [
-        ...hospitalDoctors.map(d => ({
+      const staffList: StaffItem[] = [
+        ...hospitalDoctors.map((d: any) => ({
           id: d.id,
           name: d.user?.fullName || 'Unknown',
           role: 'Doctor',
@@ -159,7 +192,7 @@ const HospitalAdminDashboard = () => {
         completedAppointments: completedCount,
         cancelledAppointments: cancelledCount,
         monthlyAppointments: monthlyActivity,
-        recentAppointments: hospitalAppointments.slice(0, 5),
+        recentAppointments: (hospitalAppointments || []).slice(0, 5),
         staffList,
         patientGrowth,
         appointmentGrowth,
@@ -173,13 +206,16 @@ const HospitalAdminDashboard = () => {
   };
 
 
-  const processMonthlyActivity = (appointments) => {
+  const processMonthlyActivity = (appointments: Array<any>): ActivityPoint[] => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentYear = new Date().getFullYear();
     const monthCounts = new Array(12).fill(0);
 
-    appointments.forEach(apt => {
-      const date = new Date(apt.appointmentDate || apt.createdAt);
+    (appointments || []).forEach(apt => {
+      const dateStr = apt?.appointmentDate ?? apt?.createdAt ?? null;
+      if (!dateStr) return;
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return;
       if (date.getFullYear() === currentYear) {
         monthCounts[date.getMonth()]++;
       }
@@ -191,7 +227,7 @@ const HospitalAdminDashboard = () => {
     }));
   };
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-RW', {
       style: 'currency',
       currency: 'RWF',
@@ -199,29 +235,15 @@ const HospitalAdminDashboard = () => {
     }).format(amount);
   };
 
-  const formatNumber = (num) => {
+  const formatNumber = (num: number): string => {
     return new Intl.NumberFormat('en-US').format(num);
   };
 
-  const getStatusColor = (status) => {
-    switch (status?.toUpperCase()) {
-      case 'COMPLETED':
-        return 'text-green-600 bg-green-50';
-      case 'CONFIRMED':
-        return 'text-blue-600 bg-blue-50';
-      case 'PENDING':
-        return 'text-yellow-600 bg-yellow-50';
-      case 'CANCELLED':
-        return 'text-red-600 bg-red-50';
-      case 'AVAILABLE':
-        return 'text-green-600 bg-green-50';
-      case 'BUSY':
-        return 'text-orange-600 bg-orange-50';
-      case 'OFFLINE':
-        return 'text-gray-600 bg-gray-50';
-      default:
-        return 'text-gray-600 bg-gray-50';
-    }
+  const safeFormatDate = (dateString?: string | null): string => {
+    if (!dateString) return '-';
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleDateString();
   };
 
   const stats = [
@@ -343,7 +365,7 @@ const HospitalAdminDashboard = () => {
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {dashboardData.recentAppointments.map((appointment, index) => (
               <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
                     <User className="w-6 h-6 text-blue-600" />
                   </div>
@@ -359,7 +381,7 @@ const HospitalAdminDashboard = () => {
                   <div className="flex items-center gap-3 text-sm text-gray-600">
                     <div className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
-                      <span>{new Date(appointment.appointmentDate).toLocaleDateString()}</span>
+                      <span>{safeFormatDate(appointment.appointmentDate)}</span>
                     </div>
                   </div>
                 </div>
@@ -391,8 +413,8 @@ const HospitalAdminDashboard = () => {
             )
             .map((staff, index) => (
               <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                <div className="shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-400 to-blue-600 flex items-center justify-center">
                     <span className="text-white font-semibold text-sm">
                       {staff.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </span>
@@ -402,7 +424,7 @@ const HospitalAdminDashboard = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-semibold text-gray-900 truncate">{staff.name}</p>
-                    <StatusBadge status={staff.status} size="sm" />
+                    <StatusBadge status={staff.status ?? 'OFFLINE'} size="sm" />
                   </div>
                   <div className="flex items-center gap-3 text-sm text-gray-600">
                     <span>{staff.role}</span>

@@ -1,17 +1,35 @@
 import  { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Building2, Users, Mail, Phone, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import {  Mail,  CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:5003';
 
+// --- Types ---
+interface ToastMessage {
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
+interface FormDataType {
+  email: string;
+  fullName: string;
+  phone: string;
+}
+
 const getAuthHeaders = () => {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const rawUser = localStorage.getItem('user') || '{}';
+  let user: Record<string, any> = {};
+  try {
+    user = JSON.parse(rawUser);
+  } catch {
+    user = {};
+  }
   return {
     'Authorization': `Bearer ${user.token}`,
     'Content-Type': 'application/json'
   };
 };
 
-const Toast = ({ message, type, onClose }) => {
+const Toast = ({ message, type, onClose }: ToastMessage & { onClose: () => void }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
     return () => clearTimeout(timer);
@@ -29,28 +47,21 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
-const AdminDashboard = () => {
-  return (
-    <div className="flex flex-col items-center justify-center h-full text-center p-8">
-      <h1 className="text-3xl font-bold text-blue-600 mb-2">Admin Dashboard</h1>
-      <p className="text-gray-500 text-lg">This page is under development.</p>
-    </div>
-  );
-};
+
 export const InviteAdmin = () => {
-  const [toast, setToast] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [formData, setFormData] = useState<FormDataType>({
     email: '',
     fullName: '',
     phone: ''
   });
 
-  const showToast = (message, type) => {
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({ message, type });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
@@ -69,7 +80,8 @@ export const InviteAdmin = () => {
       showToast('Invitation sent successfully!', 'success');
       setFormData({ email: '', fullName: '', phone: '' });
     } catch (error) {
-      showToast(error.message || 'Failed to send invitation', 'error');
+      const msg = error instanceof Error ? error.message : 'Failed to send invitation';
+      showToast(msg, 'error');
     } finally {
       setLoading(false);
     }
@@ -98,7 +110,7 @@ export const InviteAdmin = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address *
@@ -150,7 +162,7 @@ export const InviteAdmin = () => {
             </div>
 
             <button
-              onClick={handleSubmit}
+              type="submit"
               disabled={loading}
               className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
@@ -166,7 +178,7 @@ export const InviteAdmin = () => {
                 </>
               )}
             </button>
-          </div>
+          </form>
         </div>
       </div>
     </div>

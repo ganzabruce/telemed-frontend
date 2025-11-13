@@ -100,7 +100,7 @@ export const PatientsManagement = () => {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+    <div className="space-y-6 p-6 bg-linear-to-br from-gray-50 to-blue-50 min-h-screen">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
@@ -138,7 +138,7 @@ export const PatientsManagement = () => {
           return (
             <div key={index} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${gradient} flex items-center justify-center`}>
                   <stat.icon className="w-6 h-6 text-white" />
                 </div>
                 <span className="text-3xl font-bold text-gray-900">{stat.value}</span>
@@ -166,7 +166,7 @@ export const PatientsManagement = () => {
 
       {/* Patients Table */}
       <Card className="border-none shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+        <CardHeader className="bg-linear-to-r from-blue-600 to-blue-700 text-white">
           <CardTitle className="text-2xl">All Patients ({filteredPatients.length})</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -192,7 +192,7 @@ export const PatientsManagement = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredPatients.map((patient, index) => (
+                  filteredPatients.map((patient, _index) => (
                     <TableRow 
                       key={patient.id} 
                       className="hover:bg-blue-50 transition-colors duration-150"

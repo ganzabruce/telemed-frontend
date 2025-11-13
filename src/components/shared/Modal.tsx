@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../ui/dialog';
-import { Button } from '../ui/button';
 import { X } from 'lucide-react';
 
 interface ModalProps {

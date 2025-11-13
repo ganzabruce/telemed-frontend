@@ -21,12 +21,61 @@ import ListCard from '../../components/shared/ListCard';
 // API Base URL
 const API_BASE_URL = 'http://localhost:5003';
 
+// --- Types ---
+interface UserRef {
+  id?: string;
+  fullName?: string;
+}
+
+interface PatientRef {
+  user?: UserRef | null;
+}
+
+interface Appointment {
+  id?: string;
+  appointmentDate?: string | null;
+  status?: string | null;
+  type?: string | null;
+  doctorId?: string;
+  patientId?: string;
+  patient?: PatientRef | null;
+}
+
+interface DoctorProfile {
+  id?: string;
+  userId?: string;
+  status?: string;
+  specialization?: string;
+}
+
+interface WeeklyData {
+  day: string;
+  count: number;
+}
+
+interface DashboardData {
+  totalAppointments: number;
+  todayAppointments: number;
+  upcomingAppointments: number;
+  completedAppointments: number;
+  totalPatients: number;
+  pendingCount: number;
+  confirmedCount: number;
+  todaySchedule: Appointment[];
+  upcomingSchedule: Appointment[];
+  recentPatients: Array<{ id?: string; name: string; lastVisit?: string; status?: string; type?: string }>;
+  consultationBreakdown: { video: number; audio: number; chat: number };
+  weeklyAppointments: WeeklyData[];
+  status: string;
+  specialization: string;
+}
+
 const DoctorDashboard = () => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [appointments, setAppointments] = useState([]);
-  const [doctorProfile, setDoctorProfile] = useState(null);
-  const [dashboardData, setDashboardData] = useState({
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [, setDoctorProfile] = useState<DoctorProfile | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
     totalAppointments: 0,
     todayAppointments: 0,
     upcomingAppointments: 0,
@@ -42,7 +91,7 @@ const DoctorDashboard = () => {
     status: 'OFFLINE',
     specialization: '',
   });
-  const [activeTab, setActiveTab] = useState('today');
+  const [activeTab, setActiveTab] = useState<'today' | 'upcoming'>('today');
 
   useEffect(() => {
     fetchDashboardData();
@@ -57,7 +106,7 @@ const DoctorDashboard = () => {
     return null;
   };
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (): Promise<void> => {
     setLoading(true);
     setError(null);
     
@@ -81,11 +130,12 @@ const DoctorDashboard = () => {
         axios.get(`${API_BASE_URL}/doctors`, { headers })
       ]);
 
-      const appointmentsData = appointmentsResponse.data;
-      const doctorsData = doctorsResponse.data;
+      const appointmentsData = appointmentsResponse.data as any;
+      const doctorsData = doctorsResponse.data as any;
 
       // Find the doctor profile for the current user
-      const myDoctorProfile = (doctorsData.data || []).find(d => d.userId === userId);
+      const doctorsList = (doctorsData?.data as DoctorProfile[]) || [];
+      const myDoctorProfile = doctorsList.find((d: DoctorProfile) => d.userId === userId) || null;
       setDoctorProfile(myDoctorProfile);
 
       if (!myDoctorProfile) {
@@ -95,7 +145,8 @@ const DoctorDashboard = () => {
       }
 
       // Filter appointments for this doctor
-      const myAppointments = (appointmentsData.data || []).filter(a => a.doctorId === myDoctorProfile.id);
+      const apptsList = (appointmentsData?.data as Appointment[]) || [];
+      const myAppointments = apptsList.filter((a: Appointment) => a.doctorId === myDoctorProfile.id);
       setAppointments(myAppointments);
 
       // Get today's date
@@ -105,27 +156,29 @@ const DoctorDashboard = () => {
       tomorrow.setDate(tomorrow.getDate() + 1);
 
       // Filter appointments by status and date
-      const todayAppts = myAppointments.filter(a => {
-        const apptDate = new Date(a.appointmentDate);
-        return apptDate >= today && apptDate < tomorrow;
+      const todayAppts = myAppointments.filter((a: Appointment) => {
+        const apptDate = new Date(a.appointmentDate ?? '');
+        return !isNaN(apptDate.getTime()) && apptDate >= today && apptDate < tomorrow;
       });
 
-      const upcomingAppts = myAppointments.filter(a => {
-        const apptDate = new Date(a.appointmentDate);
-        return apptDate >= tomorrow;
-      }).sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate));
+      const upcomingAppts = myAppointments
+        .filter((a: Appointment) => {
+          const apptDate = new Date(a.appointmentDate ?? '');
+          return !isNaN(apptDate.getTime()) && apptDate >= tomorrow;
+        })
+        .sort((a: Appointment, b: Appointment) => (new Date(a.appointmentDate ?? '').getTime() - new Date(b.appointmentDate ?? '').getTime()));
 
-      const completedAppts = myAppointments.filter(a => a.status === 'COMPLETED');
-      const pendingAppts = myAppointments.filter(a => a.status === 'PENDING');
-      const confirmedAppts = myAppointments.filter(a => a.status === 'CONFIRMED');
+      const completedAppts = myAppointments.filter((a: Appointment) => a.status === 'COMPLETED');
+      const pendingAppts = myAppointments.filter((a: Appointment) => a.status === 'PENDING');
+      const confirmedAppts = myAppointments.filter((a: Appointment) => a.status === 'CONFIRMED');
 
       // Count unique patients
-      const uniquePatientIds = new Set(myAppointments.map(a => a.patientId));
+      const uniquePatientIds = new Set(myAppointments.map((a: Appointment) => a.patientId));
 
       // Calculate consultation type breakdown
-      const videoCount = myAppointments.filter(a => a.type === 'VIDEO').length;
-      const audioCount = myAppointments.filter(a => a.type === 'AUDIO').length;
-      const chatCount = myAppointments.filter(a => a.type === 'CHAT').length;
+      const videoCount = myAppointments.filter((a: Appointment) => (a.type ?? '').toUpperCase() === 'VIDEO').length;
+      const audioCount = myAppointments.filter((a: Appointment) => (a.type ?? '').toUpperCase() === 'AUDIO').length;
+      const chatCount = myAppointments.filter((a: Appointment) => (a.type ?? '').toUpperCase() === 'CHAT').length;
 
       // Process weekly appointments
       const weeklyActivity = processWeeklyActivity(myAppointments);
@@ -146,27 +199,29 @@ const DoctorDashboard = () => {
         recentPatients,
         consultationBreakdown: { video: videoCount, audio: audioCount, chat: chatCount },
         weeklyAppointments: weeklyActivity,
-        status: myDoctorProfile.status || 'OFFLINE',
-        specialization: myDoctorProfile.specialization || '',
+        status: myDoctorProfile?.status || 'OFFLINE',
+        specialization: myDoctorProfile?.specialization || '',
       });
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      setError(err.response?.data?.message || 'Failed to fetch dashboard data');
+      const msg = (err as any)?.response?.data?.message || (err instanceof Error ? err.message : String(err));
+      setError(msg || 'Failed to fetch dashboard data');
     } finally {
       setLoading(false);
     }
   };
 
-  const processWeeklyActivity = (appointments) => {
+  const processWeeklyActivity = (appointments: Appointment[]): WeeklyData[] => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const dayCounts = new Array(7).fill(0);
     const today = new Date();
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Monday
 
-    appointments.forEach(apt => {
-      const aptDate = new Date(apt.appointmentDate);
-      const daysDiff = Math.floor((aptDate - startOfWeek) / (1000 * 60 * 60 * 24));
+    appointments.forEach((apt: Appointment) => {
+      const aptDate = new Date(apt.appointmentDate ?? '');
+      if (isNaN(aptDate.getTime())) return;
+      const daysDiff = Math.floor((aptDate.getTime() - startOfWeek.getTime()) / (1000 * 60 * 60 * 24));
       if (daysDiff >= 0 && daysDiff < 7) {
         dayCounts[daysDiff]++;
       }
@@ -178,20 +233,20 @@ const DoctorDashboard = () => {
     }));
   };
 
-  const getRecentPatients = (appointments) => {
-    const patientMap = new Map();
-    
+  const getRecentPatients = (appointments: Appointment[]) => {
+    const patientMap = new Map<string | undefined, { id?: string; name: string; lastVisit?: string; status?: string; type?: string }>();
+
     appointments
-      .filter(a => a.patient?.user)
-      .sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))
-      .forEach(a => {
+      .filter((a: Appointment) => !!a.patient?.user?.fullName)
+      .sort((a: Appointment, b: Appointment) => (new Date(b.appointmentDate ?? '').getTime() - new Date(a.appointmentDate ?? '').getTime()))
+      .forEach((a: Appointment) => {
         if (!patientMap.has(a.patientId)) {
           patientMap.set(a.patientId, {
             id: a.patientId,
-            name: a.patient.user.fullName,
-            lastVisit: a.appointmentDate,
-            status: a.status,
-            type: a.type
+            name: a.patient?.user?.fullName ?? 'Unknown',
+            lastVisit: a.appointmentDate ?? undefined,
+            status: a.status ?? undefined,
+            type: a.type ?? undefined
           });
         }
       });
@@ -199,8 +254,9 @@ const DoctorDashboard = () => {
     return Array.from(patientMap.values()).slice(0, 5);
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
+  const formatDate = (dateString?: string | null) => {
+    const date = new Date(dateString ?? '');
+    if (isNaN(date.getTime())) return '-';
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
       year: 'numeric',
@@ -209,16 +265,17 @@ const DoctorDashboard = () => {
     });
   };
 
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
+  const formatTime = (dateString?: string | null) => {
+    const date = new Date(dateString ?? '');
+    if (isNaN(date.getTime())) return '-';
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
-  const getStatusColor = (status) => {
-    switch (status?.toUpperCase()) {
+  const getStatusColor = (status?: string | null) => {
+    switch ((status ?? '').toUpperCase()) {
       case 'COMPLETED':
         return 'text-green-600 bg-green-50 border-green-200';
       case 'CONFIRMED':
@@ -232,8 +289,8 @@ const DoctorDashboard = () => {
     }
   };
 
-  const getTypeIcon = (type) => {
-    switch (type?.toUpperCase()) {
+  const getTypeIcon = (type?: string | null) => {
+    switch ((type ?? '').toUpperCase()) {
       case 'VIDEO':
         return <Video className="w-4 h-4" />;
       case 'AUDIO':
@@ -396,7 +453,7 @@ const DoctorDashboard = () => {
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {currentSchedule.length > 0 && currentSchedule.map((appointment) => (
                   <div key={appointment.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
                         <User className="w-6 h-6 text-blue-600" />
                       </div>
@@ -446,7 +503,7 @@ const DoctorDashboard = () => {
           <div className="space-y-3">
             {dashboardData.recentPatients.length > 0 && dashboardData.recentPatients.map((patient) => (
                 <div key={patient.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
                     <span className="text-white font-semibold text-sm">
                       {patient.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </span>
@@ -455,7 +512,7 @@ const DoctorDashboard = () => {
                     <p className="font-medium text-sm text-gray-900 truncate">{patient.name}</p>
                     <p className="text-xs text-gray-500">{formatDate(patient.lastVisit)}</p>
                   </div>
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     {getTypeIcon(patient.type)}
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, Check, CheckCheck, Trash2, Info, AlertTriangle, XCircle, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Bell, Check, CheckCheck, Info, AlertTriangle, XCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, type Notification } from '../../api/notificationsApi';

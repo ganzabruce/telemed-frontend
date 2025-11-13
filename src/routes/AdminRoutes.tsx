@@ -1,5 +1,4 @@
 // src/routes/AdminRoutes.tsx
-import React from "react"
 import { Route, Outlet } from "react-router-dom"
 import ProtectedRoute from "./ProtectedRoute"
 import DashboardLayout from "../components/layout/DashboardLayout"

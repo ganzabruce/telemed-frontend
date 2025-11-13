@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Video, Phone, MessageSquare, Search, Plus, AlertCircle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getOrCreateConversation } from '../../api/chatApi';
@@ -6,14 +6,58 @@ import toast from 'react-hot-toast';
 import { InitiatePaymentModal } from './InitiatePaymentModal';
 
 const API_BASE_URL = 'http://localhost:5003';
-const APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
+const APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'] as const;
 
-const BookingModal = ({ isOpen, onClose, onAppointmentBooked }) => {
-  const [doctors, setDoctors] = useState([]);
-  const [hospitals, setHospitals] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [formData, setFormData] = useState({
+// --- Types ---
+type AppointmentStatus = typeof APPOINTMENT_STATUSES[number];
+
+interface UserRef {
+  id?: string;
+  fullName?: string;
+  role?: string;
+}
+
+interface Doctor {
+  id?: string;
+  user?: UserRef | null;
+  specialization?: string | null;
+}
+
+interface Hospital {
+  id?: string;
+  name?: string;
+  address?: string;
+}
+
+interface Appointment {
+  id?: string;
+  appointmentDate?: string | null;
+  status?: AppointmentStatus | string | null;
+  type?: string | null;
+  doctor?: Doctor | null;
+  hospital?: Hospital | null;
+  notes?: string | null;
+}
+
+interface BookingModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAppointmentBooked: () => void;
+}
+
+interface BookingFormData {
+  doctorId: string;
+  hospitalId: string;
+  appointmentDate: string;
+  type: string;
+}
+
+const BookingModal = ({ isOpen, onClose, onAppointmentBooked }: BookingModalProps) => {
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [hospitals, setHospitals] = useState<Hospital[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<BookingFormData>({
     doctorId: '',
     hospitalId: '',
     appointmentDate: '',
@@ -25,24 +69,26 @@ const BookingModal = ({ isOpen, onClose, onAppointmentBooked }) => {
       const fetchData = async () => {
         setIsLoading(true);
         try {
-          const user = JSON.parse(localStorage.getItem('user') || '{}');
-          const token = user.token;
-          if (!token) throw new Error("Authentication token not found.");
+          const raw = localStorage.getItem('user') || '{}';
+          const user = JSON.parse(raw) as any;
+          const token = user?.token as string | undefined;
+          if (!token) throw new Error('Authentication token not found.');
 
           const [doctorsRes, hospitalsRes] = await Promise.all([
             fetch(`${API_BASE_URL}/doctors`, { headers: { 'Authorization': `Bearer ${token}` } }),
             fetch(`${API_BASE_URL}/hospitals`, { headers: { 'Authorization': `Bearer ${token}` } })
           ]);
 
-          if (!doctorsRes.ok || !hospitalsRes.ok) throw new Error("Failed to fetch doctors or hospitals.");
+          if (!doctorsRes.ok || !hospitalsRes.ok) throw new Error('Failed to fetch doctors or hospitals.');
 
-          const doctorsData = await doctorsRes.json();
-          const hospitalsData = await hospitalsRes.json();
+          const doctorsData = await doctorsRes.json().catch(() => ({}));
+          const hospitalsData = await hospitalsRes.json().catch(() => ({}));
           
-          setDoctors(doctorsData.data || []);
-          setHospitals(hospitalsData.data || []);
+          setDoctors((doctorsData?.data as Doctor[]) || []);
+          setHospitals((hospitalsData?.data as Hospital[]) || []);
         } catch (err) {
-          setError(err.message || "Could not load necessary data.");
+          const message = (err instanceof Error) ? err.message : String(err);
+          setError(message || 'Could not load necessary data.');
         } finally {
           setIsLoading(false);
         }
@@ -51,61 +97,63 @@ const BookingModal = ({ isOpen, onClose, onAppointmentBooked }) => {
     }
   }, [isOpen]);
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
     try {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const token = user.token;
+      const raw = localStorage.getItem('user') || '{}';
+      const user = JSON.parse(raw) as any;
+      const token = user?.token as string | undefined;
 
-        if (!token) {
-            throw new Error("You must be logged in to book an appointment.");
-        }
+      if (!token) {
+        throw new Error('You must be logged in to book an appointment.');
+      }
 
-        // Check if user is a patient
-        if (user.role !== 'PATIENT') {
-            throw new Error("Only patients can book appointments.");
-        }
-        
-        if (!formData.doctorId || !formData.hospitalId || !formData.appointmentDate || !formData.type) {
-            throw new Error("Please fill in all fields.");
-        }
+      if (user?.role !== 'PATIENT') {
+        throw new Error('Only patients can book appointments.');
+      }
 
-        // Backend automatically finds patient profile from user ID, so we don't need to send patientId
-        const payload = {
-            doctorId: formData.doctorId,
-            hospitalId: formData.hospitalId,
-            appointmentDate: new Date(formData.appointmentDate).toISOString(),
-            type: formData.type,
-        };
+      if (!formData.doctorId || !formData.hospitalId || !formData.appointmentDate || !formData.type) {
+        throw new Error('Please fill in all fields.');
+      }
 
-        const response = await fetch(`${API_BASE_URL}/appointments`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-        });
+      const payload = {
+        doctorId: formData.doctorId,
+        hospitalId: formData.hospitalId,
+        appointmentDate: new Date(formData.appointmentDate).toISOString(),
+        type: formData.type,
+      };
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "Failed to create appointment.");
-        }
-        
-        alert("Appointment booked successfully!");
-        onAppointmentBooked();
-        onClose();
+      const response = await fetch(`${API_BASE_URL}/appointments`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const message = errorData?.message ?? 'Failed to create appointment.';
+        throw new Error(message);
+      }
+
+      alert('Appointment booked successfully!');
+      onAppointmentBooked();
+      onClose();
     } catch (err) {
-        setError(err.message);
+      const message = (err instanceof Error) ? err.message : String(err);
+      setError(message);
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -124,7 +172,7 @@ const BookingModal = ({ isOpen, onClose, onAppointmentBooked }) => {
           <div className="p-6 space-y-4">
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-3 text-red-800 text-sm">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <AlertCircle className="w-5 h-5 shrink-0" />
                 <p>{error}</p>
               </div>
             )}
@@ -132,14 +180,18 @@ const BookingModal = ({ isOpen, onClose, onAppointmentBooked }) => {
               <label htmlFor="hospitalId" className="block text-sm font-medium text-gray-700 mb-1">Hospital</label>
               <select name="hospitalId" id="hospitalId" value={formData.hospitalId} onChange={handleInputChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 <option value="" disabled>Select a hospital</option>
-                {hospitals.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+                {hospitals.map((h, idx) => <option key={h.id ?? idx} value={h.id ?? ''}>{h.name ?? ''}</option>)}
               </select>
             </div>
             <div>
               <label htmlFor="doctorId" className="block text-sm font-medium text-gray-700 mb-1">Doctor</label>
               <select name="doctorId" id="doctorId" value={formData.doctorId} onChange={handleInputChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 <option value="" disabled>Select a doctor</option>
-                {doctors.map(d => <option key={d.id} value={d.id}>Dr. {d.user.fullName} ({d.specialization})</option>)}
+                {doctors.map((d, idx) => (
+                  <option key={d.id ?? idx} value={d.id ?? ''}>
+                    Dr. {d.user?.fullName ?? 'Unknown'} {d.specialization ? `(${d.specialization})` : ''}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -169,17 +221,17 @@ const BookingModal = ({ isOpen, onClose, onAppointmentBooked }) => {
   );
 };
 
-const AppointmentsPage = () => {
+const AppointmentsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [paymentAppointment, setPaymentAppointment] = useState(null);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState<boolean>(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
+  const [paymentAppointment, setPaymentAppointment] = useState<any | null>(null);
 
   useEffect(() => {
     fetchAppointments();
@@ -216,45 +268,47 @@ const AppointmentsPage = () => {
     }
   };
   
-  const getStatusColor = (status) => {
-    const colors = {
+  const getStatusColor = (status?: string | null): string => {
+    const colors: Record<string, string> = {
       PENDING: 'bg-gray-100 text-gray-800 border-gray-200',
       CONFIRMED: 'bg-gray-100 text-gray-800 border-gray-200',
       COMPLETED: 'bg-gray-100 text-gray-800 border-gray-200',
       CANCELLED: 'bg-gray-100 text-gray-800 border-gray-200'
     };
-    return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return colors[status ?? ''] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
-  const getTypeIcon = (type) => {
-    const icons = {
+  const getTypeIcon = (type?: string | null): React.ReactElement => {
+    const icons: Record<string, React.ReactElement> = {
       VIDEO: <Video className="w-4 h-4" />,
       AUDIO: <Phone className="w-4 h-4" />,
       CHAT: <MessageSquare className="w-4 h-4" />
     };
-    return icons[type] || <Video className="w-4 h-4" />;
+    return icons[(type ?? 'VIDEO')] || icons.VIDEO;
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
+  const formatDate = (dateString?: string | null): string => {
+    const date = new Date(dateString ?? '');
+    if (isNaN(date.getTime())) return '-';
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
+  const formatTime = (dateString?: string | null): string => {
+    const date = new Date(dateString ?? '');
+    if (isNaN(date.getTime())) return '-';
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
   
   const filteredAppointments = appointments.filter(apt => {
     const statusMatch = filterStatus === 'all' || apt.status === filterStatus;
     const searchMatch = !searchTerm || (
-      apt.doctor?.user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      apt.hospital?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      (apt.doctor?.user?.fullName ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (apt.hospital?.name ?? '').toLowerCase().includes(searchTerm.toLowerCase())
     );
     return statusMatch && searchMatch;
   });
 
-  const formatStatusForDisplay = (status) => {
+  const formatStatusForDisplay = (status: string): string => {
     if (status === 'all') return 'All';
     return status.charAt(0) + status.slice(1).toLowerCase();
   }
@@ -317,7 +371,7 @@ const AppointmentsPage = () => {
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3 text-red-800">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <AlertCircle className="w-5 h-5 shrink-0" />
           <p>{error}</p>
         </div>
       )}
@@ -341,8 +395,8 @@ const AppointmentsPage = () => {
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
-                    {appointment.doctor?.user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'DR'}
+                  <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold shrink-0">
+                    {((appointment.doctor?.user?.fullName ?? 'DR').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2))}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-semibold text-gray-900">Dr. {appointment.doctor?.user?.fullName || 'Unknown Doctor'}</h3>
@@ -350,13 +404,13 @@ const AppointmentsPage = () => {
                     <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600">
                       <div className="flex items-center gap-1"><Calendar className="w-4 h-4" />{formatDate(appointment.appointmentDate)}</div>
                       <div className="flex items-center gap-1"><Clock className="w-4 h-4" />{formatTime(appointment.appointmentDate)}</div>
-                      <div className="flex items-center gap-1">{getTypeIcon(appointment.type)}{appointment.type}</div>
+                      <div className="flex items-center gap-1">{getTypeIcon(appointment.type)}{appointment.type ?? ''}</div>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
-                    {appointment.status}
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status ?? null)}`}>
+                    {appointment.status ?? ''}
                   </span>
                   {appointment.status === 'PENDING' && (
                     <button
@@ -373,8 +427,9 @@ const AppointmentsPage = () => {
                     <button 
                       onClick={async () => {
                         try {
-                          if (appointment.doctor?.user?.id) {
-                            await getOrCreateConversation(appointment.doctor.user.id);
+                          const doctorId = appointment.doctor?.user?.id;
+                          if (doctorId) {
+                            await getOrCreateConversation(doctorId);
                             navigate('/patient/consultations');
                             toast.success('Opening chat with doctor...');
                           } else {
@@ -410,7 +465,7 @@ const AppointmentsPage = () => {
             </div>
             <div className="p-6 space-y-6">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-semibold flex-shrink-0">
+                <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-semibold shrink-0">
                   {selectedAppointment.doctor?.user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'DR'}
                 </div>
                 <div>
@@ -421,8 +476,8 @@ const AppointmentsPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg"><label className="text-sm font-medium text-gray-500">Date</label><p className="text-base font-semibold text-gray-900">{formatDate(selectedAppointment.appointmentDate)}</p></div>
                 <div className="bg-gray-50 p-4 rounded-lg"><label className="text-sm font-medium text-gray-500">Time</label><p className="text-base font-semibold text-gray-900">{formatTime(selectedAppointment.appointmentDate)}</p></div>
-                <div className="bg-gray-50 p-4 rounded-lg"><label className="text-sm font-medium text-gray-500">Type</label><p className="text-base font-semibold text-gray-900 flex items-center gap-2">{getTypeIcon(selectedAppointment.type)}{selectedAppointment.type}</p></div>
-                <div className="bg-gray-50 p-4 rounded-lg"><label className="text-sm font-medium text-gray-500">Status</label><span className={`px-3 py-1 text-sm rounded-full font-medium border ${getStatusColor(selectedAppointment.status)}`}>{selectedAppointment.status}</span></div>
+                <div className="bg-gray-50 p-4 rounded-lg"><label className="text-sm font-medium text-gray-500">Type</label><p className="text-base font-semibold text-gray-900 flex items-center gap-2">{getTypeIcon(selectedAppointment.type)}{selectedAppointment.type ?? ''}</p></div>
+                <div className="bg-gray-50 p-4 rounded-lg"><label className="text-sm font-medium text-gray-500">Status</label><span className={`px-3 py-1 text-sm rounded-full font-medium border ${getStatusColor(selectedAppointment.status ?? null)}`}>{selectedAppointment.status ?? ''}</span></div>
               </div>
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-2">Hospital Details</h4>
@@ -449,10 +504,13 @@ const AppointmentsPage = () => {
                 <button 
                   onClick={async () => {
                     try {
-                      await getOrCreateConversation(selectedAppointment.doctor.user.id);
-                      setSelectedAppointment(null);
-                      navigate('/patient/consultations');
-                      toast.success('Opening chat with doctor...');
+                      const doctorId = selectedAppointment?.doctor?.user?.id;
+                      if (doctorId) {
+                        await getOrCreateConversation(doctorId);
+                        setSelectedAppointment(null);
+                        navigate('/patient/consultations');
+                        toast.success('Opening chat with doctor...');
+                      }
                     } catch (err) {
                       toast.error('Failed to open chat. Please try again.');
                       console.error('Error opening chat:', err);

@@ -1,4 +1,12 @@
-export const navigationByRole = {
+import { LayoutDashboard, Building2, Users, UserPlus, UserCog, DollarSign, Calendar, ClipboardList } from 'lucide-react';
+
+type NavigationItem = {
+  name: string;
+  href: string;
+  icon: any;
+};
+
+export const navigationByRole: Record<string, NavigationItem[]> = {
   ADMIN: [
     { name: "Dashboard", href: "/admin-dashboard", icon: LayoutDashboard },
     { name: "Hospitals", href: "/admin/hospitals", icon: Building2 },

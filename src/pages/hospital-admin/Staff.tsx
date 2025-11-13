@@ -260,7 +260,7 @@ export const StaffManagement = () => {
 
                 {/* Info note */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex gap-2">
-                  <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center shrink-0 mt-0.5">
                     <span className="text-white text-xs font-bold">i</span>
                   </div>
                   <p className="text-sm text-blue-800">
@@ -290,7 +290,7 @@ export const StaffManagement = () => {
           return (
             <div key={index} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${gradient} flex items-center justify-center`}>
                   <stat.icon className="w-6 h-6 text-white" />
                 </div>
                 <span className="text-3xl font-bold text-gray-900">{stat.value}</span>

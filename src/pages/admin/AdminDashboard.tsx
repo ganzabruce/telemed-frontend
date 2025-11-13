@@ -1,15 +1,9 @@
-// import PagePlaceholder from "../../components/common/PagePlaceholder"
-// export default function AdminDashboard() {
-//   return <PagePlaceholder title="Admin Dashboard" description="Overview of system metrics and insights." />
-// }
-
 import  { useState, useEffect } from 'react';
 import { 
   Users, 
   Building2, 
   Calendar, 
   DollarSign,
-  RefreshCw,
   Shield,
   User,
   Clock
@@ -23,13 +17,31 @@ import {
   LoadingState,
   StatusBadge
 } from '../../components/shared';
-
-// API Base URL
 const API_BASE_URL = 'http://localhost:5003';
 
+// --- Types ---
+interface ActivityPoint {
+  month: string;
+  count: number;
+}
+
+interface DashboardData {
+  totalPatients: number;
+  totalProviders: number;
+  totalAppointments: number;
+  totalRevenue: number;
+  patientGrowth: number;
+  appointmentGrowth: number;
+  revenueGrowth: number;
+  monthlyActivity: ActivityPoint[];
+  consultationOverview: ActivityPoint[];
+  recentConsultations: Array<any>;
+  complaints: Array<any>;
+}
+
 const AdminDashboard = () => {
-  const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState({
+  const [loading, setLoading] = useState<boolean>(true);
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
     totalPatients: 0,
     totalProviders: 0,
     totalAppointments: 0,
@@ -42,7 +54,6 @@ const AdminDashboard = () => {
     recentConsultations: [],
     complaints: []
   });
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchDashboardData();
@@ -51,24 +62,29 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : null;
-      const headers = {
-        'Authorization': `Bearer ${token}`,
+      const rawUser = localStorage.getItem('user');
+      let token: string | null = null;
+      if (rawUser) {
+        try {
+          const parsed = JSON.parse(rawUser);
+          token = parsed?.token ?? null;
+        } catch {
+          token = null;
+        }
+      }
+
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json'
       };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       // Fetch system-wide report
       const reportResponse = await fetch(`${API_BASE_URL}/reports/system`, { headers });
-      const reportData = await reportResponse.json();
+      const reportData = await reportResponse.json().catch(() => ({}));
 
       // Fetch all appointments for monthly activity
       const appointmentsResponse = await fetch(`${API_BASE_URL}/appointments?orderBy=appointmentDate&order=desc`, { headers });
-      const appointmentsData = await appointmentsResponse.json();
-
-      // Fetch all consultations
-      const paymentsResponse = await fetch(`${API_BASE_URL}/payments`, { headers });
-      const paymentsData = await paymentsResponse.json();
-
+      const appointmentsData = await appointmentsResponse.json().catch(() => ({}));
       // Process monthly activity data
       const monthlyActivity = processMonthlyActivity(appointmentsData.data || []);
       const consultationOverview = processConsultationOverview(appointmentsData.data || []);
@@ -98,13 +114,16 @@ const AdminDashboard = () => {
     }
   };
 
-  const processMonthlyActivity = (appointments) => {
+  const processMonthlyActivity = (appointments: Array<any>): ActivityPoint[] => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentYear = new Date().getFullYear();
     const monthCounts = new Array(12).fill(0);
 
     appointments.forEach(apt => {
-      const date = new Date(apt.appointmentDate || apt.createdAt);
+      const dateStr = apt?.appointmentDate ?? apt?.createdAt ?? null;
+      if (!dateStr) return;
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return;
       if (date.getFullYear() === currentYear) {
         monthCounts[date.getMonth()]++;
       }
@@ -116,12 +135,15 @@ const AdminDashboard = () => {
     }));
   };
 
-  const processConsultationOverview = (appointments) => {
+  const processConsultationOverview = (appointments: Array<any>): ActivityPoint[] => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
     const monthCounts = new Array(8).fill(0);
 
     appointments.forEach(apt => {
-      const date = new Date(apt.appointmentDate || apt.createdAt);
+      const dateStr = apt?.appointmentDate ?? apt?.createdAt ?? null;
+      if (!dateStr) return;
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return;
       const monthIndex = date.getMonth();
       if (monthIndex < 8) {
         monthCounts[monthIndex] += Math.floor(Math.random() * 50) + 50;
@@ -134,7 +156,7 @@ const AdminDashboard = () => {
     }));
   };
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'RWF',
@@ -142,7 +164,7 @@ const AdminDashboard = () => {
     }).format(amount);
   };
 
-  const formatNumber = (num) => {
+  const formatNumber = (num: number): string => {
     return new Intl.NumberFormat('en-US').format(num);
   };
 
@@ -227,9 +249,9 @@ const AdminDashboard = () => {
           emptyIcon={<Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />}
         >
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {dashboardData.recentConsultations.map((consultation, index) => (
+            {dashboardData.recentConsultations.map((consultation: any, index: number) => (
               <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
                     <User className="w-6 h-6 text-blue-600" />
                   </div>
@@ -245,10 +267,15 @@ const AdminDashboard = () => {
                   <div className="flex items-center gap-3 text-sm text-gray-600">
                     <div className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
-                      <span>{new Date(consultation.appointmentDate).toLocaleDateString()}</span>
+                      {
+                        (() => {
+                          const d = consultation?.appointmentDate ? new Date(consultation.appointmentDate) : null;
+                          return <span>{d && !isNaN(d.getTime()) ? d.toLocaleDateString() : '-'}</span>;
+                        })()
+                      }
                     </div>
                     <div className="flex items-center gap-1">
-                      <span>{consultation.type}</span>
+                      <span>{consultation?.type ?? '-'}</span>
                     </div>
                   </div>
                 </div>
@@ -268,7 +295,7 @@ const AdminDashboard = () => {
             { user: 'Payment System', message: 'Payment gateway integration updated', time: '2d ago' }
           ].map((notification, index) => (
             <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
                 <span className="text-white font-semibold text-sm">
                   {notification.user.split(' ').map(n => n[0]).join('').toUpperCase()}
                 </span>

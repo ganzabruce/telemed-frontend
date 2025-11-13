@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, User, Video, Phone, MessageSquare, CheckCircle, XCircle, AlertCircle, Filter, Search, MapPin, ChevronRight, MoreVertical, RefreshCw, FileText, Pill } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar, Clock, Video, Phone, MessageSquare, CheckCircle, XCircle, AlertCircle, Filter, Search, MapPin, ChevronRight, RefreshCw, FileText, Pill } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -15,27 +14,59 @@ import toast from 'react-hot-toast';
 
 const API_BASE_URL = 'http://localhost:5003';
 
+// --- Types ---
+interface UserRef {
+  id?: string;
+  fullName?: string;
+}
+
+interface PatientRef {
+  user?: UserRef | null;
+}
+
+interface HospitalRef {
+  id?: string;
+  name?: string;
+}
+
+interface Consultation {
+  doctorNotes?: string;
+  prescription?: string;
+  createdAt?: string;
+}
+
+interface Appointment {
+  id?: string;
+  appointmentDate?: string | null;
+  status?: string | null;
+  type?: string | null;
+  patient?: PatientRef | null;
+  hospital?: HospitalRef | null;
+  consultation?: Consultation | null;
+}
+
 const DoctorAppointments = () => {
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState([]);
-  const [filteredAppointments, setFilteredAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [prescriptionFormOpen, setPrescriptionFormOpen] = useState(false);
-  const [appointmentForPrescription, setAppointmentForPrescription] = useState(null);
-  const [newStatus, setNewStatus] = useState('');
-  const [updating, setUpdating] = useState(false);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [statusDialogOpen, setStatusDialogOpen] = useState<boolean>(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState<boolean>(false);
+  const [prescriptionFormOpen, setPrescriptionFormOpen] = useState<boolean>(false);
+  const [appointmentForPrescription, setAppointmentForPrescription] = useState<Appointment | null>(null);
+  const [newStatus, setNewStatus] = useState<string>('');
+  const [updating, setUpdating] = useState<boolean>(false);
   
   // Filter states
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
-  const [typeFilter, setTypeFilter] = useState('ALL');
-  const [dateFilter, setDateFilter] = useState('ALL');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [typeFilter, setTypeFilter] = useState<string>('ALL');
+  const [dateFilter, setDateFilter] = useState<string>('ALL');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   const statusConfig = {
     PENDING: {
@@ -149,9 +180,10 @@ const DoctorAppointments = () => {
       setAppointments(response.data.data || []);
       setFilteredAppointments(response.data.data || []);
       setTotalPages(response.data.pages || 1);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching appointments:', err);
-      setError(err.response?.data?.message || 'Failed to fetch appointments');
+      const msg = err?.response?.data?.message || err?.message || String(err);
+      setError(msg || 'Failed to fetch appointments');
     } finally {
       setLoading(false);
     }
@@ -163,8 +195,8 @@ const DoctorAppointments = () => {
       return;
     }
 
-    const filtered = appointments.filter(appointment => {
-      const patientName = appointment.patient?.user?.fullName?.toLowerCase() || '';
+    const filtered = appointments.filter((appointment: Appointment) => {
+      const patientName = (appointment.patient?.user?.fullName ?? '').toLowerCase();
       const search = searchTerm.toLowerCase();
       return patientName.includes(search);
     });
@@ -172,7 +204,7 @@ const DoctorAppointments = () => {
     setFilteredAppointments(filtered);
   };
 
-  const handleStatusUpdate = async () => {
+  const handleStatusUpdate = async (): Promise<void> => {
     if (!selectedAppointment || !newStatus) return;
 
     setUpdating(true);
@@ -194,26 +226,28 @@ const DoctorAppointments = () => {
       setSelectedAppointment(null);
       setNewStatus('');
     } catch (err) {
-      console.error('Error updating status:', err);
-      alert(err.response?.data?.message || 'Failed to update appointment status');
+      const e: any = err;
+      console.error('Error updating status:', e);
+      alert(e?.response?.data?.message || e?.message || 'Failed to update appointment status');
     } finally {
       setUpdating(false);
     }
   };
 
-  const openStatusDialog = (appointment) => {
+  const openStatusDialog = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
-    setNewStatus(appointment.status);
+    setNewStatus(appointment.status ?? '');
     setStatusDialogOpen(true);
   };
 
-  const openDetailsDialog = (appointment) => {
+  const openDetailsDialog = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setDetailsDialogOpen(true);
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
+  const formatDate = (dateString?: string | null): string => {
+    const date = dateString ? new Date(dateString) : null;
+    if (!date || isNaN(date.getTime())) return '-';
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
       year: 'numeric',
@@ -222,21 +256,16 @@ const DoctorAppointments = () => {
     });
   };
 
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
+  const formatTime = (dateString?: string | null): string => {
+    const date = dateString ? new Date(dateString) : null;
+    if (!date || isNaN(date.getTime())) return '-';
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
-  const formatDateShort = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+  // (formatDateShort removed — not used)
 
   if (loading && appointments.length === 0) {
     return (
@@ -249,15 +278,10 @@ const DoctorAppointments = () => {
     );
   }
 
-  const stats = {
-    total: appointments.length,
-    pending: appointments.filter(a => a.status === 'PENDING').length,
-    confirmed: appointments.filter(a => a.status === 'CONFIRMED').length,
-    completed: appointments.filter(a => a.status === 'COMPLETED').length
-  };
+
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Hero Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-8 py-8">
@@ -310,7 +334,7 @@ const DoctorAppointments = () => {
                 <SelectItem value="CANCELLED">Cancelled</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={typeFilter} onValueChange={setTypeFilter} className="bg-white">
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
@@ -321,7 +345,7 @@ const DoctorAppointments = () => {
                 <SelectItem value="CHAT">Chat</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={dateFilter} onValueChange={setDateFilter} className="bg-white">
+            <Select value={dateFilter} onValueChange={setDateFilter}>
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="All Dates" />
               </SelectTrigger>
@@ -354,10 +378,15 @@ const DoctorAppointments = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredAppointments.map((appointment) => {
-              const StatusIcon = statusConfig[appointment.status].icon;
-              const TypeIcon = typeConfig[appointment.type].icon;
-              
+            {filteredAppointments.map((appointment: Appointment) => {
+              const statusKey = (appointment.status ?? 'PENDING') as keyof typeof statusConfig;
+              const typeKey = (appointment.type ?? 'VIDEO') as keyof typeof typeConfig;
+              const StatusIcon = statusConfig[statusKey].icon;
+              const TypeIcon = typeConfig[typeKey].icon;
+              const date = appointment.appointmentDate ? new Date(appointment.appointmentDate) : null;
+              const day = date && !isNaN(date.getTime()) ? String(date.getDate()) : '-';
+              const monthShort = date && !isNaN(date.getTime()) ? date.toLocaleDateString('en-US', { month: 'short' }) : '';
+
               return (
                 <div
                   key={appointment.id}
@@ -366,13 +395,13 @@ const DoctorAppointments = () => {
                   <div className="p-6">
                     <div className="flex items-start gap-6">
                       {/* Date Badge */}
-                      <div className="flex-shrink-0">
+                      <div className="shrink-0">
                         <div className="w-20 h-20 bg-blue-500 rounded-2xl flex flex-col items-center justify-center text-white shadow-lg">
                           <span className="text-2xl font-bold">
-                            {new Date(appointment.appointmentDate).getDate()}
+                            {day}
                           </span>
                           <span className="text-xs font-medium uppercase">
-                            {new Date(appointment.appointmentDate).toLocaleDateString('en-US', { month: 'short' })}
+                            {monthShort}
                           </span>
                         </div>
                       </div>
@@ -403,16 +432,16 @@ const DoctorAppointments = () => {
                         </div>
 
                         <div className="flex items-center gap-3 mb-4">
-                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${statusConfig[appointment.status].lightBg} ${statusConfig[appointment.status].border} border`}>
-                            <StatusIcon className={`w-4 h-4 ${statusConfig[appointment.status].text}`} />
-                            <span className={`text-sm font-medium ${statusConfig[appointment.status].text}`}>
+                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${statusConfig[statusKey].lightBg} ${statusConfig[statusKey].border} border`}>
+                            <StatusIcon className={`w-4 h-4 ${statusConfig[statusKey].text}`} />
+                            <span className={`text-sm font-medium ${statusConfig[statusKey].text}`}>
                               {appointment.status}
                             </span>
                           </div>
                           
-                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${typeConfig[appointment.type].bg}`}>
-                            <TypeIcon className={`w-4 h-4 ${typeConfig[appointment.type].color}`} />
-                            <span className={`text-sm font-medium ${typeConfig[appointment.type].color}`}>
+                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${typeConfig[typeKey].bg}`}>
+                            <TypeIcon className={`w-4 h-4 ${typeConfig[typeKey].color}`} />
+                            <span className={`text-sm font-medium ${typeConfig[typeKey].color}`}>
                               {appointment.type}
                             </span>
                           </div>
@@ -545,14 +574,19 @@ const DoctorAppointments = () => {
       </div>
 
       {/* Details Dialog */}
-      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen} className="bg-transparent backdrop-blur-sm">
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         <DialogContent className="max-w-2xl bg-white"> 
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">Appointment Details</DialogTitle>
           </DialogHeader>
-          {selectedAppointment && (
+          {selectedAppointment && (() => {
+            const selStatusKey = (selectedAppointment.status ?? 'PENDING') as keyof typeof statusConfig;
+            const selTypeKey = (selectedAppointment.type ?? 'VIDEO') as keyof typeof typeConfig;
+            const ConsultationDate = selectedAppointment.consultation?.createdAt ? new Date(selectedAppointment.consultation.createdAt) : null;
+
+            return (
             <div className="space-y-6 py-4">
-              <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+              <div className="flex items-center gap-4 p-5 bg-linear-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
                 <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
                   {selectedAppointment.patient?.user?.fullName?.charAt(0) || 'P'}
                 </div>
@@ -586,8 +620,8 @@ const DoctorAppointments = () => {
                 </div>
 
                 <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className="flex items-center gap-2 text-gray-600 mb-2">
-                    {React.createElement(typeConfig[selectedAppointment.type].icon, { className: 'w-4 h-4' })}
+                    <div className="flex items-center gap-2 text-gray-600 mb-2">
+                    {React.createElement(typeConfig[selTypeKey].icon, { className: 'w-4 h-4' })}
                     <span className="text-sm font-medium">Type</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">
@@ -596,11 +630,11 @@ const DoctorAppointments = () => {
                 </div>
 
                 <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className="flex items-center gap-2 text-gray-600 mb-2">
-                    {React.createElement(statusConfig[selectedAppointment.status].icon, { className: 'w-4 h-4' })}
+                    <div className="flex items-center gap-2 text-gray-600 mb-2">
+                    {React.createElement(statusConfig[selStatusKey].icon, { className: 'w-4 h-4' })}
                     <span className="text-sm font-medium">Status</span>
                   </div>
-                  <Badge className={`${statusConfig[selectedAppointment.status].lightBg} ${statusConfig[selectedAppointment.status].text} ${statusConfig[selectedAppointment.status].border} border font-semibold`}>
+                  <Badge className={`${statusConfig[selStatusKey].lightBg} ${statusConfig[selStatusKey].text} ${statusConfig[selStatusKey].border} border font-semibold`}>
                     {selectedAppointment.status}
                   </Badge>
                 </div>
@@ -647,34 +681,41 @@ const DoctorAppointments = () => {
                     )}
 
                     <div className="mt-4 text-sm text-gray-500">
-                      Consultation recorded on: {new Date(selectedAppointment.consultation.createdAt).toLocaleString()}
+                      Consultation recorded on: {ConsultationDate ? ConsultationDate.toLocaleString() : '-'}
                     </div>
                   </div>
                 </>
               )}
             </div>
-          )}
+            );
+          })()}
           <DialogFooter className="flex items-center justify-between gap-2">
             <div className="flex-1">
-              {selectedAppointment?.status === 'CONFIRMED' && selectedAppointment?.type === 'CHAT' && selectedAppointment?.patient?.user?.id && (
-                <Button
-                  onClick={async () => {
-                    try {
-                      await getOrCreateConversation(selectedAppointment.patient.user.id);
-                      setDetailsDialogOpen(false);
-                      navigate('/doctor/consultations');
-                      toast.success('Opening chat with patient...');
-                    } catch (err) {
-                      toast.error('Failed to open chat. Please try again.');
-                      console.error('Error opening chat:', err);
-                    }
-                  }}
-                  className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Open Chat
-                </Button>
-              )}
+              {(() => {
+                const chatPatientId = selectedAppointment?.patient?.user?.id;
+                if (selectedAppointment?.status === 'CONFIRMED' && selectedAppointment?.type === 'CHAT' && chatPatientId) {
+                  return (
+                    <Button
+                      onClick={async () => {
+                        try {
+                          await getOrCreateConversation(chatPatientId);
+                          setDetailsDialogOpen(false);
+                          navigate('/doctor/consultations');
+                          toast.success('Opening chat with patient...');
+                        } catch (err) {
+                          toast.error('Failed to open chat. Please try again.');
+                          console.error('Error opening chat:', err);
+                        }
+                      }}
+                      className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      Open Chat
+                    </Button>
+                  );
+                }
+                return null;
+              })()}
             </div>
             <Button
               onClick={() => setDetailsDialogOpen(false)}
@@ -735,8 +776,8 @@ const DoctorAppointments = () => {
             setPrescriptionFormOpen(false);
             setAppointmentForPrescription(null);
           }}
-          appointmentId={appointmentForPrescription.id}
-          appointmentType={appointmentForPrescription.type}
+          appointmentId={appointmentForPrescription?.id ?? ''}
+          appointmentType={(appointmentForPrescription?.type as 'VIDEO' | 'AUDIO' | 'CHAT') ?? 'CHAT'}
           patientName={appointmentForPrescription.patient?.user?.fullName || 'Patient'}
           onSuccess={() => {
             fetchAppointments();

@@ -1,39 +1,10 @@
-// src/pages/admin/Hospitals.tsx
 import React, { useState, useEffect } from 'react'
 import { Plus, Search, Edit, Trash2, Building2, Mail, Phone, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 
 const API_BASE_URL = 'http://localhost:5003'
 
 // Add custom styles for animations
-const styles = `
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-  
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px) scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-  
-  .animate-fadeIn {
-    animation: fadeIn 0.2s ease-out;
-  }
-  
-  .animate-slideUp {
-    animation: slideUp 0.3s ease-out;
-  }
-`
+
 
 interface Hospital {
   id: string
@@ -296,7 +267,7 @@ export const Hospitals: React.FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header with gradient */}
-              <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div className="p-6 border-b bg-linear-to-r from-blue-50 to-indigo-50">
                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                   <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                     <Building2 className="text-white" size={20} />
