@@ -458,7 +458,7 @@ const DoctorAppointments = () => {
                                       console.error('Error opening chat:', err);
                                     }
                                   }}
-                                  className="bg-green-600 hover:from-green-700 hover:to-emerald-700 text-white flex items-center gap-2"
+                                  className="bg-gray-50  text-black border border-gray-200 flex items-center gap-2"
                                 >
                                   <MessageSquare className="w-4 h-4" />
                                   Open Chat
@@ -494,7 +494,7 @@ const DoctorAppointments = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => openDetailsDialog(appointment)}
-                              className="text-green-600 border-green-600 hover:bg-green-50"
+                              className="text-black-600 border-gray-600 hover:bg-green-50"
                             >
                               View Consultation
                             </Button>
@@ -669,7 +669,7 @@ const DoctorAppointments = () => {
                       console.error('Error opening chat:', err);
                     }
                   }}
-                  className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                  className="bg-black-600 hover:bg-black-700 text-white flex items-center gap-2"
                 >
                   <MessageSquare className="w-4 h-4" />
                   Open Chat

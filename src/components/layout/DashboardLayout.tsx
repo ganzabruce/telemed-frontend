@@ -175,7 +175,8 @@ const DashboardLayout: React.FC = () => {
                 </button>
                 
                 {/* Mobile Logo - visible only on mobile */}
-                <div className="md:hidden">
+                <div className="md:hidden flex items-center gap-2">
+                  <img src="/telemed.png" alt="TeleMed" className="w-8 h-8 rounded-full" />
                   <h1 className="text-xl font-bold text-blue-600">TeleMedecine</h1>
                 </div>
               </div>
@@ -184,10 +185,6 @@ const DashboardLayout: React.FC = () => {
 
               {/* Right Section */}
               <div className="flex items-center gap-2 md:gap-4 md:ml-6">
-                {/* Search button for mobile */}
-                <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors md:hidden">
-                  <Search className="w-5 h-5" />
-                </button>
 
                 {/* Notifications Dropdown */}
                 <div className="relative notifications-dropdown">

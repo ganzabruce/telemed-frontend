@@ -140,7 +140,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
           <div className="mb-6 flex items-center gap-2">
             {!isCollapsed && (
               <div>
-                <h1 className="text-2xl font-bold text-blue-600">Telemedicine</h1>
+                <div className="flex items-center gap-2 justify-center text-center mx-auto">
+                  <img src="/telemed.png" alt="TeleMed" className="w-8 h-8 rounded-full" />
+                  <h1 className="text-2xl font-bold text-blue-600">TeleMedecine</h1>
+                </div>
                 <p className="text-sm text-gray-500 mt-1">{user.role.replace('_', ' ')}</p>
               </div>
             )}
@@ -168,7 +171,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
                 }
                 title={isCollapsed ? item.name : undefined}
               >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
+                <item.icon className="w-5 h-5 shrink-0" />
                 {!isCollapsed && <span className="text-sm">{item.name}</span>}
               </NavLink>
             ))}
@@ -183,7 +186,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
               }`}
               title={isCollapsed ? "Notifications" : undefined}
             >
-              <Bell className="w-5 h-5 flex-shrink-0" />
+              <Bell className="w-5 h-5 shrink-0" />
               {!isCollapsed && <span className="text-sm">Notifications</span>}
             </NavLink>
           </div>
