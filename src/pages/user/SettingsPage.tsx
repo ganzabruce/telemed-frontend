@@ -24,7 +24,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5003';
+const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
 
 interface PatientProfile {
   id: string;

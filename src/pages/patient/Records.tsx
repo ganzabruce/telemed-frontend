@@ -3,7 +3,7 @@ import { FileText, Calendar, Pill, Download, Eye, AlertCircle, Search } from 'lu
 import jsPDF from 'jspdf';
 import toast from 'react-hot-toast';
 
-const API_BASE_URL = 'http://localhost:5003';
+const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
 
 const RecordsPage = () => {
   const [consultations, setConsultations] = useState<any[]>([]);

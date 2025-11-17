@@ -29,7 +29,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
 
    
-    const newSocket = io('http://localhost:5003', {
+    const newSocket = io('https://telemedicine-backend-dtna.onrender.com', {
       auth: {
         token: state.user.token,
       },

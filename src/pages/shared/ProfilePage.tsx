@@ -58,7 +58,7 @@ const ProfilePage: React.FC = () => {
   // Role-specific form states
   const [roleSpecificForm, setRoleSpecificForm] = useState<any>({});
 
-  const API_BASE_URL = 'http://localhost:5003';
+  const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
 
   useEffect(() => {
     if (user) {

@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5003';
+const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
 
 type Step = 'email' | 'otp' | 'reset';
 

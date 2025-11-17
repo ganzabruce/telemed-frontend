@@ -19,7 +19,7 @@ import ChartCard from '../../components/shared/ChartCard';
 import ListCard from '../../components/shared/ListCard';
 
 // API Base URL
-const API_BASE_URL = 'http://localhost:5003';
+const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
 
 // --- Types ---
 interface UserRef {

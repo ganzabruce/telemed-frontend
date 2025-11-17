@@ -1,7 +1,7 @@
 import  { useState, useEffect } from 'react';
 import {  Mail,  CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5003';
+const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
 
 // --- Types ---
 interface ToastMessage {

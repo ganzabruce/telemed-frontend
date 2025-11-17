@@ -26,7 +26,7 @@ import {
   DialogContent,
 } from '@/components/ui/dialog';
 
-const API_BASE_URL = 'http://localhost:5003';
+const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
 
 interface Patient {
   id: string;

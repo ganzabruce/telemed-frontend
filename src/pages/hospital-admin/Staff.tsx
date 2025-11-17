@@ -25,7 +25,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
 
-const API_URL = 'http://localhost:5003';
+const API_URL = 'https://telemedicine-backend-dtna.onrender.com';
 
 export const StaffManagement = () => {
   const [staff, setStaff] = useState<any[]>([]);

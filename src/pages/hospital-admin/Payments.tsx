@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DollarSign, Calendar, User, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
 import { PageContainer, DashboardHeader } from '@/components/shared';
 
-const API_BASE_URL = 'http://localhost:5003';
+const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
 
 interface PaymentItem {
   id: string;
