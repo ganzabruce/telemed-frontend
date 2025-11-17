@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Mail, UserCircle, CheckCircle, AlertCircle, Eye, Send, Shield, Building2, Stethoscope, Users, Calendar } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
+const API_BASE_URL = 'https://telemedicine-be.onrender.com';
 
 interface User {
   id: string;

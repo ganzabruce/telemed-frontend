@@ -45,7 +45,7 @@ const RegisterPage: React.FC = () => {
     try {
       const { fullName, email, phone, password } = formData
       await axios.post<RegisterResponse>(
-        "https://telemedicine-backend-dtna.onrender.com/auth/register-patient",
+        "https://telemedicine-be.onrender.com/auth/register-patient",
         { fullName, email, phone, password },
         { headers: { "Content-Type": "application/json" } }
       )

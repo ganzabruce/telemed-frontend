@@ -101,7 +101,7 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
         }
       } else if (userRole === 'DOCTOR') {
         // Fetch patients for doctors from appointments
-        const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
+        const API_BASE_URL = 'https://telemedicine-be.onrender.com';
         const response = await fetch(`${API_BASE_URL}/appointments?limit=100`, {
           headers: {
             Authorization: `Bearer ${token}`,

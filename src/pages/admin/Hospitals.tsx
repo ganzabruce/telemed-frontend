@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Search, Edit, Trash2, Building2, Mail, Phone, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 
-const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com'
+const API_BASE_URL = 'https://telemedicine-be.onrender.com'
 
 // Add custom styles for animations
 

@@ -36,7 +36,7 @@ const LoginPage: React.FC = () => {
 
     try {
       const { data } = await axios.post<LoginResponse>(
-        "https://telemedicine-backend-dtna.onrender.com/auth/login",
+        "https://telemedicine-be.onrender.com/auth/login",
         { email, password },
         { headers: { "Content-Type": "application/json" } }
       )

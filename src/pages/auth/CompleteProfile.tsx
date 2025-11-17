@@ -101,7 +101,7 @@ const CompleteProfilePage: React.FC = () => {
         }),
       }
 
-      await axios.post("https://telemedicine-backend-dtna.onrender.com/auth/complete-invitation", payload)
+      await axios.post("https://telemedicine-be.onrender.com/auth/complete-invitation", payload)
 
       setFeedback("✅ Your account has been created successfully! You will be redirected to the login page shortly.")
       setTimeout(() => {

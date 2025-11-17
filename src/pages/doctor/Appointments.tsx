@@ -12,7 +12,7 @@ import PrescriptionForm from '@/components/shared/PrescriptionForm';
 import { getOrCreateConversation } from '@/api/chatApi';
 import toast from 'react-hot-toast';
 
-const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
+const API_BASE_URL = 'https://telemedicine-be.onrender.com';
 
 // --- Types ---
 interface UserRef {

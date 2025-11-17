@@ -11,7 +11,7 @@ import {
 
 // Create an Axios instance
 const api = axios.create({
-  baseURL: "https://telemedicine-backend-dtna.onrender.com",
+  baseURL: "https://telemedicine-be.onrender.com",
 })
 
 // Function to get the auth token

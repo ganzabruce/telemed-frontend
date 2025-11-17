@@ -383,7 +383,7 @@ const DoctorConsultationsPage = () => {
     try {
       // Fetch appointments and find the most recent confirmed appointment for this patient
       const token = getAuthToken();
-      const response = await axios.get('https://telemedicine-backend-dtna.onrender.com/appointments?status=CONFIRMED', {
+      const response = await axios.get('https://telemedicine-be.onrender.com/appointments?status=CONFIRMED', {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -413,7 +413,7 @@ const DoctorConsultationsPage = () => {
     try {
       // Fetch appointments and find the most recent confirmed appointment for this patient
       const token = getAuthToken();
-      const response = await axios.get('https://telemedicine-backend-dtna.onrender.com/appointments?status=CONFIRMED', {
+      const response = await axios.get('https://telemedicine-be.onrender.com/appointments?status=CONFIRMED', {
         headers: { Authorization: `Bearer ${token}` },
       });
       

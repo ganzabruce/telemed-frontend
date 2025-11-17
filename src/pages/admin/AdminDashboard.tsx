@@ -17,7 +17,7 @@ import {
   LoadingState,
   StatusBadge
 } from '../../components/shared';
-const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
+const API_BASE_URL = 'https://telemedicine-be.onrender.com';
 
 // --- Types ---
 interface ActivityPoint {

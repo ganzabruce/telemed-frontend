@@ -5,7 +5,7 @@ import { getOrCreateConversation } from '../../api/chatApi';
 import toast from 'react-hot-toast';
 import { InitiatePaymentModal } from './InitiatePaymentModal';
 
-const API_BASE_URL = 'https://telemedicine-backend-dtna.onrender.com';
+const API_BASE_URL = 'https://telemedicine-be.onrender.com';
 const APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'] as const;
 
 // --- Types ---
