@@ -1,30 +1,4 @@
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: "https://telemedicine-be.onrender.com",
-});
-
-const getAuthToken = () => {
-  const stored = localStorage.getItem("user");
-  if (stored) {
-    const user = JSON.parse(stored);
-    return user?.token;
-  }
-  return null;
-};
-
-api.interceptors.request.use(
-  (config) => {
-    const token = getAuthToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+import { api } from "./client";
 
 export interface AvailabilitySlot {
   id: string;

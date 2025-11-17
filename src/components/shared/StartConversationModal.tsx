@@ -3,6 +3,7 @@ import { X, Search, MessageSquare, User, Loader2, AlertCircle } from 'lucide-rea
 import { getOrCreateConversation } from '../../api/chatApi';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 interface StartConversationModalProps {
   isOpen: boolean;
@@ -101,7 +102,6 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
         }
       } else if (userRole === 'DOCTOR') {
         // Fetch patients for doctors from appointments
-        const API_BASE_URL = 'https://telemedicine-be.onrender.com';
         const response = await fetch(`${API_BASE_URL}/appointments?limit=100`, {
           headers: {
             Authorization: `Bearer ${token}`,

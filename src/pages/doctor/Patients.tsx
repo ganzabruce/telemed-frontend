@@ -25,8 +25,7 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
-
-const API_BASE_URL = 'https://telemedicine-be.onrender.com';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 interface Patient {
   id: string;

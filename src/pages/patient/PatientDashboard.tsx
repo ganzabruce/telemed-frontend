@@ -21,9 +21,7 @@ import PageContainer from '../../components/shared/PageContainer';
 import LoadingState from '../../components/shared/LoadingState';
 
 import StatusBadge from '../../components/shared/StatusBadge';
-
-// API Base URL
-const API_BASE_URL = 'https://telemedicine-be.onrender.com';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 // --- Types ---
 interface UserRef {

@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { useAuth, type User, type UserRole, type UserStatus } from "../../context/AuthContext"
 import { redirectByRole } from "../../utils/redirects"
+import { API_BASE_URL } from "../../utils/apiConfig"
 
 interface LoginResponse {
   token: string
@@ -36,7 +37,7 @@ const LoginPage: React.FC = () => {
 
     try {
       const { data } = await axios.post<LoginResponse>(
-        "https://telemedicine-be.onrender.com/auth/login",
+        `${API_BASE_URL}/auth/login`,
         { email, password },
         { headers: { "Content-Type": "application/json" } }
       )

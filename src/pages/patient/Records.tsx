@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { FileText, Calendar, Pill, Download, Eye, AlertCircle, Search } from 'lucide-react';
 import jsPDF from 'jspdf';
 import toast from 'react-hot-toast';
-
-const API_BASE_URL = 'https://telemedicine-be.onrender.com';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 const RecordsPage = () => {
   const [consultations, setConsultations] = useState<any[]>([]);

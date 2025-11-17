@@ -8,6 +8,7 @@ import VideoCall from '../../components/shared/VideoCall';
 import StartConversationModal from '../../components/shared/StartConversationModal';
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 const DoctorConsultationsPage = () => {
   const { state } = useAuth();
@@ -383,7 +384,7 @@ const DoctorConsultationsPage = () => {
     try {
       // Fetch appointments and find the most recent confirmed appointment for this patient
       const token = getAuthToken();
-      const response = await axios.get('https://telemedicine-be.onrender.com/appointments?status=CONFIRMED', {
+      const response = await axios.get(`${API_BASE_URL}/appointments?status=CONFIRMED`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -413,7 +414,7 @@ const DoctorConsultationsPage = () => {
     try {
       // Fetch appointments and find the most recent confirmed appointment for this patient
       const token = getAuthToken();
-      const response = await axios.get('https://telemedicine-be.onrender.com/appointments?status=CONFIRMED', {
+      const response = await axios.get(`${API_BASE_URL}/appointments?status=CONFIRMED`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       

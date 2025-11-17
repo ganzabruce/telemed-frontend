@@ -1,7 +1,6 @@
 import  { useState, useEffect } from 'react';
 import {  Mail,  CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-
-const API_BASE_URL = 'https://telemedicine-be.onrender.com';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 // --- Types ---
 interface ToastMessage {

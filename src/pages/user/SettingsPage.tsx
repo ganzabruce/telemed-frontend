@@ -23,8 +23,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-
-const API_BASE_URL = 'https://telemedicine-be.onrender.com';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 interface PatientProfile {
   id: string;

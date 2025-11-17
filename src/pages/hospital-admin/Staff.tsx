@@ -24,8 +24,9 @@ import {
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
-const API_URL = 'https://telemedicine-be.onrender.com';
+const API_URL = API_BASE_URL;
 
 export const StaffManagement = () => {
   const [staff, setStaff] = useState<any[]>([]);

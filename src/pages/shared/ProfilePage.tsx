@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 interface ProfileData {
   id: string;
@@ -57,8 +58,6 @@ const ProfilePage: React.FC = () => {
 
   // Role-specific form states
   const [roleSpecificForm, setRoleSpecificForm] = useState<any>({});
-
-  const API_BASE_URL = 'https://telemedicine-be.onrender.com';
 
   useEffect(() => {
     if (user) {

@@ -11,8 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import PrescriptionForm from '@/components/shared/PrescriptionForm';
 import { getOrCreateConversation } from '@/api/chatApi';
 import toast from 'react-hot-toast';
-
-const API_BASE_URL = 'https://telemedicine-be.onrender.com';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 // --- Types ---
 interface UserRef {

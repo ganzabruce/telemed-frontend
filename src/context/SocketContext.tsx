@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { API_BASE_URL } from '../utils/apiConfig';
 
 interface SocketContextType {
   socket: Socket | null;
@@ -29,7 +30,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
 
    
-    const newSocket = io('https://telemedicine-be.onrender.com', {
+    const newSocket = io(API_BASE_URL, {
       auth: {
         token: state.user.token,
       },

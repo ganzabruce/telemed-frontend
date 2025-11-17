@@ -1,6 +1,5 @@
 // new/src/api/patientService.ts
 
-import axios from "axios"
 import {
   type ApiAppointment,
   type ApiDoctor,
@@ -9,34 +8,7 @@ import {
   type InitiatePaymentData,
 } from "../types/api" // We will create this file next
 
-// Create an Axios instance
-const api = axios.create({
-  baseURL: "https://telemedicine-be.onrender.com",
-})
-
-// Function to get the auth token
-const getAuthToken = () => {
-  const stored = localStorage.getItem("user")
-  if (stored) {
-    const user = JSON.parse(stored)
-    return user?.token
-  }
-  return null
-}
-
-// Add an interceptor to include the auth token in all requests
-api.interceptors.request.use(
-  (config) => {
-    const token = getAuthToken()
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  },
-)
+import { api } from "./client"
 
 /**
  * Fetches the current patient's appointments.

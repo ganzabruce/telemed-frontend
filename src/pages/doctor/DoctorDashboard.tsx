@@ -17,9 +17,7 @@ import StatsGrid from '../../components/shared/StatsGrid';
 import StatCard from '../../components/shared/StatCard';
 import ChartCard from '../../components/shared/ChartCard';
 import ListCard from '../../components/shared/ListCard';
-
-// API Base URL
-const API_BASE_URL = 'https://telemedicine-be.onrender.com';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 // --- Types ---
 interface UserRef {

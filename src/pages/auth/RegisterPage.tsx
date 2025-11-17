@@ -2,6 +2,7 @@
 import React, { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
+import { API_BASE_URL } from "../../utils/apiConfig"
 
 interface RegisterResponse {
   status: string
@@ -45,7 +46,7 @@ const RegisterPage: React.FC = () => {
     try {
       const { fullName, email, phone, password } = formData
       await axios.post<RegisterResponse>(
-        "https://telemedicine-be.onrender.com/auth/register-patient",
+        `${API_BASE_URL}/auth/register-patient`,
         { fullName, email, phone, password },
         { headers: { "Content-Type": "application/json" } }
       )

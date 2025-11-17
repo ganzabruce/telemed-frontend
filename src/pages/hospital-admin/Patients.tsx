@@ -15,8 +15,9 @@ import {
 } from '../../components/ui/table';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
-const API_URL = 'https://telemedicine-be.onrender.com';
+const API_URL = API_BASE_URL;
 
 export const PatientsManagement = () => {
   const [patients, setPatients] = useState<any[]>([]);

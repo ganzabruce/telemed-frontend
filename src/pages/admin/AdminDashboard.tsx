@@ -17,7 +17,7 @@ import {
   LoadingState,
   StatusBadge
 } from '../../components/shared';
-const API_BASE_URL = 'https://telemedicine-be.onrender.com';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 // --- Types ---
 interface ActivityPoint {

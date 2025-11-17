@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DollarSign, Calendar, User, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
 import { PageContainer, DashboardHeader } from '@/components/shared';
-
-const API_BASE_URL = 'https://telemedicine-be.onrender.com';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 interface PaymentItem {
   id: string;

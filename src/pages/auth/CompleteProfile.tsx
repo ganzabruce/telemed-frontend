@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import axios from "axios"
 import { jwtDecode } from "jwt-decode"
+import { API_BASE_URL } from "../../utils/apiConfig"
 
 interface DecodedToken {
   email: string
@@ -101,7 +102,7 @@ const CompleteProfilePage: React.FC = () => {
         }),
       }
 
-      await axios.post("https://telemedicine-be.onrender.com/auth/complete-invitation", payload)
+      await axios.post(`${API_BASE_URL}/auth/complete-invitation`, payload)
 
       setFeedback("✅ Your account has been created successfully! You will be redirected to the login page shortly.")
       setTimeout(() => {
