@@ -14,16 +14,18 @@ const VideoCall: React.FC<VideoCallProps> = ({
   onClose,
   isVideoEnabled = true,
 }) => {
-  const { socket, joinCallRoom, sendWebRTCOffer, sendWebRTCAnswer, sendICECandidate } = useSocket();
+  const { socket, joinCallRoom, leaveCallRoom, sendWebRTCOffer, sendWebRTCAnswer, sendICECandidate } = useSocket();
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteSocketIdRef = useRef<string | null>(null);
+  const pendingICECandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const [isVideoOn, setIsVideoOn] = useState(isVideoEnabled);
   const [isAudioOn, setIsAudioOn] = useState(true);
-  const [_roomId, setRoomId] = useState<string | null>(null);
+  const [roomId, setRoomId] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(true);
+  const isInitiatorRef = useRef<boolean>(false);
 
   useEffect(() => {
     initializeCall();
@@ -40,10 +42,13 @@ const VideoCall: React.FC<VideoCallProps> = ({
       console.log('Call room info:', data);
       setRoomId(data.id);
       if (data.otherParticipants.length > 0) {
+        // There's already someone in the room, we're joining
         remoteSocketIdRef.current = data.otherParticipants[0];
+        isInitiatorRef.current = false; // We're the answerer
         createPeerConnection();
       } else {
         // We're the first one, wait for peer to join
+        isInitiatorRef.current = true; // We'll be the initiator
         setIsConnecting(true);
       }
     };
@@ -51,36 +56,100 @@ const VideoCall: React.FC<VideoCallProps> = ({
     const handlePeerJoined = (data: { socketId: string; userId: string; userName: string }) => {
       console.log('Peer joined:', data);
       remoteSocketIdRef.current = data.socketId;
-      createPeerConnection();
+      if (isInitiatorRef.current) {
+        // We're the initiator (first one in the room), create connection and send offer
+        console.log('We are the initiator, creating peer connection and sending offer');
+        createPeerConnection();
+      } else {
+        // We're the answerer (joined after someone else), peer connection should already exist
+        // But if it doesn't, create it (this handles the case where we joined before creating connection)
+        if (!peerConnectionRef.current) {
+          console.log('We are the answerer but no peer connection yet, creating it');
+          createPeerConnection();
+        } else {
+          // Process any pending ICE candidates
+          console.log('Processing pending ICE candidates');
+          pendingICECandidatesRef.current.forEach(candidate => {
+            if (candidate) {
+              peerConnectionRef.current?.addIceCandidate(new RTCIceCandidate(candidate)).catch(console.error);
+            }
+          });
+          pendingICECandidatesRef.current = [];
+        }
+      }
     };
 
     const handleWebRTCOffer = async (data: { fromSocketId: string; description: RTCSessionDescriptionInit }) => {
       console.log('Received WebRTC offer:', data);
-      if (!peerConnectionRef.current) {
-        await createPeerConnection();
+      if (data.fromSocketId !== remoteSocketIdRef.current) {
+        console.warn('Received offer from unexpected socket:', data.fromSocketId);
+        return;
       }
-      await peerConnectionRef.current!.setRemoteDescription(new RTCSessionDescription(data.description));
-      const answer = await peerConnectionRef.current!.createAnswer();
-      await peerConnectionRef.current!.setLocalDescription(answer);
-      sendWebRTCAnswer(data.fromSocketId, answer);
+      
+      try {
+        if (!peerConnectionRef.current) {
+          isInitiatorRef.current = false;
+          await createPeerConnection();
+        }
+        
+        if (peerConnectionRef.current) {
+          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.description));
+          const answer = await peerConnectionRef.current.createAnswer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: true,
+          });
+          await peerConnectionRef.current.setLocalDescription(answer);
+          console.log('Sending answer to:', data.fromSocketId);
+          sendWebRTCAnswer(data.fromSocketId, answer);
+        }
+      } catch (error) {
+        console.error('Error handling WebRTC offer:', error);
+      }
     };
 
     const handleWebRTCAnswer = async (data: { fromSocketId: string; description: RTCSessionDescriptionInit }) => {
       console.log('Received WebRTC answer:', data);
-      if (peerConnectionRef.current) {
-        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.description));
+      if (data.fromSocketId !== remoteSocketIdRef.current) {
+        console.warn('Received answer from unexpected socket:', data.fromSocketId);
+        return;
+      }
+      
+      try {
+        if (peerConnectionRef.current) {
+          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.description));
+          console.log('Remote description set from answer');
+        } else {
+          console.error('No peer connection when receiving answer');
+        }
+      } catch (error) {
+        console.error('Error handling WebRTC answer:', error);
       }
     };
 
     const handleICECandidate = async (data: { fromSocketId: string; candidate: RTCIceCandidateInit }) => {
       console.log('Received ICE candidate:', data);
-      if (peerConnectionRef.current && data.candidate) {
-        await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+      if (data.fromSocketId === remoteSocketIdRef.current && data.candidate) {
+        if (peerConnectionRef.current) {
+          try {
+            await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+          } catch (error) {
+            console.error('Error adding ICE candidate:', error);
+          }
+        } else {
+          // Store candidate if peer connection not ready yet
+          pendingICECandidatesRef.current.push(data.candidate);
+        }
       }
     };
 
     const handlePeerLeft = () => {
       console.log('Peer left the call');
+      onClose();
+    };
+
+    const handleCallError = (error: { message: string }) => {
+      console.error('Call error:', error);
+      alert(`Call error: ${error.message}`);
       onClose();
     };
 
@@ -90,6 +159,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
     socket.on('webrtcAnswer', handleWebRTCAnswer);
     socket.on('iceCandidate', handleICECandidate);
     socket.on('peerLeft', handlePeerLeft);
+    socket.on('callError', handleCallError);
 
     return () => {
       socket.off('callRoomInfo', handleCallRoomInfo);
@@ -98,6 +168,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
       socket.off('webrtcAnswer', handleWebRTCAnswer);
       socket.off('iceCandidate', handleICECandidate);
       socket.off('peerLeft', handlePeerLeft);
+      socket.off('callError', handleCallError);
     };
   }, [socket]);
 
@@ -129,6 +200,17 @@ const VideoCall: React.FC<VideoCallProps> = ({
 
   const createPeerConnection = async () => {
     try {
+      // Don't create if already exists
+      if (peerConnectionRef.current) {
+        console.log('Peer connection already exists');
+        return;
+      }
+
+      if (!remoteSocketIdRef.current) {
+        console.log('No remote socket ID yet, waiting...');
+        return;
+      }
+
       const configuration: RTCConfiguration = {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
@@ -143,22 +225,41 @@ const VideoCall: React.FC<VideoCallProps> = ({
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => {
           peerConnection.addTrack(track, localStreamRef.current!);
+          console.log('Added local track:', track.kind, track.id);
         });
+      } else {
+        console.warn('No local stream available when creating peer connection');
       }
 
       // Handle remote stream
       peerConnection.ontrack = (event) => {
         console.log('Received remote track:', event);
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = event.streams[0];
-          setIsConnecting(false);
+        if (event.streams && event.streams.length > 0) {
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = event.streams[0];
+            setIsConnecting(false);
+            console.log('Remote stream set on video element');
+          }
         }
       };
 
       // Handle ICE candidates
       peerConnection.onicecandidate = (event) => {
         if (event.candidate && remoteSocketIdRef.current) {
+          console.log('Sending ICE candidate:', event.candidate);
           sendICECandidate(remoteSocketIdRef.current, event.candidate.toJSON());
+        } else if (!event.candidate) {
+          console.log('ICE gathering complete');
+        }
+      };
+
+      // Handle ICE connection state
+      peerConnection.oniceconnectionstatechange = () => {
+        console.log('ICE connection state:', peerConnection.iceConnectionState);
+        if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
+          setIsConnecting(false);
+        } else if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'disconnected') {
+          console.error('ICE connection failed or disconnected');
         }
       };
 
@@ -168,18 +269,44 @@ const VideoCall: React.FC<VideoCallProps> = ({
         if (peerConnection.connectionState === 'connected') {
           setIsConnecting(false);
         } else if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'failed') {
-          onClose();
+          console.error('Peer connection failed or disconnected');
+          // Don't close immediately, wait a bit for reconnection
+          setTimeout(() => {
+            if (peerConnection.connectionState === 'failed' || peerConnection.connectionState === 'disconnected') {
+              onClose();
+            }
+          }, 3000);
         }
       };
 
-      // Create and send offer if we're the first one
-      if (remoteSocketIdRef.current) {
-        const offer = await peerConnection.createOffer();
+      // Process any pending ICE candidates
+      if (pendingICECandidatesRef.current.length > 0) {
+        console.log('Processing pending ICE candidates:', pendingICECandidatesRef.current.length);
+        for (const candidate of pendingICECandidatesRef.current) {
+          try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+          } catch (error) {
+            console.error('Error adding pending ICE candidate:', error);
+          }
+        }
+        pendingICECandidatesRef.current = [];
+      }
+
+      // Create and send offer if we're the initiator
+      if (isInitiatorRef.current && remoteSocketIdRef.current) {
+        console.log('Creating offer as initiator');
+        const offer = await peerConnection.createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true,
+        });
         await peerConnection.setLocalDescription(offer);
+        console.log('Sending offer to:', remoteSocketIdRef.current);
         sendWebRTCOffer(remoteSocketIdRef.current, offer);
       }
     } catch (error) {
       console.error('Error creating peer connection:', error);
+      alert('Failed to establish connection. Please try again.');
+      onClose();
     }
   };
 
@@ -204,8 +331,18 @@ const VideoCall: React.FC<VideoCallProps> = ({
   };
 
   const cleanup = () => {
+    console.log('Cleaning up video call resources');
+    
+    // Leave call room
+    if (roomId) {
+      leaveCallRoom(roomId);
+    }
+    
     if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current.getTracks().forEach((track) => {
+        track.stop();
+        console.log('Stopped local track:', track.kind);
+      });
       localStreamRef.current = null;
     }
 
@@ -221,6 +358,10 @@ const VideoCall: React.FC<VideoCallProps> = ({
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = null;
     }
+
+    remoteSocketIdRef.current = null;
+    pendingICECandidatesRef.current = [];
+    isInitiatorRef.current = false;
   };
 
   const handleEndCall = () => {
