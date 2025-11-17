@@ -1,13 +1,15 @@
 
-
+import { lazy } from "react"
 import { Route, Outlet } from "react-router-dom"
 import ProtectedRoute from "./ProtectedRoute"
 import DashboardLayout from "../components/layout/DashboardLayout"
-import PatientDashboard from "../pages/patient/PatientDashboard"
-import AppointmentsPage from "../pages/patient/Appointments"
-import RecordsPage from "../pages/patient/Records"
-import PatientConsultationPage from "@/pages/patient/PatientConsultationPage"
-import BrowseHospitalsPage from "../pages/patient/BrowseHospitals"
+
+// Lazy load patient pages for code splitting
+const PatientDashboard = lazy(() => import("../pages/patient/PatientDashboard"))
+const AppointmentsPage = lazy(() => import("../pages/patient/Appointments"))
+const RecordsPage = lazy(() => import("../pages/patient/Records"))
+const PatientConsultationPage = lazy(() => import("@/pages/patient/PatientConsultationPage"))
+const BrowseHospitalsPage = lazy(() => import("../pages/patient/BrowseHospitals"))
 
 
 const PatientRoutes = (

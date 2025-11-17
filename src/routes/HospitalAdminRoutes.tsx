@@ -1,11 +1,13 @@
-
+import { lazy } from "react"
 import { Route, Outlet } from "react-router-dom"
 import ProtectedRoute from "./ProtectedRoute"
 import DashboardLayout from "../components/layout/DashboardLayout"
-import HospitalAdminDashboard from "../pages/hospital-admin/HospitalAdminDashboard"
-import { StaffManagement } from "@/pages/hospital-admin/Staff"
-import { PatientsManagement } from "@/pages/hospital-admin/Patients"
-import PaymentsPage from "@/pages/hospital-admin/Payments"
+
+// Lazy load hospital admin pages for code splitting
+const HospitalAdminDashboard = lazy(() => import("../pages/hospital-admin/HospitalAdminDashboard"))
+const StaffManagement = lazy(() => import("@/pages/hospital-admin/Staff").then(module => ({ default: module.StaffManagement })))
+const PatientsManagement = lazy(() => import("@/pages/hospital-admin/Patients").then(module => ({ default: module.PatientsManagement })))
+const PaymentsPage = lazy(() => import("@/pages/hospital-admin/Payments"))
 
 const hospitalAdmin = (
   <Route element={<ProtectedRoute allowedRoles={["HOSPITAL_ADMIN"]}><Outlet /></ProtectedRoute>}>

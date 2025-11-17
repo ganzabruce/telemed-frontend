@@ -1,11 +1,14 @@
 // src/routes/AdminRoutes.tsx
+import { lazy } from "react"
 import { Route, Outlet } from "react-router-dom"
 import ProtectedRoute from "./ProtectedRoute"
 import DashboardLayout from "../components/layout/DashboardLayout"
-import AdminDashboard from "../pages/admin/AdminDashboard"
-import {Hospitals }from "../pages/admin/Hospitals"
-import UsersManagement from "../pages/admin/Users"
-import {InviteAdmin }from "../pages/admin/InviteAdmin"
+
+// Lazy load admin pages for code splitting
+const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"))
+const Hospitals = lazy(() => import("../pages/admin/Hospitals").then(module => ({ default: module.Hospitals })))
+const UsersManagement = lazy(() => import("../pages/admin/Users"))
+const InviteAdmin = lazy(() => import("../pages/admin/InviteAdmin").then(module => ({ default: module.InviteAdmin })))
 
 const AdminRoutes = (
   <Route element={<ProtectedRoute allowedRoles={["ADMIN"]}><Outlet /></ProtectedRoute>}>

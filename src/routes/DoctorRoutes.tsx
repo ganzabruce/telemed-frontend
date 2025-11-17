@@ -1,12 +1,15 @@
 // src/routes/DoctorRoutes.tsx
+import { lazy } from "react"
 import { Route, Outlet } from "react-router-dom"
 import ProtectedRoute from "./ProtectedRoute"
 import DashboardLayout from "../components/layout/DashboardLayout"
-import DoctorDashboard from "../pages/doctor/DoctorDashboard"
-import DoctorAppointments from "../pages/doctor/Appointments"
-import DoctorPatientsPage from "../pages/doctor/Patients"
-import DoctorConsultationsPage from "../pages/doctor/DoctorConsultationsPage"
-import AvailabilityPage from "../pages/doctor/Availability"
+
+// Lazy load doctor pages for code splitting
+const DoctorDashboard = lazy(() => import("../pages/doctor/DoctorDashboard"))
+const DoctorAppointments = lazy(() => import("../pages/doctor/Appointments"))
+const DoctorPatientsPage = lazy(() => import("../pages/doctor/Patients"))
+const DoctorConsultationsPage = lazy(() => import("../pages/doctor/DoctorConsultationsPage"))
+const AvailabilityPage = lazy(() => import("../pages/doctor/Availability"))
 
 
 const DoctorRoutes = (
