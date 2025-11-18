@@ -6,7 +6,11 @@ import {
   DollarSign,
   Shield,
   User,
-  Clock
+  Clock,
+  Info,
+  AlertTriangle,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import {
   DashboardHeader,
@@ -18,6 +22,8 @@ import {
   StatusBadge
 } from '../../components/shared';
 import { API_BASE_URL } from '../../utils/apiConfig';
+import { getNotifications } from '../../api/notificationsApi';
+import type { Notification } from '../../api/notificationsApi';
 
 // --- Types ---
 interface ActivityPoint {
@@ -41,6 +47,8 @@ interface DashboardData {
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState<boolean>(true);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState<boolean>(false);
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     totalPatients: 0,
     totalProviders: 0,
@@ -57,7 +65,20 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    fetchNotifications();
   }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      setNotificationsLoading(true);
+      const data = await getNotifications(10); // Get latest 10 notifications
+      setNotifications(data);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -168,6 +189,65 @@ const AdminDashboard = () => {
     return new Intl.NumberFormat('en-US').format(num);
   };
 
+  const formatTimeAgo = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w ago`;
+    if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo ago`;
+    return `${Math.floor(diffInSeconds / 31536000)}y ago`;
+  };
+
+  const getNotificationIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'INFO':
+        return Info;
+      case 'WARNING':
+        return AlertTriangle;
+      case 'ERROR':
+        return XCircle;
+      case 'SUCCESS':
+        return CheckCircle;
+      default:
+        return Info;
+    }
+  };
+
+  const getNotificationColor = (type: Notification['type']) => {
+    switch (type) {
+      case 'INFO':
+        return 'bg-blue-500';
+      case 'WARNING':
+        return 'bg-yellow-500';
+      case 'ERROR':
+        return 'bg-red-500';
+      case 'SUCCESS':
+        return 'bg-green-500';
+      default:
+        return 'bg-blue-500';
+    }
+  };
+
+  const getNotificationLabel = (type: Notification['type']) => {
+    switch (type) {
+      case 'INFO':
+        return 'System';
+      case 'WARNING':
+        return 'Warning';
+      case 'ERROR':
+        return 'Error';
+      case 'SUCCESS':
+        return 'Success';
+      default:
+        return 'System';
+    }
+  };
+
   const stats = [
     {
       icon: Users,
@@ -205,7 +285,10 @@ const AdminDashboard = () => {
         icon={Shield}
         title="Admin Dashboard"
         subtitle="System overview and management"
-        onRefresh={fetchDashboardData}
+        onRefresh={() => {
+          fetchDashboardData();
+          fetchNotifications();
+        }}
         loading={loading}
       />
 
@@ -286,30 +369,47 @@ const AdminDashboard = () => {
       </div>
 
       {/* System Notifications */}
-      <ListCard title="System Notifications">
-        <div className="space-y-3">
-          {[
-            { user: 'System Admin', message: 'New hospital registration pending approval', time: '2h ago' },
-            { user: 'Hospital Admin', message: 'Monthly report generated successfully', time: '5h ago' },
-            { user: 'System', message: 'Database backup completed', time: '1d ago' },
-            { user: 'Payment System', message: 'Payment gateway integration updated', time: '2d ago' }
-          ].map((notification, index) => (
-            <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
-                <span className="text-white font-semibold text-sm">
-                  {notification.user.split(' ').map(n => n[0]).join('').toUpperCase()}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className="font-semibold text-sm text-gray-900">{notification.user}</h4>
-                  <span className="text-xs text-gray-500">{notification.time}</span>
+      <ListCard 
+        title="System Notifications"
+        emptyMessage="No notifications available"
+        emptyIcon={<Info className="w-12 h-12 text-gray-300 mx-auto mb-3" />}
+      >
+        {notificationsLoading ? (
+          <div className="p-4 text-center text-gray-500">Loading notifications...</div>
+        ) : notifications.length === 0 ? (
+          <div className="p-4 text-center text-gray-500">No notifications available</div>
+        ) : (
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {notifications.map((notification) => {
+              const Icon = getNotificationIcon(notification.type);
+              const bgColor = getNotificationColor(notification.type);
+              const label = getNotificationLabel(notification.type);
+              
+              return (
+                <div 
+                  key={notification.id} 
+                  className={`flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors ${
+                    notification.status === 'SENT' ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-full ${bgColor} flex items-center justify-center shrink-0`}>
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="font-semibold text-sm text-gray-900">{label}</h4>
+                      <span className="text-xs text-gray-500">{formatTimeAgo(notification.createdAt)}</span>
+                    </div>
+                    <p className="text-sm text-gray-600 truncate">{notification.message}</p>
+                    {notification.status === 'SENT' && (
+                      <span className="inline-block mt-1 text-xs text-blue-600 font-medium">Unread</span>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600 truncate">{notification.message}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </ListCard>
     </PageContainer>
   );
