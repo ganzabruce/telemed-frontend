@@ -183,8 +183,8 @@ const SettingsPage = () => {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading settings...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading settings...</p>
         </div>
       </div>
     );
@@ -203,7 +203,7 @@ const SettingsPage = () => {
 
       {/* User Information Card */}
       <Card className="border-none shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+        <CardHeader className="bg-gray-400 text-white">
           <CardTitle className="flex items-center gap-2 text-2xl">
             <User className="w-6 h-6" />
             User Information
@@ -339,7 +339,7 @@ const SettingsPage = () => {
 
       {/* Password Change Card */}
       <Card className="border-none shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-green-600 to-green-700 text-white">
+        <CardHeader className="bg-gray-400 text-white">
           <CardTitle className="flex items-center gap-2 text-2xl">
             <Lock className="w-6 h-6" />
             Security

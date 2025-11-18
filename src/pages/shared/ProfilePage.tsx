@@ -306,8 +306,8 @@ const ProfilePage: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center">
-          <RefreshCw className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
-          <p className="text-gray-600 font-medium text-lg">Loading profile...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading profile...</p>
         </div>
       </div>
     );
@@ -557,7 +557,7 @@ const ProfilePage: React.FC = () => {
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
               <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
-                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
                   <Mail className="w-6 h-6 text-gray-600" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -567,7 +567,7 @@ const ProfilePage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
-                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
                   <Phone className="w-6 h-6 text-gray-600" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -673,7 +673,7 @@ const ProfilePage: React.FC = () => {
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
                     <Briefcase className="w-6 h-6 text-gray-600" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -685,7 +685,7 @@ const ProfilePage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
                     <Calendar className="w-6 h-6 text-gray-600" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -697,7 +697,7 @@ const ProfilePage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
                     <User className="w-6 h-6 text-gray-600" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -709,7 +709,7 @@ const ProfilePage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
                     <span className="text-2xl"><DollarSign /></span>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -723,7 +723,7 @@ const ProfilePage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
                     profileData.roleSpecific.status === 'AVAILABLE' 
                       ? 'bg-green-100'
                       : profileData.roleSpecific.status === 'BUSY'
@@ -758,7 +758,7 @@ const ProfilePage: React.FC = () => {
             <div className="grid md:grid-cols-2 gap-4">
               {profileData.roleSpecific.dateOfBirth && (
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
                     <Calendar className="w-6 h-6 text-gray-600" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -772,7 +772,7 @@ const ProfilePage: React.FC = () => {
 
               {profileData.roleSpecific.gender && (
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center shrink-0">
                     <User className="w-6 h-6 text-pink-600" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -786,7 +786,7 @@ const ProfilePage: React.FC = () => {
 
               {profileData.roleSpecific.bloodType && (
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
                     <Heart className="w-6 h-6 text-red-600" />
                   </div>
                   <div className="flex-1 min-w-0">

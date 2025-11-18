@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Edit, Trash2, Building2, Mail, Phone, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Building2, Mail, Phone, MapPin, AlertCircle, Download, Eye } from 'lucide-react'
+import { toast } from 'react-hot-toast'
+import * as XLSX from 'xlsx'
 import { API_BASE_URL } from '../../utils/apiConfig'
 
 // Add custom styles for animations
@@ -15,10 +17,6 @@ interface Hospital {
   adminId: string
 }
 
-interface ToastProps {
-  message: string
-  type: 'success' | 'error' | 'info'
-}
 
 const getAuthHeaders = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -28,22 +26,6 @@ const getAuthHeaders = () => {
   }
 }
 
-const Toast: React.FC<ToastProps & { onClose: () => void }> = ({ message, type, onClose }) => {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3000)
-    return () => clearTimeout(timer)
-  }, [onClose])
-
-  const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-  
-  return (
-    <div className={`fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2`}>
-      {type === 'success' && <CheckCircle size={20} />}
-      {type === 'error' && <XCircle size={20} />}
-      <span>{message}</span>
-    </div>
-  )
-}
 
 export const Hospitals: React.FC = () => {
 
@@ -51,8 +33,9 @@ export const Hospitals: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [showModal, setShowModal] = useState(false)
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null)
   const [editingHospital, setEditingHospital] = useState<Hospital | null>(null)
-  const [toast, setToast] = useState<ToastProps | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     licenseNumber: '',
@@ -73,16 +56,13 @@ export const Hospitals: React.FC = () => {
         headers: getAuthHeaders()
       })
       const data = await response.json()
-      setHospitals(data.data)
+      setHospitals(data.data || [])
     } catch (error) {
-      showToast('Failed to fetch hospitals', 'error')
+      toast.error('Failed to fetch hospitals')
+      console.error('Error fetching hospitals:', error)
     } finally {
       setLoading(false)
     }
-  }
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    setToast({ message, type })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,12 +80,12 @@ export const Hospitals: React.FC = () => {
 
       if (!response.ok) throw new Error('Operation failed')
       
-      showToast(editingHospital ? 'Hospital updated successfully' : 'Hospital created successfully', 'success')
+      toast.success(editingHospital ? 'Hospital updated successfully' : 'Hospital created successfully')
       setShowModal(false)
       resetForm()
       fetchHospitals()
     } catch (error) {
-      showToast('Operation failed', 'error')
+      toast.error('Operation failed')
     }
   }
 
@@ -120,10 +100,10 @@ export const Hospitals: React.FC = () => {
       
       if (!response.ok) throw new Error('Failed to delete')
       
-      showToast('Hospital deleted successfully', 'success')
+      toast.success('Hospital deleted successfully')
       fetchHospitals()
     } catch (error) {
-      showToast('Failed to delete hospital', 'error')
+      toast.error('Failed to delete hospital')
     }
   }
 
@@ -154,33 +134,102 @@ export const Hospitals: React.FC = () => {
 
   const filteredHospitals = hospitals.filter(h =>
     h.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    h.address?.toLowerCase().includes(searchTerm.toLowerCase())
+    h.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    h.licenseNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    h.contactEmail?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const handleExportExcel = () => {
+    if (filteredHospitals.length === 0) {
+      toast.error('No data to export')
+      return
+    }
+
+    // Prepare data for Excel
+    const excelData = filteredHospitals.map(hospital => ({
+      'Name': hospital.name || '',
+      'License Number': hospital.licenseNumber || '',
+      'Address': hospital.address || '',
+      'Contact Email': hospital.contactEmail || '',
+      'Contact Phone': hospital.contactPhone || '',
+      'Admin ID': hospital.adminId || ''
+    }))
+
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(excelData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Hospitals')
+
+    // Set column widths
+    const columnWidths = [
+      { wch: 25 }, // Name
+      { wch: 18 }, // License Number
+      { wch: 35 }, // Address
+      { wch: 30 }, // Contact Email
+      { wch: 15 }, // Contact Phone
+      { wch: 38 }  // Admin ID
+    ]
+    worksheet['!cols'] = columnWidths
+
+    // Generate Excel file and download
+    const fileName = `hospitals-export-${new Date().toISOString().split('T')[0]}.xlsx`
+    XLSX.writeFile(workbook, fileName)
+    
+    toast.success(`Exported ${filteredHospitals.length} hospitals to Excel`)
+  }
+
+  const handleViewDetails = (hospital: Hospital) => {
+    setSelectedHospital(hospital)
+    setShowViewModal(true)
+  }
+
+  const stats = {
+    total: hospitals.length
+  }
+
   return (
-    <div className="p-6">
-      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
-      
+    <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Hospitals Management</h1>
           <p className="text-gray-600 mt-1">Manage all hospitals in the system</p>
         </div>
-        <button
-          onClick={() => { resetForm(); setShowModal(true) }}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
-        >
-          <Plus size={20} />
-          Add Hospital
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleExportExcel}
+            className="bg-white text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 border border-gray-300 hover:bg-gray-50 transition-colors"
+          >
+            <Download size={20} />
+            Export
+          </button>
+          <button
+            onClick={() => { resetForm(); setShowModal(true) }}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+          >
+            <Plus size={20} />
+            Add Hospital
+          </button>
+        </div>
       </div>
 
-      <div className="mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center">
+              <Building2 className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-3xl font-bold text-gray-900">{stats.total}</span>
+          </div>
+          <h3 className="text-sm font-medium text-gray-600">Total Hospitals</h3>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-3 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Search hospitals..."
+            placeholder="Search by name, address, license number, or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -189,65 +238,266 @@ export const Hospitals: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="text-center py-12">
+        <div className="text-center py-12 bg-white rounded-lg shadow-md">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading hospitals...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredHospitals.map((hospital) => (
-            <div key={hospital.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Building2 className="text-blue-600" size={24} />
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[800px]">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hospital</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">License</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredHospitals.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center">
+                        <Building2 className="mx-auto text-gray-400 mb-3" size={48} />
+                        <p className="text-gray-600">No hospitals found</p>
+                        <p className="text-sm text-gray-500 mt-1">Try adjusting your search</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredHospitals.map((hospital) => (
+                      <tr key={hospital.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <Building2 className="text-blue-600" size={24} />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{hospital.name}</p>
+                              <p className="text-xs text-gray-500 font-mono">{hospital.id.substring(0, 13)}...</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Mail size={14} />
+                              {hospital.contactEmail || 'N/A'}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Phone size={14} />
+                              {hospital.contactPhone || 'N/A'}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <MapPin size={14} />
+                            <span className="max-w-xs truncate">{hospital.address || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-gray-700 font-mono">{hospital.licenseNumber || 'N/A'}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleViewDetails(hospital)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="View Details"
+                            >
+                              <Eye size={18} />
+                            </button>
+                            <button
+                              onClick={() => openEditModal(hospital)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Edit"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(hospital.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            
+            {filteredHospitals.length > 0 && (
+              <div className="px-6 py-4 bg-gray-50 border-t">
+                <p className="text-sm text-gray-600">
+                  Showing <span className="font-medium">{filteredHospitals.length}</span> of <span className="font-medium">{hospitals.length}</span> hospitals
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {filteredHospitals.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                <Building2 className="mx-auto text-gray-400 mb-3" size={48} />
+                <p className="text-gray-600">No hospitals found</p>
+                <p className="text-sm text-gray-500 mt-1">Try adjusting your search</p>
+              </div>
+            ) : (
+              filteredHospitals.map((hospital) => (
+                <div key={hospital.id} className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                        <Building2 className="text-blue-600" size={24} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{hospital.name}</p>
+                        <p className="text-xs text-gray-500 font-mono truncate">{hospital.id.substring(0, 13)}...</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => handleViewDetails(hospital)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="View Details"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button
+                        onClick={() => openEditModal(hospital)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(hospital.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-800">{hospital.name}</h3>
-                    <span className="text-xs text-gray-500">{hospital.licenseNumber}</span>
+                  
+                  <div className="space-y-2 border-t pt-3">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Mail size={14} className="shrink-0" />
+                      <span className="truncate">{hospital.contactEmail || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Phone size={14} className="shrink-0" />
+                      <span className="truncate">{hospital.contactPhone || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm text-gray-600">
+                      <MapPin size={14} className="shrink-0 mt-0.5" />
+                      <span className="break-words">{hospital.address || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <span className="font-medium">License:</span>
+                      <span className="font-mono">{hospital.licenseNumber || 'N/A'}</span>
+                    </div>
                   </div>
                 </div>
+              ))
+            )}
+            
+            {filteredHospitals.length > 0 && (
+              <div className="bg-white rounded-lg shadow-md p-4 text-center">
+                <p className="text-sm text-gray-600">
+                  Showing <span className="font-medium">{filteredHospitals.length}</span> of <span className="font-medium">{hospitals.length}</span> hospitals
+                </p>
               </div>
-              
-              <div className="space-y-2 mb-4">
-                {hospital.address && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin size={16} />
-                    <span>{hospital.address}</span>
-                  </div>
-                )}
-                {hospital.contactEmail && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Mail size={16} />
-                    <span>{hospital.contactEmail}</span>
-                  </div>
-                )}
-                {hospital.contactPhone && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Phone size={16} />
-                    <span>{hospital.contactPhone}</span>
-                  </div>
-                )}
+            )}
+          </div>
+        </>
+      )}
+
+      {/* View Details Modal */}
+      {showViewModal && selectedHospital && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowViewModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-2xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-800">Hospital Details</h2>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Building2 className="text-blue-600" size={40} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-800">{selectedHospital.name}</h3>
+                  <p className="text-sm text-gray-500 mt-1">License: {selectedHospital.licenseNumber || 'N/A'}</p>
+                </div>
               </div>
 
-              <div className="flex gap-2 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Contact Email</label>
+                  <p className="text-gray-800 flex items-center gap-2 mt-1">
+                    <Mail size={16} />
+                    {selectedHospital.contactEmail || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Contact Phone</label>
+                  <p className="text-gray-800 flex items-center gap-2 mt-1">
+                    <Phone size={16} />
+                    {selectedHospital.contactPhone || 'N/A'}
+                  </p>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-sm font-medium text-gray-500">Address</label>
+                  <p className="text-gray-800 flex items-center gap-2 mt-1">
+                    <MapPin size={16} />
+                    {selectedHospital.address || 'N/A'}
+                  </p>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-sm font-medium text-gray-500">Hospital ID</label>
+                  <p className="text-gray-800 font-mono text-sm mt-1 bg-gray-50 p-2 rounded">{selectedHospital.id}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-sm font-medium text-gray-500">Admin ID</label>
+                  <p className="text-gray-800 font-mono text-sm mt-1 bg-gray-50 p-2 rounded">{selectedHospital.adminId || 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 mt-6 border-t">
                 <button
-                  onClick={() => openEditModal(hospital)}
-                  className="flex-1 bg-blue-50 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-100 flex items-center justify-center gap-2"
+                  onClick={() => setShowViewModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <Edit size={16} />
-                  Edit
+                  Close
                 </button>
                 <button
-                  onClick={() => handleDelete(hospital.id)}
-                  className="flex-1 bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100 flex items-center justify-center gap-2"
+                  onClick={() => {
+                    setShowViewModal(false)
+                    openEditModal(selectedHospital)
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                 >
-                  <Trash2 size={16} />
-                  Delete
+                  <Edit size={18} />
+                  Edit Hospital
                 </button>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       )}
 

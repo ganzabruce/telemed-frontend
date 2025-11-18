@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
-import { Plus, Mail, UserCog, Edit, Search, Stethoscope, Phone, DollarSign, FileText, Filter, Download } from 'lucide-react';
+import { Plus, Mail, UserCog, Edit, Search, Stethoscope, Phone, DollarSign, FileText, Filter, Download, X } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { toast } from 'react-hot-toast';
 import {
   Dialog,
@@ -24,6 +25,13 @@ import {
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 import { API_BASE_URL } from '../../utils/apiConfig';
 
 const API_URL = API_BASE_URL;
@@ -37,6 +45,11 @@ export const StaffManagement = () => {
   const [showEditFeeDialog, setShowEditFeeDialog] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<any | null>(null);
   const [newFee, setNewFee] = useState<string>('');
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
+  const [filters, setFilters] = useState({
+    status: 'all',
+    specialization: 'all'
+  });
 
   useEffect(() => {
     fetchStaff();
@@ -84,11 +97,72 @@ export const StaffManagement = () => {
     }
   };
 
-  const filteredStaff = staff.filter(s => 
-    s.user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.specialization?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Get unique specializations for filter dropdown
+  const specializations = Array.from(new Set(staff.map(s => s.specialization).filter(Boolean)));
+
+  const filteredStaff = staff.filter(s => {
+    // Search filter
+    const matchesSearch = 
+      s.user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.specialization?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Status filter
+    const matchesStatus = filters.status === 'all' || s.status === filters.status;
+
+    // Specialization filter
+    const matchesSpecialization = filters.specialization === 'all' || s.specialization === filters.specialization;
+
+    return matchesSearch && matchesStatus && matchesSpecialization;
+  });
+
+  const handleExportExcel = () => {
+    if (filteredStaff.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+
+    // Prepare data for Excel
+    const excelData = filteredStaff.map(doctor => ({
+      'Name': doctor.user?.fullName || '',
+      'Email': doctor.user?.email || '',
+      'Phone': doctor.user?.phone || '',
+      'Specialization': doctor.specialization || '',
+      'License Number': doctor.licenseNumber || '',
+      'Consultation Fee (RWF)': doctor.consultationFee || 0,
+      'Status': doctor.status || ''
+    }));
+
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Staff');
+
+    // Set column widths
+    const columnWidths = [
+      { wch: 25 }, // Name
+      { wch: 30 }, // Email
+      { wch: 15 }, // Phone
+      { wch: 20 }, // Specialization
+      { wch: 18 }, // License Number
+      { wch: 20 }, // Consultation Fee
+      { wch: 12 }  // Status
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Generate Excel file and download
+    const fileName = `staff-export-${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+    
+    toast.success(`Exported ${filteredStaff.length} staff members to Excel`);
+  };
+
+  const handleResetFilters = () => {
+    setFilters({ status: 'all', specialization: 'all' });
+    toast.success('Filters reset');
+  };
+
+  const activeFiltersCount = (filters.status !== 'all' ? 1 : 0) + (filters.specialization !== 'all' ? 1 : 0);
 
   const openEditFee = (doctor: any) => {
     setSelectedDoctor(doctor);
@@ -150,8 +224,8 @@ export const StaffManagement = () => {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading staff...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading staff...</p>
         </div>
       </div>
     );
@@ -168,11 +242,83 @@ export const StaffManagement = () => {
           <p className="text-gray-600 mt-2 text-lg">Manage doctors</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="gap-2">
-            <Filter className="w-4 h-4" />
-            Filter
-          </Button>
-          <Button variant="outline" className="gap-2">
+          <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2 relative">
+                <Filter className="w-4 h-4" />
+                Filter
+                {activeFiltersCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md bg-white">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Filter className="w-5 h-5" />
+                  Filter Staff
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700 mb-2 block">Status</Label>
+                  <Select
+                    value={filters.status}
+                    onValueChange={(value) => setFilters({ ...filters, status: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="AVAILABLE">Available</SelectItem>
+                      <SelectItem value="UNAVAILABLE">Unavailable</SelectItem>
+                      <SelectItem value="BUSY">Busy</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700 mb-2 block">Specialization</Label>
+                  <Select
+                    value={filters.specialization}
+                    onValueChange={(value) => setFilters({ ...filters, specialization: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select specialization" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="all">All Specializations</SelectItem>
+                      {specializations.map((spec) => (
+                        <SelectItem key={spec} value={spec}>
+                          {spec}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleResetFilters}
+                    className="flex-1"
+                    disabled={activeFiltersCount === 0}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Reset
+                  </Button>
+                  <Button
+                    onClick={() => setShowFilterDialog(false)}
+                    className="flex-1 bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    Apply Filters
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Button variant="outline" className="gap-2" onClick={handleExportExcel}>
             <Download className="w-4 h-4" />
             Export
           </Button>
@@ -320,8 +466,9 @@ export const StaffManagement = () => {
       {/* Doctors Table */}
       <Card className="border-none shadow-lg">
         <CardHeader className="bg-gradient-blue-600 to-blue-700 text-white">
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <Stethoscope className="w-6 h-6" />
+          <CardTitle className="flex items-center gap-2 text-2xl text-blue-600">
+            <Stethoscope className="w-6 h-6 " />
+            
             Doctors ({filteredStaff.length})
           </CardTitle>
         </CardHeader>
@@ -421,7 +568,7 @@ export const StaffManagement = () => {
 
       {/* Edit Consultation Fee Dialog */}
       <Dialog open={showEditFeeDialog} onOpenChange={setShowEditFeeDialog}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-l overflow-hidden  bg-white">
           <DialogHeader>
             <DialogTitle>Update Consultation Fee</DialogTitle>
           </DialogHeader>
@@ -439,7 +586,7 @@ export const StaffManagement = () => {
             </div>
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowEditFeeDialog(false)}>Cancel</Button>
-              <Button onClick={saveConsultationFee}>Save</Button>
+              <Button onClick={saveConsultationFee} className="bg-blue-600 text-white hover:bg-blue-700 hover:to-purple-700 gap-2 shadow-lg hover:shadow-xl transition-all duration-300">Save</Button>
             </div>
           </div>
         </DialogContent>

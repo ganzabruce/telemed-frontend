@@ -1,5 +1,4 @@
 import React from 'react';
-import { RefreshCw } from 'lucide-react';
 
 interface LoadingStateProps {
   message?: string;
@@ -9,9 +8,9 @@ interface LoadingStateProps {
 }
 
 const sizeClasses = {
-  sm: 'w-6 h-6',
-  md: 'w-8 h-8',
-  lg: 'w-12 h-12',
+  sm: 'h-6 w-6',
+  md: 'h-8 w-8',
+  lg: 'h-12 w-12',
 };
 
 const LoadingState: React.FC<LoadingStateProps> = ({ 
@@ -21,9 +20,9 @@ const LoadingState: React.FC<LoadingStateProps> = ({
   className = '' 
 }) => {
   const content = (
-    <div className={`flex flex-col items-center justify-center ${className}`}>
-      <RefreshCw className={`${sizeClasses[size]} text-blue-600 animate-spin mb-4`} />
-      {message && <p className="text-gray-600 font-medium">{message}</p>}
+    <div className={`text-center ${className}`}>
+      <div className={`animate-spin rounded-full ${sizeClasses[size]} border-b-2 border-blue-600 mx-auto`}></div>
+      {message && <p className="mt-4 text-gray-600">{message}</p>}
     </div>
   );
 
