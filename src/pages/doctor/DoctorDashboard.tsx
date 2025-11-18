@@ -10,7 +10,6 @@ import {
   User,
   Stethoscope,
   MoreVertical,
-  RefreshCw
 } from 'lucide-react';
 import DashboardHeader from '../../components/shared/DashboardHeader';
 import StatsGrid from '../../components/shared/StatsGrid';
