@@ -3,8 +3,6 @@ import {
   Search, 
   User, 
   Calendar, 
-  Phone, 
-  Mail, 
   FileText, 
   AlertCircle, 
   Loader2,
