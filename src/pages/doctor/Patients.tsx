@@ -62,6 +62,8 @@ const DoctorPatientsPage: React.FC = () => {
   const [patientAppointments, setPatientAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING'>('ALL');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 15;
 
   useEffect(() => {
     fetchPatients();
@@ -79,6 +81,17 @@ const DoctorPatientsPage: React.FC = () => {
 
     setFilteredPatients(filtered);
   }, [searchTerm, patients, statusFilter]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedPatients = filteredPatients.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
   const fetchPatients = async () => {
     try {
@@ -326,7 +339,7 @@ const DoctorPatientsPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Patients Grid/List */}
+      {/* Patients Table */}
       {filteredPatients.length === 0 ? (
         <Card className="border-none shadow-sm bg-white">
           <CardContent className="flex flex-col items-center justify-center py-16">
@@ -342,76 +355,137 @@ const DoctorPatientsPage: React.FC = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredPatients.map((patient) => (
-            <Card 
-              key={patient.id} 
-              className="border-none shadow-sm hover:shadow-xl transition-all duration-300 bg-white cursor-pointer group overflow-hidden"
-              onClick={() => handleViewPatient(patient)}
-            >
-              <CardContent className="p-6">
-                {/* Patient Header */}
-                <div className="flex items-start gap-4 mb-6">
-                  {patient.user.avatarUrl ? (
-                    <img
-                      src={patient.user.avatarUrl}
-                      alt={patient.user.fullName}
-                      className="w-16 h-16 rounded-full object-cover ring-4 ring-blue-50 group-hover:ring-blue-100 transition-all"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-blue-500  flex items-center justify-center ring-4 ring-blue-50 group-hover:ring-blue-100 transition-all">
-                      <span className="text-white font-bold text-xl">
-                        {getInitials(patient.user.fullName)}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-lg text-gray-900 truncate mb-1 group-hover:text-blue-600 transition-colors">
-                      {patient.user.fullName}
-                    </h3>
-                    <Badge className={`${getStatusColor(patient.status)} border text-xs font-medium`}>
-                      {patient.status}
-                    </Badge>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+        <>
+          <Card className="border-none shadow-sm bg-white overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blood Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedPatients.map((patient) => (
+                    <tr 
+                      key={patient.id} 
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => handleViewPatient(patient)}
+                    >
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          {patient.user.avatarUrl ? (
+                            <img
+                              src={patient.user.avatarUrl}
+                              alt={patient.user.fullName}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm shrink-0">
+                              {getInitials(patient.user.fullName)}
+                            </div>
+                          )}
+                          <span className="text-sm font-medium text-gray-900">{patient.user.fullName}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{calculateAge(patient.dateOfBirth)} years</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{patient.gender}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{patient.user.email}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{patient.user.phone}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {patient.bloodType ? (
+                          <span className="flex items-center gap-1">
+                            <Heart className="w-3 h-3 text-red-500" />
+                            {patient.bloodType}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <Badge className={`${getStatusColor(patient.status)} border text-xs font-medium`}>
+                          {patient.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewPatient(patient);
+                          }}
+                          className="h-7 text-xs"
+                        >
+                          View Details
+                          <ChevronRight className="w-3 h-3 ml-1" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3">
+              <div className="text-sm text-gray-700">
+                Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, filteredPatients.length)}</span> of{' '}
+                <span className="font-medium">{filteredPatients.length}</span> patients
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="h-9 px-4 text-sm"
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="h-9 w-9 text-sm"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
                 </div>
-
-                {/* Patient Quick Info */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
-                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                      <User className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <span className="font-medium">{calculateAge(patient.dateOfBirth)} years • {patient.gender}</span>
-                  </div>
-
-                  <div className="flex items-center gap-3 text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
-                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                      <Mail className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <span className="truncate font-medium">{patient.user.email}</span>
-                  </div>
-
-                  <div className="flex items-center gap-3 text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
-                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                      <Phone className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <span className="font-medium">{patient.user.phone}</span>
-                  </div>
-
-                  {patient.bloodType && (
-                    <div className="flex items-center gap-3 text-sm text-gray-600 bg-red-50 rounded-lg p-3">
-                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                        <Heart className="w-4 h-4 text-red-600" />
-                      </div>
-                      <span className="font-medium">Blood Type: {patient.bloodType}</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="h-9 px-4 text-sm"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Patient Details Dialog */}
