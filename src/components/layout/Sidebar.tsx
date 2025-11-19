@@ -2,58 +2,14 @@
 import React, { useState } from "react"
 import { useAuth } from "../../context/AuthContext"
 import {
-  LayoutDashboard,
-  Users,
-  Building2,
-  UserPlus,
-  UserCog,
-  Calendar,
-  ClipboardList,
   Bell,
   ChevronLeft,
   ChevronRight,
-  Stethoscope,
   X,
-  Clock,
-  DollarSign,
 } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import {  motion } from "framer-motion"
-
-interface NavItem {
-  name: string
-  href: string
-  icon: React.ElementType
-}
-
-const navigationByRole: Record<string, NavItem[]> = {
-  ADMIN: [
-    { name: "Dashboard", href: "/admin-dashboard", icon: LayoutDashboard },
-    { name: "Hospitals", href: "/admin/hospitals", icon: Building2 },
-    { name: "Users", href: "/admin/users", icon: Users },
-    { name: "Invite Admin", href: "/admin/invite-admin", icon: UserPlus },
-  ],
-  HOSPITAL_ADMIN: [
-    { name: "Dashboard", href: "/hospital-admin-dashboard", icon: LayoutDashboard },
-    { name: "Staff", href: "/hospital-admin/staff", icon: UserCog },
-    { name: "Patients", href: "/hospital-admin/patients", icon: Users },
-    { name: "Payments", href: "/hospital-admin/payments", icon: DollarSign },
-  ],
-  DOCTOR: [
-    { name: "Dashboard", href: "/doctor-dashboard", icon: LayoutDashboard },
-    { name: "Appointments", href: "/doctor/appointments", icon: Calendar },
-    { name: "Consultations", href: "/doctor/consultations", icon: Stethoscope },
-    { name: "Patients", href: "/doctor/patients", icon: Users },
-    { name: "Availability", href: "/doctor/availability", icon: Clock },
-  ],
-  PATIENT: [
-    { name: "Dashboard", href: "/patient-dashboard", icon: LayoutDashboard },
-    { name: "Browse Hospitals", href: "/patient/browse-hospitals", icon: Building2 },
-    { name: "My Appointments", href: "/patient/appointments", icon: Calendar },
-    { name: "My Consultations", href: "/patient/consultations", icon: Stethoscope },
-    { name: "Medical Records", href: "/patient/records", icon: ClipboardList },
-  ],
-}
+import { navigationByRole } from "../../constants/navigationRoles"
 
 interface SidebarProps {
   isMobileOpen: boolean

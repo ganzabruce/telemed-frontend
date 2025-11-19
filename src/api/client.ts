@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// Get API URL from environment variable, fallback to deployed backend
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://telemedicine-be.onrender.com";
+// Get API URL from environment variable, fallback to local backend
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://telemedicine.andasy.dev";
 
 // Create an Axios instance
 export const api = axios.create({

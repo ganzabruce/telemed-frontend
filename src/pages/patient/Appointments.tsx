@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Video, Phone, MessageSquare, Search, Plus, AlertCircle, X } from 'lucide-react';
+import { Calendar, Video, Phone, MessageSquare, Search, Plus, AlertCircle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getOrCreateConversation } from '../../api/chatApi';
 import toast from 'react-hot-toast';
@@ -232,6 +232,8 @@ const AppointmentsPage: React.FC = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState<boolean>(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
   const [paymentAppointment, setPaymentAppointment] = useState<any | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 15;
 
   useEffect(() => {
     fetchAppointments();
@@ -313,6 +315,17 @@ const AppointmentsPage: React.FC = () => {
     return status.charAt(0) + status.slice(1).toLowerCase();
   }
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredAppointments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedAppointments = filteredAppointments.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, searchTerm]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -376,85 +389,164 @@ const AppointmentsPage: React.FC = () => {
         </div>
       )}
 
-      <div className="space-y-4">
-        {filteredAppointments.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Appointments Found</h3>
-            <p className="text-gray-600">
-              {searchTerm 
-                ? 'Your search returned no results. Try different keywords.' 
-                : `There are no appointments with the status "${formatStatusForDisplay(filterStatus)}".`}
-            </p>
+      {filteredAppointments.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Appointments Found</h3>
+          <p className="text-gray-600">
+            {searchTerm 
+              ? 'Your search returned no results. Try different keywords.' 
+              : `There are no appointments with the status "${formatStatusForDisplay(filterStatus)}".`}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doctor</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Specialization</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hospital</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedAppointments.map((appointment) => (
+                    <tr key={appointment.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shrink-0">
+                            {((appointment.doctor?.user?.fullName ?? 'DR').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2))}
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">Dr. {appointment.doctor?.user?.fullName || 'Unknown'}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{appointment.doctor?.specialization || 'General Practice'}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{appointment.hospital?.name || '-'}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{formatDate(appointment.appointmentDate)}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{formatTime(appointment.appointmentDate)}</td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-sm text-gray-600">
+                          {getTypeIcon(appointment.type)}
+                          <span>{appointment.type ?? ''}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status ?? null)}`}>
+                          {appointment.status ?? ''}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-2">
+                          {appointment.status === 'PENDING' && (
+                            <button
+                              onClick={() => {
+                                setPaymentAppointment(appointment);
+                                setIsPaymentModalOpen(true);
+                              }}
+                              className="px-3 py-1 bg-gray-600 text-white hover:bg-gray-700 rounded transition-colors text-xs font-medium"
+                            >
+                              Pay
+                            </button>
+                          )}
+                          {appointment.status === 'CONFIRMED' && appointment.type === 'CHAT' && (
+                            <button 
+                              onClick={async () => {
+                                try {
+                                  const doctorId = appointment.doctor?.user?.id;
+                                  if (doctorId) {
+                                    await getOrCreateConversation(doctorId);
+                                    navigate('/patient/consultations');
+                                    toast.success('Opening chat with doctor...');
+                                  } else {
+                                    toast.error('Doctor information not available');
+                                  }
+                                } catch (err) {
+                                  toast.error('Failed to open chat. Please try again.');
+                                  console.error('Error opening chat:', err);
+                                }
+                              }}
+                              className="px-3 py-1 bg-gray-600 text-white hover:bg-gray-700 rounded transition-colors text-xs font-medium flex items-center gap-1"
+                            >
+                              <MessageSquare className="w-3 h-3" />
+                              Chat
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => setSelectedAppointment(appointment)} 
+                            className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded transition-colors text-xs font-medium"
+                          >
+                            Details
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        ) : (
-          filteredAppointments.map((appointment) => (
-            <div
-              key={appointment.id}
-              className="bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-all hover:shadow-md p-6"
-            >
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold shrink-0">
-                    {((appointment.doctor?.user?.fullName ?? 'DR').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2))}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-gray-900">Dr. {appointment.doctor?.user?.fullName || 'Unknown Doctor'}</h3>
-                    <p className="text-sm text-gray-600">{appointment.doctor?.specialization || 'General Practice'} • {appointment.hospital?.name || 'Hospital'}</p>
-                    <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600">
-                      <div className="flex items-center gap-1"><Calendar className="w-4 h-4" />{formatDate(appointment.appointmentDate)}</div>
-                      <div className="flex items-center gap-1"><Clock className="w-4 h-4" />{formatTime(appointment.appointmentDate)}</div>
-                      <div className="flex items-center gap-1">{getTypeIcon(appointment.type)}{appointment.type ?? ''}</div>
-                    </div>
-                  </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3">
+              <div className="text-sm text-gray-700">
+                Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, filteredAppointments.length)}</span> of{' '}
+                <span className="font-medium">{filteredAppointments.length}</span> appointments
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-1 text-sm font-medium rounded-lg ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
                 </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status ?? null)}`}>
-                    {appointment.status ?? ''}
-                  </span>
-                  {appointment.status === 'PENDING' && (
-                    <button
-                      onClick={() => {
-                        setPaymentAppointment(appointment);
-                        setIsPaymentModalOpen(true);
-                      }}
-                      className="px-4 py-2 bg-gray-600 text-white hover:bg-gray-700 rounded-lg transition-colors font-medium text-sm"
-                    >
-                      Pay
-                    </button>
-                  )}
-                  {appointment.status === 'CONFIRMED' && appointment.type === 'CHAT' && (
-                    <button 
-                      onClick={async () => {
-                        try {
-                          const doctorId = appointment.doctor?.user?.id;
-                          if (doctorId) {
-                            await getOrCreateConversation(doctorId);
-                            navigate('/patient/consultations');
-                            toast.success('Opening chat with doctor...');
-                          } else {
-                            toast.error('Doctor information not available');
-                          }
-                        } catch (err) {
-                          toast.error('Failed to open chat. Please try again.');
-                          console.error('Error opening chat:', err);
-                        }
-                      }}
-                      className="px-4 py-2 bg-gray-600 text-white hover:bg-gray-700 rounded-lg transition-colors font-medium text-sm flex items-center gap-2"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                      Open Chat
-                    </button>
-                  )}
-                  <button onClick={() => setSelectedAppointment(appointment)} className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors font-medium text-sm">
-                    View Details
-                  </button>
-                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
               </div>
             </div>
-          ))
-        )}
-      </div>
+          )}
+        </>
+      )}
 
       {selectedAppointment && (
         <div className="fixed inset-0 bg-transparent backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 p-4">

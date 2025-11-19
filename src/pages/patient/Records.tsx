@@ -10,6 +10,8 @@ const RecordsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 15;
 
   useEffect(() => {
     fetchMedicalRecords();
@@ -265,6 +267,17 @@ const RecordsPage = () => {
     );
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -303,71 +316,153 @@ const RecordsPage = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredRecords.length === 0 ? (
-          <div className="col-span-full bg-white rounded-xl border border-gray-200 p-12 text-center">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No medical records found</h3>
-            <p className="text-gray-600">
-              {searchTerm ? 'Try adjusting your search' : 'Your consultation records will appear here after appointments'}
-            </p>
-          </div>
-        ) : (
-          filteredRecords.map((record) => (
-            <div
-              key={record.id}
-              className="bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-all hover:shadow-md p-6 cursor-pointer"
-              onClick={() => setSelectedRecord(record)}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                    {record.doctor?.user?.fullName?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'DR'}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">
-                      Dr. {record.doctor?.user?.fullName || 'Unknown Doctor'}
-                    </h3>
-                    <p className="text-sm text-gray-600">{record.doctor?.specialization || 'General Practice'}</p>
-                  </div>
-                </div>
-                <span className="text-xs text-gray-500">{formatDate(record.appointmentDate)}</span>
-              </div>
-
-              <div className="space-y-3">
-                {record.consultation?.doctorNotes && (
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FileText className="w-4 h-4 text-gray-600" />
-                      <span className="text-sm font-medium text-gray-700">Notes</span>
-                    </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {record.consultation.doctorNotes}
-                    </p>
-                  </div>
-                )}
-
-                {record.consultation?.prescription && (
-                  <div className="bg-blue-50 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Pill className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-700">Prescription</span>
-                    </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {record.consultation.prescription}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <button className="mt-4 w-full py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2">
-                <Eye className="w-4 h-4" />
-                View Full Record
-              </button>
+      {filteredRecords.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No medical records found</h3>
+          <p className="text-gray-600">
+            {searchTerm ? 'Try adjusting your search' : 'Your consultation records will appear here after appointments'}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doctor</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Specialization</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hospital</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prescription</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedRecords.map((record) => (
+                    <tr key={record.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shrink-0">
+                            {record.doctor?.user?.fullName?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'DR'}
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">Dr. {record.doctor?.user?.fullName || 'Unknown'}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{record.doctor?.specialization || 'General Practice'}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{record.hospital?.name || '-'}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{formatDate(record.appointmentDate)}</td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{record.type || '-'}</td>
+                      <td className="px-4 py-4 text-sm text-gray-600 max-w-xs">
+                        <div className="truncate" title={record.consultation?.doctorNotes || 'No notes'}>
+                          {record.consultation?.doctorNotes ? (
+                            <span className="flex items-center gap-1">
+                              <FileText className="w-3 h-3 text-gray-400" />
+                              {record.consultation.doctorNotes.length > 50 
+                                ? record.consultation.doctorNotes.substring(0, 50) + '...' 
+                                : record.consultation.doctorNotes}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-600 max-w-xs">
+                        <div className="truncate" title={record.consultation?.prescription || 'No prescription'}>
+                          {record.consultation?.prescription ? (
+                            <span className="flex items-center gap-1">
+                              <Pill className="w-3 h-3 text-blue-400" />
+                              {record.consultation.prescription.length > 50 
+                                ? record.consultation.prescription.substring(0, 50) + '...' 
+                                : record.consultation.prescription}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setSelectedRecord(record)}
+                            className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded transition-colors text-xs font-medium flex items-center gap-1"
+                          >
+                            <Eye className="w-3 h-3" />
+                            View
+                          </button>
+                          <button
+                            onClick={() => downloadPDF(record)}
+                            className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded transition-colors text-xs font-medium flex items-center gap-1"
+                          >
+                            <Download className="w-3 h-3" />
+                            PDF
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))
-        )}
-      </div>  
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3">
+              <div className="text-sm text-gray-700">
+                Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, filteredRecords.length)}</span> of{' '}
+                <span className="font-medium">{filteredRecords.length}</span> records
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-1 text-sm font-medium rounded-lg ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}  
 
       {selectedRecord && (
         <div className="fixed inset-0 bg-transparent shadow-lg shadow-black/20  rounded-lg border-gray-200 backdrop-blur-sm bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setSelectedRecord(null)}>

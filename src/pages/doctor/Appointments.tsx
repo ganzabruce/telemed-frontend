@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Video, Phone, MessageSquare, CheckCircle, XCircle, AlertCircle, Filter, Search, MapPin, ChevronRight, RefreshCw, FileText, Pill } from 'lucide-react';
+import { Calendar, Clock, Video, Phone, MessageSquare, CheckCircle, XCircle, AlertCircle, Filter, Search, MapPin, RefreshCw, FileText, Pill } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -59,13 +59,14 @@ const DoctorAppointments = () => {
   const [updating, setUpdating] = useState<boolean>(false);
   
   // Filter states
-  // Filter states
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
   const [dateFilter, setDateFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [clientPage, setClientPage] = useState<number>(1);
+  const itemsPerPage = 15;
 
   const statusConfig = {
     PENDING: {
@@ -111,8 +112,8 @@ const DoctorAppointments = () => {
     },
     CHAT: {
       icon: MessageSquare,
-      color: 'text-blue-600',
-      bg: 'bg-blue-100'
+      color: 'text-black',
+      bg: 'bg-gray-100'
     }
   };
 
@@ -189,19 +190,35 @@ const DoctorAppointments = () => {
   };
 
   const filterAppointments = () => {
-    if (!searchTerm.trim()) {
-      setFilteredAppointments(appointments);
-      return;
+    let filtered = appointments;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter((appointment: Appointment) => {
+        const patientName = (appointment.patient?.user?.fullName ?? '').toLowerCase();
+        const search = searchTerm.toLowerCase();
+        return patientName.includes(search);
+      });
     }
 
-    const filtered = appointments.filter((appointment: Appointment) => {
-      const patientName = (appointment.patient?.user?.fullName ?? '').toLowerCase();
-      const search = searchTerm.toLowerCase();
-      return patientName.includes(search);
-    });
+    // Apply type filter
+    if (typeFilter !== 'ALL') {
+      filtered = filtered.filter((appointment: Appointment) => appointment.type === typeFilter);
+    }
 
     setFilteredAppointments(filtered);
   };
+
+  // Client-side pagination for filtered results
+  const totalClientPages = Math.ceil(filteredAppointments.length / itemsPerPage);
+  const startIndex = (clientPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedAppointments = filteredAppointments.slice(startIndex, endIndex);
+
+  // Reset client page when filters change
+  useEffect(() => {
+    setClientPage(1);
+  }, [searchTerm, typeFilter]);
 
   const handleStatusUpdate = async (): Promise<void> => {
     if (!selectedAppointment || !newStatus) return;
@@ -366,7 +383,7 @@ const DoctorAppointments = () => {
           </Alert>
         )}
 
-        {/* Appointments Grid */}
+        {/* Appointments Table */}
         {filteredAppointments.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -376,100 +393,73 @@ const DoctorAppointments = () => {
             <p className="text-gray-600">Try adjusting your filters or search criteria</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredAppointments.map((appointment: Appointment) => {
-              const statusKey = (appointment.status ?? 'PENDING') as keyof typeof statusConfig;
-              const typeKey = (appointment.type ?? 'VIDEO') as keyof typeof typeConfig;
-              const StatusIcon = statusConfig[statusKey].icon;
-              const TypeIcon = typeConfig[typeKey].icon;
-              const date = appointment.appointmentDate ? new Date(appointment.appointmentDate) : null;
-              const day = date && !isNaN(date.getTime()) ? String(date.getDate()) : '-';
-              const monthShort = date && !isNaN(date.getTime()) ? date.toLocaleDateString('en-US', { month: 'short' }) : '';
+          <>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hospital</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {paginatedAppointments.map((appointment: Appointment) => {
+                      const statusKey = (appointment.status ?? 'PENDING') as keyof typeof statusConfig;
+                      const typeKey = (appointment.type ?? 'VIDEO') as keyof typeof typeConfig;
+                      const StatusIcon = statusConfig[statusKey].icon;
+                      const TypeIcon = typeConfig[typeKey].icon;
 
-              return (
-                <div
-                  key={appointment.id}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 transition-all duration-300 overflow-hidden"
-                >
-                  <div className="p-6">
-                    <div className="flex items-start gap-6">
-                      {/* Date Badge */}
-                      <div className="shrink-0">
-                        <div className="w-20 h-20 bg-blue-500 rounded-2xl flex flex-col items-center justify-center text-white shadow-lg">
-                          <span className="text-2xl font-bold">
-                            {day}
-                          </span>
-                          <span className="text-xs font-medium uppercase">
-                            {monthShort}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Main Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-blue-500  flex items-center justify-center text-white font-bold text-lg">
-                              {appointment.patient?.user?.fullName?.charAt(0) || 'P'}
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900 mb-1">
-                                {appointment.patient?.user?.fullName || 'Unknown Patient'}
-                              </h3>
-                              <div className="flex items-center gap-4 text-sm text-gray-600">
-                                <div className="flex items-center gap-1">
-                                  <Clock className="w-4 h-4" />
-                                  {formatTime(appointment.appointmentDate)}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="w-4 h-4" />
-                                  {appointment.hospital?.name || 'Unknown Hospital'}
-                                </div>
+                      return (
+                        <tr key={appointment.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                {appointment.patient?.user?.fullName?.charAt(0) || 'P'}
                               </div>
+                              <span className="text-sm font-medium text-gray-900">{appointment.patient?.user?.fullName || 'Unknown Patient'}</span>
                             </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${statusConfig[statusKey].lightBg} ${statusConfig[statusKey].border} border`}>
-                            <StatusIcon className={`w-4 h-4 ${statusConfig[statusKey].text}`} />
-                            <span className={`text-sm font-medium ${statusConfig[statusKey].text}`}>
-                              {appointment.status}
-                            </span>
-                          </div>
-                          
-                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${typeConfig[typeKey].bg}`}>
-                            <TypeIcon className={`w-4 h-4 ${typeConfig[typeKey].color}`} />
-                            <span className={`text-sm font-medium ${typeConfig[typeKey].color}`}>
-                              {appointment.type}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 ">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openDetailsDialog(appointment)}
-                            className="flex items-center gap-2"
-                          >
-                            View Details
-                            <ChevronRight className="w-4 h-4" />
-                          </Button>
-                          
-                          {(appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') && (
-                            <Button
-                              size="sm"
-                              onClick={() => openStatusDialog(appointment)}
-                              className="bg-blue-600  hover:from-blue-700 hover:to-indigo-700 text-white"
-                            >
-                              Update Status
-                            </Button>
-                          )}
-                          
-                          {appointment.status === 'CONFIRMED' && (
-                            <>
-                              {appointment.type === 'CHAT' ? (
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{formatDate(appointment.appointmentDate)}</td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{formatTime(appointment.appointmentDate)}</td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{appointment.hospital?.name || 'Unknown'}</td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className={`flex items-center gap-2 px-2 py-1 rounded-lg ${typeConfig[typeKey].bg}`}>
+                              <TypeIcon className={`w-4 h-4 ${typeConfig[typeKey].color}`} />
+                              <span className={`text-xs font-medium ${typeConfig[typeKey].color}`}>{appointment.type}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className={`flex items-center gap-2 px-2 py-1 rounded-lg ${statusConfig[statusKey].lightBg} ${statusConfig[statusKey].border} border`}>
+                              <StatusIcon className={`w-4 h-4 ${statusConfig[statusKey].text}`} />
+                              <span className={`text-xs font-medium ${statusConfig[statusKey].text}`}>{appointment.status}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openDetailsDialog(appointment)}
+                                className="h-7 text-xs"
+                              >
+                                Details
+                              </Button>
+                              {(appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => openStatusDialog(appointment)}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white h-7 text-xs"
+                                >
+                                  Update
+                                </Button>
+                              )}
+                              {appointment.status === 'CONFIRMED' && appointment.type === 'CHAT' && (
                                 <Button 
                                   size="sm"
                                   onClick={async () => {
@@ -486,89 +476,122 @@ const DoctorAppointments = () => {
                                       console.error('Error opening chat:', err);
                                     }
                                   }}
-                                  className="bg-green-600 hover:from-green-700 hover:to-emerald-700 text-white flex items-center gap-2"
+                                  className="bg-gray-50 text-black border border-gray-200 hover:bg-gray-100 h-7 text-xs flex items-center gap-1"
                                 >
-                                  <MessageSquare className="w-4 h-4" />
-                                  Open Chat
-                                </Button>
-                              ) : (
-                                <Button 
-                                  size="sm"
-                                  className="bg-gray-50 text-black border border-gray-200 hover:from-green-700 hover:to-emerald-700 "
-                                >
-                                  {appointment.type === 'VIDEO' && 'Join Video'}
-                                  {appointment.type === 'AUDIO' && 'Join Call'}
+                                  <MessageSquare className="w-3 h-3" />
+                                  Chat
                                 </Button>
                               )}
-                            </>
-                          )}
-                          
-                          {(appointment.status === 'CONFIRMED' || appointment.status === 'COMPLETED') && !appointment.consultation && (
-                            <Button 
-                              size="sm"
-                              onClick={() => {
-                                setAppointmentForPrescription(appointment);
-                                setPrescriptionFormOpen(true);
-                              }}
-                              className="bg-gray-50  text-black border border-gray-200 flex items-center gap-2"
-                            >
-                              <FileText className="w-4 h-4" />
-                              Record Consultation
-                            </Button>
-                          )}
-                          
-                          {appointment.consultation && (
-                            <Button 
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openDetailsDialog(appointment)}
-                              className="text-green-600 border-green-600 hover:bg-green-50"
-                            >
-                              View Consultation
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-3 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="h-11 px-6"
-            >
-              Previous
-            </Button>
-            <div className="flex items-center gap-2">
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(page => (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? "default" : "outline"}
-                  onClick={() => setCurrentPage(page)}
-                  className="h-11 w-11"
-                >
-                  {page}
-                </Button>
-              ))}
+                              {(appointment.status === 'CONFIRMED' || appointment.status === 'COMPLETED') && !appointment.consultation && (
+                                <Button 
+                                  size="sm"
+                                  onClick={() => {
+                                    setAppointmentForPrescription(appointment);
+                                    setPrescriptionFormOpen(true);
+                                  }}
+                                  className="bg-gray-50 text-black border border-gray-200 hover:bg-gray-100 h-7 text-xs flex items-center gap-1"
+                                >
+                                  <FileText className="w-3 h-3" />
+                                  Record
+                                </Button>
+                              )}
+                              {appointment.consultation && (
+                                <Button 
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => openDetailsDialog(appointment)}
+                                  className="bg-gray-50 text-black border border-gray-200 hover:bg-gray-100 h-7 text-xs"
+                                >
+                                  View
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="h-11 px-6"
-            >
-              Next
-            </Button>
-          </div>
+
+            {/* Client-side Pagination */}
+            {totalClientPages > 1 && (
+              <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3">
+                <div className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, filteredAppointments.length)}</span> of{' '}
+                  <span className="font-medium">{filteredAppointments.length}</span> appointments
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setClientPage(prev => Math.max(1, prev - 1))}
+                    disabled={clientPage === 1}
+                    className="h-9 px-4 text-sm"
+                  >
+                    Previous
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(totalClientPages, 5) }, (_, i) => {
+                      let pageNum;
+                      if (totalClientPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (clientPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (clientPage >= totalClientPages - 2) {
+                        pageNum = totalClientPages - 4 + i;
+                      } else {
+                        pageNum = clientPage - 2 + i;
+                      }
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={clientPage === pageNum ? "default" : "outline"}
+                          onClick={() => setClientPage(pageNum)}
+                          className="h-9 w-9 text-sm"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setClientPage(prev => Math.min(totalClientPages, prev + 1))}
+                    disabled={clientPage === totalClientPages}
+                    className="h-9 px-4 text-sm"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Backend Pagination (if needed) */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="h-11 px-6"
+                >
+                  Previous Page
+                </Button>
+                <div className="text-sm text-gray-600">
+                  Backend Page {currentPage} of {totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="h-11 px-6"
+                >
+                  Next Page
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
