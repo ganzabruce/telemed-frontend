@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, UserPlus, UserCog, DollarSign, Calendar, ClipboardList, Sparkles, UserCircle, Shield } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, UserPlus, UserCog, DollarSign, Calendar, ClipboardList, Sparkles, UserCircle, Shield, MessageSquare, Clock } from 'lucide-react';
 
 type NavigationItem = {
   name: string;
@@ -25,11 +25,15 @@ export const navigationByRole: Record<string, NavigationItem[]> = {
   DOCTOR: [
     { name: "Dashboard", href: "/doctor-dashboard", icon: LayoutDashboard },
     { name: "Appointments", href: "/doctor/appointments", icon: Calendar },
+    { name: "Consultations", href: "/doctor/consultations", icon: MessageSquare },
     { name: "Patients", href: "/doctor/patients", icon: Users },
+    { name: "Availability", href: "/doctor/availability", icon: Clock },
   ],
   PATIENT: [
     { name: "Dashboard", href: "/patient-dashboard", icon: LayoutDashboard },
+    { name: "Browse Hospitals", href: "/patient/browse-hospitals", icon: Building2 },
     { name: "My Appointments", href: "/patient/appointments", icon: Calendar },
+    { name: "Consultations", href: "/patient/consultations", icon: MessageSquare },
     { name: "Records", href: "/patient/records", icon: ClipboardList },
   ],
 };
