@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { Menu, X, Search, ShoppingBag, MessageSquare, Package, Truck, ClipboardList, Linkedin, Facebook } from "lucide-react";
+import { Menu, X, Search, ShoppingBag, MessageSquare, Package, Truck, ClipboardList, Linkedin, Facebook, Heart, Stethoscope, Phone, Video } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import heroImage from "../assets/hero-healthcare.jpg";
 import providersImage from "../assets/healthcare-providers.jpg";
 import checkupImage from "../assets/medical-checkup.jpg";
+import { getServices, getTeamMembers, getInsurancePartners, type Service, type TeamMember, type InsurancePartner } from "../api/landingApi";
+import type { LucideIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 
 // Navigation Component
 const Navigation = () => {
@@ -84,9 +87,11 @@ const Hero = () => {
               Accessible, reliable healthcare—online consultations, prescriptions, and support
               from experienced professionals.
             </p>
+            <Link to="/login">
             <Button className="rounded-full px-8 py-3 text-lg bg-blue-900 text-white hover:opacity-95">
               Get Started
             </Button>
+            </Link>
           </div>
 
           <div data-aos="fade-left" data-aos-duration="800" data-aos-delay="200">
@@ -102,40 +107,61 @@ const Hero = () => {
   );
 };
 
+// Icon mapping function
+const getIconComponent = (iconName: string | null): LucideIcon => {
+  const iconMap: Record<string, LucideIcon> = {
+    Search,
+    ShoppingBag,
+    MessageSquare,
+    ClipboardList,
+    Package,
+    Truck,
+    Heart,
+    Stethoscope,
+    Phone,
+    Video,
+  };
+  return iconMap[iconName || ''] || Search; // Default to Search if not found
+};
+
 // Services Component
 const Services = () => {
-  const services = [
-    {
-      icon: Search,
-      title: "Best Quality HealthCare",
-      description: "Comprehensive medical services with state-of-the-art facilities and expert care",
-    },
-    {
-      icon: ShoppingBag,
-      title: "Online pharmacy",
-      description: "Order your prescriptions online and get them delivered to your doorstep",
-    },
-    {
-      icon: MessageSquare,
-      title: "Consultation",
-      description: "Connect with healthcare professionals for expert medical advice",
-    },
-    {
-      icon: ClipboardList,
-      title: "Counseling",
-      description: "Professional mental health support and guidance for your wellbeing",
-    },
-    {
-      icon: Package,
-      title: "Medicine Delivery",
-      description: "Fast and reliable delivery of medications right to your home",
-    },
-    {
-      icon: Truck,
-      title: "Tracking",
-      description: "Real-time tracking of your orders and appointment schedules",
-    },
-  ];
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const data = await getServices();
+        setServices(data);
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchServices();
+  }, []);
+
+  const displayedServices = showAll ? services : services.slice(0, 6);
+
+  if (loading) {
+    return (
+      <section id="services" className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto"></div>
+            <p className="mt-4 text-blue-900/70">Loading services...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (services.length === 0) {
+    return null; // Don't show section if no services
+  }
 
   return (
     <section id="services" className="py-16 md:py-24">
@@ -151,33 +177,41 @@ const Services = () => {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.map((service, index) => (
-            <Card
-              key={index}
-              className="border border-border bg-white shadow-sm hover:shadow-md transition-shadow"
-              data-aos="fade-up"
-              data-aos-delay={index * 100}
-            >
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-white border border-border rounded-full flex items-center justify-center mx-auto mb-6">
-                  <service.icon className="w-8 h-8 text-blue-900" />
-                </div>
-                <h3 className="text-xl font-semibold text-blue-900 mb-3">
-                  {service.title}
-                </h3>
-                <p className="text-blue-900/70 leading-relaxed">
-                  {service.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+          {displayedServices.map((service, index) => {
+            const IconComponent = getIconComponent(service.icon);
+            return (
+              <Card
+                key={service.id}
+                className="border border-border bg-white shadow-sm hover:shadow-md transition-shadow"
+                data-aos="fade-up"
+                data-aos-delay={index * 100}
+              >
+                <CardContent className="p-8 text-center">
+                  <div className="w-16 h-16 bg-white border border-border rounded-full flex items-center justify-center mx-auto mb-6">
+                    <IconComponent className="w-8 h-8 text-blue-900" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-blue-900 mb-3">
+                    {service.title}
+                  </h3>
+                  <p className="text-blue-900/70 leading-relaxed">
+                    {service.description}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
-        <div className="text-center mt-12" data-aos="fade-up">
-          <button className="text-blue-900 font-medium hover:underline">
-            Learn more
-          </button>
-        </div>
+        {services.length > 6 && (
+          <div className="text-center mt-12" data-aos="fade-up">
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-blue-900 font-medium border-2 border-blue-900 px-8 py-3 rounded-full hover:bg-blue-900 hover:text-white transition-colors"
+            >
+              {showAll ? 'Show Less' : 'View All'}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -189,7 +223,7 @@ const AboutSection = () => {
     <section id="about" className="py-16 md:py-24">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div data-aos="fade-right" data-aos-duration="800">
+          <div data-aos="fade-up" data-aos-duration="100">
             <img
               src={providersImage}
               alt="Healthcare providers collaborating"
@@ -197,7 +231,7 @@ const AboutSection = () => {
             />
           </div>
 
-          <div data-aos="fade-left" data-aos-duration="800" data-aos-delay="200">
+          <div data-aos="fade-up" data-aos-duration="100">
             <h2 className="text-2xl md:text-3xl font-semibold text-blue-900 mb-6">
               Trusted healthcare partners
             </h2>
@@ -205,9 +239,11 @@ const AboutSection = () => {
             <p className="text-blue-900/75 text-base mb-6 leading-relaxed">
               Collaborating with leading providers to bring you consistent, high-quality care.
             </p>
-            <Button className="rounded-full px-8 border border-blue-900 text-blue-900">
+            <Link to="/login">  
+            <Button className="rounded-full px-8 border border-blue-900 text-blue-900 hover:bg-blue-900 hover:text-white transition-colors">
               Learn more
             </Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -221,7 +257,7 @@ const SpecialOffer = () => {
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div data-aos="fade-right" data-aos-duration="800">
+          <div data-aos="fade-up" data-aos-duration="100">
             <h2 className="text-2xl md:text-3xl font-semibold text-blue-900 mb-6">
               Save on your first checkup
             </h2>
@@ -229,12 +265,14 @@ const SpecialOffer = () => {
             <p className="text-blue-900/75 text-base mb-8 leading-relaxed">
               Join today and receive a discount on your initial comprehensive checkup.
             </p>
-            <Button className="rounded-full px-8 border border-blue-900 text-blue-900">
+            <Link to="/login">
+            <Button className="rounded-full px-8 border border-blue-900 text-blue-900 hover:bg-blue-900 hover:text-white transition-colors">
               Learn More
             </Button>
+            </Link>
           </div>
 
-          <div data-aos="fade-left" data-aos-duration="800" data-aos-delay="200">
+          <div data-aos="fade-up" data-aos-duration="100">
             <img
               src={checkupImage}
               alt="Medical checkup illustration"
@@ -249,6 +287,43 @@ const SpecialOffer = () => {
 
 // Insurance Partners Component
 const InsurancePartners = () => {
+  const [partners, setPartners] = useState<InsurancePartner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    const fetchPartners = async () => {
+      try {
+        const data = await getInsurancePartners();
+        setPartners(data);
+      } catch (error) {
+        console.error('Error fetching insurance partners:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPartners();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto"></div>
+            <p className="mt-4 text-blue-900/70">Loading insurance partners...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (partners.length === 0) {
+    return null; // Don't show section if no partners
+  }
+
+  const displayedPartners = showAll ? partners : partners.slice(0, 6);
+
   return (
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4">
@@ -257,34 +332,74 @@ const InsurancePartners = () => {
             Our insurance partners
           </h2>
         </div>
-        <Card className="bg-white border border-border shadow-sm p-6" data-aos="zoom-in" data-aos-duration="800">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-white border border-border flex items-center justify-center">
-                  <span className="text-blue-900 font-bold text-2xl">B</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-xl mb-1">Britam Insurance</h3>
-                  <p className="text-primary-foreground/80">Healthcare services provider</p>
-                </div>
-              </div>
+        
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayedPartners.map((partner, index) => (
+            <Card
+              key={partner.id}
+              className="bg-white border border-border shadow-sm p-6 hover:shadow-md transition-shadow"
+              data-aos="fade-up"
+              data-aos-delay={index * 100}
+            >
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center gap-4">
+                  <div className="flex items-center gap-4 w-full">
+                    {partner.logoUrl ? (
+                      <img
+                        src={partner.logoUrl}
+                        alt={partner.name}
+                        className="w-16 h-16 rounded-full object-cover border border-border shrink-0"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          const placeholder = (e.target as HTMLImageElement).parentElement?.querySelector('.logo-placeholder');
+                          if (placeholder) {
+                            placeholder.classList.remove('hidden');
+                          }
+                        }}
+                      />
+                    ) : null}
+                    <div className={`w-16 h-16 rounded-full bg-white border border-border flex items-center justify-center logo-placeholder shrink-0 ${partner.logoUrl ? 'hidden' : ''}`}>
+                      <span className="text-blue-900 font-bold text-2xl">
+                        {partner.logoInitial || partner.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <h3 className="font-bold text-xl mb-1">{partner.name}</h3>
+                      <p className="text-primary-foreground/80 text-sm">Healthcare services provider</p>
+                    </div>
+                  </div>
 
-              <div className="max-w-md text-center md:text-left">
-                <p className="text-blue-900/75">
-                  Britam is one of Rwanda's leading insurance providers, offering comprehensive 
-                  healthcare coverage to ensure quality medical care for all.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-center gap-2 mt-8" data-aos="fade-up">
-          <div className="w-3 h-3 rounded-full bg-blue-900"></div>
-          <div className="w-3 h-3 rounded-full bg-muted"></div>
-          <div className="w-3 h-3 rounded-full bg-muted"></div>
+                  <div className="w-full">
+                    <p className="text-blue-900/75 text-sm">
+                      {partner.description}
+                    </p>
+                    {partner.websiteUrl && (
+                      <a
+                        href={partner.websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline text-sm mt-2 inline-block"
+                      >
+                        Visit website →
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
+
+        {partners.length > 6 && (
+          <div className="text-center mt-12" data-aos="fade-up">
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-blue-900 font-medium border-2 border-blue-900 px-8 py-3 rounded-full hover:bg-blue-900 hover:text-white transition-colors"
+            >
+              {showAll ? 'Show Less' : 'View All'}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -292,23 +407,49 @@ const InsurancePartners = () => {
 
 // Team Component
 const Team = () => {
-  const teamMembers = [
-    {
-      name: "Mr. Vincent MUVUNABEZA",
-      role: "CEO and Founder",
-      image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop",
-    },
-    {
-      name: "Mr. Jean Peter MUNDERAWANA",
-      role: "Operations Manager",
-      image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop",
-    },
-    {
-      name: "Mr. Salomon NIYIGENA",
-      role: "Medical Director",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop",
-    },
-  ];
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      try {
+        const data = await getTeamMembers();
+        setTeamMembers(data);
+      } catch (error) {
+        console.error('Error fetching team members:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTeamMembers();
+  }, []);
+
+  const handleReadMore = (member: TeamMember) => {
+    setSelectedMember(member);
+    setShowModal(true);
+  };
+
+  const displayedMembers = showAll ? teamMembers : teamMembers.slice(0, 3);
+
+  if (loading) {
+    return (
+      <section id="team" className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto"></div>
+            <p className="mt-4 text-blue-900/70">Loading team...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (teamMembers.length === 0) {
+    return null; // Don't show section if no team members
+  }
 
   return (
     <section id="team" className="py-16 md:py-24">
@@ -324,58 +465,195 @@ const Team = () => {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {teamMembers.map((member, index) => (
+          {displayedMembers.map((member, index) => (
             <Card
-              key={index}
+              key={member.id}
               className="border-none shadow-lg hover:shadow-xl transition-shadow"
               data-aos="fade-up"
               data-aos-delay={index * 100}
             >
               <CardContent className="p-6">
                 <div className="mb-4 overflow-hidden rounded-lg">
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-full aspect-square object-cover"
-                  />
+                  {member.imageUrl ? (
+                    <img
+                      src={member.imageUrl}
+                      alt={member.name}
+                      className="w-full aspect-square object-cover"
+                      onError={(e) => {
+                        // Fallback to placeholder if image fails to load
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full aspect-square bg-gray-200 flex items-center justify-center">
+                      <span className="text-4xl text-gray-400">{member.name.charAt(0)}</span>
+                    </div>
+                  )}
                 </div>
 
                 <h3 className="text-xl font-semibold text-blue-900 mb-2">
                   {member.name}
                 </h3>
                 <p className="text-blue-900/70 mb-4">{member.role}</p>
+                {member.bio && (
+                  <p className="text-sm text-blue-900/60 mb-4 line-clamp-2">
+                    {member.bio.length > 100 ? `${member.bio.substring(0, 100)}...` : member.bio}
+                  </p>
+                )}
 
-                <div className="flex gap-3">
+                <div className="flex gap-3 mb-4">
+                  {member.linkedinUrl && (
                     <a
-                      href="#"
+                      href={member.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="w-10 h-10 rounded-full bg-white border border-border flex items-center justify-center hover:bg-blue-900 hover:text-white transition-colors"
                       aria-label="LinkedIn"
                     >
                       <Linkedin size={18} />
                     </a>
+                  )}
+                  {member.facebookUrl && (
                     <a
-                      href="#"
+                      href={member.facebookUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="w-10 h-10 rounded-full bg-white border border-border flex items-center justify-center hover:bg-blue-900 hover:text-white transition-colors"
                       aria-label="Facebook"
                     >
                       <Facebook size={18} />
                     </a>
+                  )}
                 </div>
 
-                <button className="mt-4 text-blue-900 text-sm font-medium hover:underline">
-                  Read more →
-                </button>
+                {member.bio && member.bio.length > 100 && (
+                  <button
+                    onClick={() => handleReadMore(member)}
+                    className="w-full text-blue-900 text-sm font-medium hover:underline flex items-center justify-start"
+                  >
+                    Read more →
+                  </button>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="text-center mt-12" data-aos="fade-up">
-          <button className="text-blue-900 font-medium border-2 border-blue-900 px-8 py-3 rounded-full hover:bg-blue-900 hover:text-white transition-colors">
-            View All
-          </button>
-        </div>
+        {teamMembers.length > 3 && (
+          <div className="text-center mt-12" data-aos="fade-up">
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-blue-900 font-medium border-2 border-blue-900 px-8 py-3 rounded-full hover:bg-blue-900 hover:text-white transition-colors"
+            >
+              {showAll ? 'Show Less' : 'View All'}
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Team Member Detail Modal */}
+      {showModal && selectedMember && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            onClick={() => {
+              setShowModal(false);
+              setSelectedMember(null);
+            }}
+          />
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
+            <div
+              className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-blue-900">Team Member Details</h2>
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setSelectedMember(null);
+                    }}
+                    className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    <X size={24} className="text-gray-600" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                <div className="flex flex-col md:flex-row gap-6 mb-6">
+                  {selectedMember.imageUrl ? (
+                    <img
+                      src={selectedMember.imageUrl}
+                      alt={selectedMember.name}
+                      className="w-48 h-48 rounded-full object-cover border-4 border-gray-200 shadow-lg mx-auto md:mx-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-48 h-48 rounded-full bg-gray-200 flex items-center justify-center mx-auto md:mx-0">
+                      <span className="text-6xl text-gray-400">{selectedMember.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  <div className="flex-1 text-center md:text-left">
+                    <h3 className="text-3xl font-bold text-blue-900 mb-2">
+                      {selectedMember.name}
+                    </h3>
+                    <p className="text-xl text-blue-700 mb-4">{selectedMember.role}</p>
+                    <div className="flex gap-3 justify-center md:justify-start">
+                      {selectedMember.linkedinUrl && (
+                        <a
+                          href={selectedMember.linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-12 h-12 rounded-full bg-blue-900 text-white flex items-center justify-center hover:bg-blue-800 transition-colors"
+                          aria-label="LinkedIn"
+                        >
+                          <Linkedin size={20} />
+                        </a>
+                      )}
+                      {selectedMember.facebookUrl && (
+                        <a
+                          href={selectedMember.facebookUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-12 h-12 rounded-full bg-blue-900 text-white flex items-center justify-center hover:bg-blue-800 transition-colors"
+                          aria-label="Facebook"
+                        >
+                          <Facebook size={20} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {selectedMember.bio && (
+                  <div className="mt-6">
+                    <h4 className="text-lg font-semibold text-blue-900 mb-3">About</h4>
+                    <p className="text-gray-700 leading-relaxed text-base">
+                      {selectedMember.bio}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-6 pt-6 border-t">
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setSelectedMember(null);
+                    }}
+                    className="w-full px-6 py-3 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors font-medium"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </section>
   );
 };
@@ -388,9 +666,8 @@ const Footer = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                <span className="text-blue-900 font-bold text-sm">T</span>
-              </div>
+            
+              <img src="/telemedLanding.png" alt="TeleMed" className="w-8 h-8 rounded-full" />
               <span className="font-bold text-lg">TeleMedicine</span>
             </div>
             <p className="text-primary-foreground/80 text-sm mb-4">
