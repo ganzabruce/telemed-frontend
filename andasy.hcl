@@ -10,7 +10,7 @@ app {
 
   env = {}
 
-  port = 80
+  port = 8080
 
   compute {
     cpu      = 1
