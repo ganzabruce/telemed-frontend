@@ -34,7 +34,7 @@ interface ProfileData {
   isEmailVerified: boolean;
   avatarUrl?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
   roleSpecific?: any;
 }
 
@@ -79,7 +79,8 @@ const ProfilePage: React.FC = () => {
 
       if (!response.ok) throw new Error('Failed to fetch profile');
 
-      const userData = await response.json();
+      const userResponse = await response.json();
+      const userData = userResponse.data || userResponse; // Extract data from response
 
       // Fetch role-specific data
       let roleSpecificData: any = {};
@@ -93,13 +94,13 @@ const ProfilePage: React.FC = () => {
           roleSpecificData = doctorData.data.find((d: any) => d.userId === user.id) || {};
         }
       } else if (user.role === 'PATIENT') {
-        const patientResponse = await fetch(`${API_BASE_URL}/patients`, {
+        const patientResponse = await fetch(`${API_BASE_URL}/patients/me`, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
         
         if (patientResponse.ok) {
           const patientData = await patientResponse.json();
-          roleSpecificData = patientData.data.find((p: any) => p.userId === user.id) || {};
+          roleSpecificData = patientData.data || {};
         }
       }
 
@@ -258,7 +259,10 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined) => {
+    if (!name || typeof name !== 'string') {
+      return '??';
+    }
     return name
       .split(' ')
       .map(word => word[0])
@@ -838,11 +842,17 @@ const ProfilePage: React.FC = () => {
                 <span className="text-sm font-medium text-gray-600">Last Updated</span>
               </div>
               <span className="text-sm font-semibold text-gray-900">
-                {new Date(profileData.updatedAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
+                {profileData.updatedAt 
+                  ? new Date(profileData.updatedAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })
+                  : new Date(profileData.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
               </span>
             </div>
           </div>
