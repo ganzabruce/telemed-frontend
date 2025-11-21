@@ -310,17 +310,44 @@ const HospitalAdminDashboard = () => {
 
       <StatsGrid stats={stats} columns={4} />
 
-      {/* Appointment Status Overview */}
-      <div className="grid grid-cols-3 gap-4 md:gap-6 mb-6">
-        {statusStats.map((stat, index) => (
-          <StatCard
-            key={index}
-            icon={stat.icon}
-            value={stat.value}
-            label={stat.label}
-            gradient={stat.gradient}
-          />
-        ))}
+      {/* Appointment Status Overview - Mobile-Optimized Layout */}
+      <div className="mb-6">
+        {/* Mobile: Horizontal scrollable cards */}
+        <div className="flex sm:hidden gap-3 overflow-x-auto pb-2 -mx-4 px-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {statusStats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={index}
+                className="shrink-0 w-[calc(100vw-2rem)] max-w-[280px] bg-white rounded-xl p-4 shadow-sm border border-gray-100"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg ${stat.gradient} flex items-center justify-center shrink-0`}>
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    <p className="text-xs font-medium text-gray-600 truncate">{stat.label}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop: Grid layout */}
+        <div className="hidden sm:grid sm:grid-cols-3 gap-4 md:gap-6">
+          {statusStats.map((stat, index) => (
+            <StatCard
+              key={index}
+              icon={stat.icon}
+              value={stat.value}
+              label={stat.label}
+              gradient={stat.gradient}
+              className="w-full"
+            />
+          ))}
+        </div>
       </div>
 
       {/* Charts and Lists Row */}

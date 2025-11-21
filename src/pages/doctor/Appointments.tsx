@@ -306,14 +306,7 @@ const DoctorAppointments = () => {
               <h1 className="text-4xl font-bold text-gray-900 mb-2">Appointments</h1>
               <p className="text-gray-600">Manage and track your patient consultations</p>
             </div>
-            <Button 
-              onClick={fetchAppointments}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </Button>
+            
           </div>
         </div>
       </div>
