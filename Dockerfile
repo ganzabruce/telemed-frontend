@@ -41,20 +41,8 @@ RUN pnpm prune --prod
 # Final stage for app image
 FROM nginx
 
-# Remove default nginx configuration
-RUN rm -f /etc/nginx/conf.d/default.conf
-
-# Copy nginx configuration for SPA routing from build context
-COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf
-
 # Copy built application
 COPY --from=build /app/dist /usr/share/nginx/html
-
-# Verify index.html exists
-RUN test -f /usr/share/nginx/html/index.html || (echo "ERROR: index.html not found!" && exit 1)
-
-# Test nginx configuration
-RUN nginx -t
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 80
