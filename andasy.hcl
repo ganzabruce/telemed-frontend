@@ -1,4 +1,4 @@
-# andasy.hcl app configuration file generated for telemedecine-rw on Wednesday, 19-Nov-25 21:17:28 CAT
+# andasy.hcl app configuration file generated for telemedecine-rw on Friday, 21-Nov-25 09:54:25 CAT
 #
 # See https://github.com/quarksgroup/andasy-cli for information about how to use this file.
 
@@ -10,7 +10,7 @@ app {
 
   env = {}
 
-  port = 8080
+  port = 80
 
   compute {
     cpu      = 1
