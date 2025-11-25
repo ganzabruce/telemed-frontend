@@ -1,16 +1,5 @@
 import { useState, useEffect } from 'react';
-import { 
-  Calendar,
-  Clock,
-  Video,
-  Phone,
-  MessageSquare,
-  Heart,
-  Activity,
-  CheckCircle,
-  User,
-  CreditCard,
-} from 'lucide-react';
+import { Calendar,Clock,Video,Phone,MessageSquare,Heart,Activity,CheckCircle,User,CreditCard,} from 'lucide-react';
 import StartConversationModal from '../../components/shared/StartConversationModal';
 import DashboardHeader from '../../components/shared/DashboardHeader';
 import StatsGrid from '../../components/shared/StatsGrid';
@@ -19,11 +8,8 @@ import ChartCard from '../../components/shared/ChartCard';
 import ListCard from '../../components/shared/ListCard';
 import PageContainer from '../../components/shared/PageContainer';
 import LoadingState from '../../components/shared/LoadingState';
-
 import StatusBadge from '../../components/shared/StatusBadge';
 import { API_BASE_URL } from '../../utils/apiConfig';
-
-// --- Types ---
 interface UserRef {
   id?: string;
   fullName?: string;

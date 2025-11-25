@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { Plus, Mail, UserCog, Edit, Search, Stethoscope, Phone, DollarSign, FileText, Filter, Download, X } from 'lucide-react';
+import { Plus, Mail, UserCog, Edit, Search, Stethoscope, Phone,  FileText, Filter, Download, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { toast } from 'react-hot-toast';
 import {
@@ -531,7 +531,6 @@ export const StaffManagement = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1 font-semibold text-gray-700">
-                          <DollarSign className="w-4 h-4" />
                           {doctor.consultationFee} RWF
                         </div>
                       </TableCell>

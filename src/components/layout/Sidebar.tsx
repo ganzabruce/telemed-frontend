@@ -3,8 +3,6 @@ import React, { useState } from "react"
 import { useAuth } from "../../context/AuthContext"
 import {
   Bell,
-  ChevronLeft,
-  ChevronRight,
   X,
 } from "lucide-react"
 import { NavLink } from "react-router-dom"
@@ -19,7 +17,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
   const { state } = useAuth()
   const user = state.user
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCollapsed, _setIsCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
   // Detect mobile screen size
@@ -37,9 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
 
   const navigation = navigationByRole[user.role] || []
 
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed)
-  }
+ 
 
   const handleNavClick = () => {
     // Close mobile menu when a nav item is clicked
@@ -81,17 +77,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
             <X className="w-5 h-5 text-gray-600" />
           </button>
 
-          {/* Collapse button for desktop */}
-          <button
-            onClick={toggleSidebar}
-            className="hidden md:block absolute -right-3 top-6 bg-white border-2 border-gray-300 rounded-full p-1 z-10 hover:bg-gray-50 transition-colors"
-          >
-            {isCollapsed ? (
-              <ChevronRight className="w-4 h-4" />
-            ) : (
-              <ChevronLeft className="w-4 h-4" />
-            )}
-          </button>
+          
 
           <div className="mb-6 flex items-center gap-2">
             {!isCollapsed && (

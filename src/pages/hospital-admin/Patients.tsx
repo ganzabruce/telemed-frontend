@@ -6,30 +6,14 @@ import { Button } from '../../components/ui/button';
 import {
   Card, CardContent, CardHeader, CardTitle
 } from '../../components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
+import {Table,TableBody,TableCell,TableHead,TableHeader,TableRow
 } from '../../components/ui/table';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
+import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogTrigger
 } from '../../components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue,
 } from '../../components/ui/select';
 import { API_BASE_URL } from '../../utils/apiConfig';
 
