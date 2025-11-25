@@ -185,7 +185,6 @@ const DashboardLayout: React.FC = () => {
 
               {/* Right Section */}
               <div className="flex items-center gap-2 md:gap-4 md:ml-6">
-
                 {/* Notifications Dropdown */}
                 <div className="relative notifications-dropdown">
                   <button 
@@ -371,7 +370,7 @@ const DashboardLayout: React.FC = () => {
           <div className="px-4 md:px-6 py-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-sm text-gray-600">
-                © 2025 TeleMed. All rights reserved.
+                © 2025 TeleMedecine. All rights reserved.
               </div>
               
               <div className="flex items-center gap-4 md:gap-6">

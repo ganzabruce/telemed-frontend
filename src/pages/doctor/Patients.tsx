@@ -12,7 +12,6 @@ import {
   Filter,
   SortAsc,
   ChevronRight,
-  Heart
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -399,7 +398,7 @@ const DoctorPatientsPage: React.FC = () => {
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
                         {patient.bloodType ? (
                           <span className="flex items-center gap-1">
-                            <Heart className="w-3 h-3 text-red-500" />
+
                             {patient.bloodType}
                           </span>
                         ) : (

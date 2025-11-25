@@ -1,25 +1,7 @@
 import { useState, useEffect } from 'react';
-import { 
-  Users, 
-  UserCog,
-  Calendar, 
-  DollarSign,
-  Clock,
-  CheckCircle,
-  MoreVertical,
-  Building2,
-  User
+import { Users, UserCog,Calendar, DollarSign,Clock,CheckCircle,MoreVertical,Building2,User
 } from 'lucide-react';
-import {
-  DashboardHeader,
-  StatsGrid,
-  StatCard,
-  ChartCard,
-  ListCard,
-  PageContainer,
-  LoadingState,
-  StatusBadge,
-  SearchBar
+import {DashboardHeader,StatsGrid,StatCard,ChartCard,ListCard,PageContainer,LoadingState,StatusBadge,SearchBar
 } from '../../components/shared';
 import { API_BASE_URL } from '../../utils/apiConfig';
 

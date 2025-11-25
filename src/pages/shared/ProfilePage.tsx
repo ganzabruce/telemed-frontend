@@ -1,24 +1,6 @@
 // src/pages/shared/ProfilePage.tsx
 import React, { useState, useEffect } from 'react';
-import { 
-  Camera, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  Briefcase, 
-  User, 
-  Edit2, 
-  Save, 
-  X,
-  Shield,
-  Stethoscope,
-
-  Heart,
-  Building2,
-  RefreshCw,
-  CheckCircle,
-  Clock,
-  DollarSign
+import { Camera, Mail,Phone, Calendar, Briefcase, User, Edit2, Save, X,Shield,Stethoscope,Heart,Building2,RefreshCw,CheckCircle,Clock,DollarSign
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';

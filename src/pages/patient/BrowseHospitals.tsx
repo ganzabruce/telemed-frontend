@@ -1,19 +1,5 @@
 import  { useState, useEffect } from 'react';
-import {
-  Building2,
-  Search,
-  MapPin,
-  Phone,
-  Mail,
-  Stethoscope,
-  Clock,
-  DollarSign,
-  Calendar,
-  ChevronDown,
-  ChevronUp,
-  User,
-  X,
-} from 'lucide-react';
+import {Building2,Search,MapPin,Phone,Mail,Stethoscope,Clock,Calendar,ChevronDown,ChevronUp,User,X,} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -366,7 +352,6 @@ const BrowseHospitalsPage = () => {
                                   <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                                     {/* Consultation Fee */}
                                     <div className="flex items-center gap-2">
-                                      <DollarSign className="w-4 h-4 text-gray-600" />
                                       <span className="font-medium">
                                         {doctor.consultationFee.toLocaleString('en-RW', {
                                           style: 'currency',
