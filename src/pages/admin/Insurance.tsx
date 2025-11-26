@@ -424,7 +424,7 @@ const Insurance: React.FC = () => {
               className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div className="p-6 border-b bg-linear-to-r from-blue-50 to-indigo-50">
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                     <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
