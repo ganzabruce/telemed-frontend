@@ -46,7 +46,7 @@ export const InsurancePartners = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12" data-aos="fade-up">
           <h2 className="text-2xl md:text-3xl font-semibold text-blue-900 mb-8">
-            Our insurance partners
+            Our partners
           </h2>
         </div>
         
