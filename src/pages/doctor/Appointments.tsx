@@ -435,6 +435,7 @@ const DoctorAppointments = () => {
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm">
                             <div className="flex items-center gap-2 flex-wrap">
+                             
                               <Button
                                 size="sm"
                                 variant="outline"
