@@ -40,8 +40,8 @@ const Insurance: React.FC = () => {
       const data = await getAllInsurancePartners();
       setPartners(data);
     } catch (error) {
-      toast.error('Failed to fetch insurance partners');
-      console.error('Error fetching insurance partners:', error);
+      toast.error('Failed to fetch  partners');
+      console.error('Error fetching  partners:', error);
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ const Insurance: React.FC = () => {
           const result = await uploadInsurancePartnerLogo(newPartner.id, selectedLogo);
           logoUrl = result.logoUrl;
           await updateInsurancePartner(newPartner.id, { logoUrl });
-          toast.success('Insurance partner created successfully');
+          toast.success('partner created successfully');
           setShowModal(false);
           resetForm();
           fetchPartners();
@@ -93,10 +93,10 @@ const Insurance: React.FC = () => {
 
       if (editingPartner) {
         await updateInsurancePartner(editingPartner.id, { ...formData, logoUrl });
-        toast.success('Insurance partner updated successfully');
+        toast.success(' partner updated successfully');
       } else {
         await createInsurancePartner({ ...formData, logoUrl });
-        toast.success('Insurance partner created successfully');
+        toast.success(' partner created successfully');
       }
       setShowModal(false);
       resetForm();
@@ -109,14 +109,14 @@ const Insurance: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this insurance partner?')) return;
+    if (!window.confirm('Are you sure you want to delete this  partner?')) return;
 
     try {
       await deleteInsurancePartner(id);
-      toast.success('Insurance partner deleted successfully');
+      toast.success(' partner deleted successfully');
       fetchPartners();
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Failed to delete insurance partner');
+      toast.error(error?.response?.data?.message || 'Failed to delete  partner');
     }
   };
 
@@ -175,9 +175,9 @@ const Insurance: React.FC = () => {
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Shield className="text-white" size={24} />
               </div>
-              Insurance Partners Management
+               Partners Management
             </h1>
-            <p className="text-gray-600 mt-1">Manage insurance partners displayed on the landing page</p>
+            <p className="text-gray-600 mt-1">Manage  partners displayed on the landing page</p>
           </div>
           <button
             onClick={() => {
@@ -226,7 +226,7 @@ const Insurance: React.FC = () => {
             <Search className="absolute left-3 top-3 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="Search insurance partners..."
+              placeholder="Search  partners..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -238,7 +238,7 @@ const Insurance: React.FC = () => {
       {loading ? (
         <div className="text-center py-12 bg-white rounded-lg shadow-md">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading insurance partners...</p>
+          <p className="mt-4 text-gray-600">Loading  partners...</p>
         </div>
       ) : (
         <>
@@ -269,7 +269,7 @@ const Insurance: React.FC = () => {
                     <tr>
                       <td colSpan={5} className="px-6 py-12 text-center">
                         <Shield className="mx-auto text-gray-400 mb-3" size={48} />
-                        <p className="text-gray-600">No insurance partners found</p>
+                        <p className="text-gray-600">No partners found</p>
                         <p className="text-sm text-gray-500 mt-1">Try adjusting your search</p>
                       </td>
                     </tr>
@@ -353,7 +353,7 @@ const Insurance: React.FC = () => {
             {filteredPartners.length === 0 ? (
               <div className="bg-white rounded-lg shadow-md p-12 text-center">
                 <Shield className="mx-auto text-gray-400 mb-3" size={48} />
-                <p className="text-gray-600">No insurance partners found</p>
+                <p className="text-gray-600">No partners found</p>
               </div>
             ) : (
               filteredPartners.map((partner) => (
@@ -430,7 +430,7 @@ const Insurance: React.FC = () => {
                     <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                       <Shield className="text-white" size={20} />
                     </div>
-                    {editingPartner ? 'Edit Insurance Partner' : 'Add New Insurance Partner'}
+                    {editingPartner ? 'Edit Partner' : 'Add New Partner'}
                   </h2>
                   <button
                     onClick={() => {
@@ -469,7 +469,7 @@ const Insurance: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     rows={4}
-                    placeholder="Insurance partner description..."
+                    placeholder="partner description..."
                     required
                   />
                 </div>
