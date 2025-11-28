@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { API_BASE_URL } from '../../utils/apiConfig';
+import { se } from 'date-fns/locale';
 
 type Step = 'email' | 'otp' | 'reset';
 
@@ -50,10 +51,13 @@ const ForgotPasswordPage = () => {
 
     try {
       setLoading(true);
-      
-
-      toast.success('If an account exists with this email, an OTP has been sent.');
-      setStep('otp');
+      const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
+        email
+      });
+      if(response.status === 200){
+        toast.success('If an account exists with this email, an OTP has been sent.');
+        setStep('otp');
+      }
     } catch (error: any) {
       console.error('Error requesting OTP:', error);
       // Backend always returns 200, but handle any unexpected errors

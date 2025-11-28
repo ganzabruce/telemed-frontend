@@ -251,7 +251,7 @@ const SettingsPage = () => {
       {/* Patient Profile Information */}
       {state.user?.role === 'PATIENT' && patientProfile && (
         <Card className="border-none shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-purple-600 to-purple-700 text-white">
+          <CardHeader className="bg-gradient-to-r bg-gray-400 text-white">
             <CardTitle className="flex items-center gap-2 text-2xl">
               <Heart className="w-6 h-6" />
               Medical Information
@@ -451,7 +451,7 @@ const SettingsPage = () => {
                 <Button
                   type="submit"
                   disabled={changingPassword || newPassword !== confirmPassword || newPassword.length < 6}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   {changingPassword ? 'Changing...' : 'Change Password'}
