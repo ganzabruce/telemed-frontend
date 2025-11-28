@@ -1,12 +1,10 @@
-# andasy.hcl app configuration file generated for telemedecine-rw on Friday, 21-Nov-25 09:54:25 CAT
+# andasy.hcl app configuration file generated for telemed-fn on Thursday, 27-Nov-25 15:32:09 CAT
 #
 # See https://github.com/quarksgroup/andasy-cli for information about how to use this file.
 
-app_name = "telemedecine-rw"
+app_name = "telemed-fn"
 
 app {
-
-  image = "registry.andasy.io/telemed-frontend:latest-1763564235218"
 
   env = {}
 
@@ -19,7 +17,7 @@ app {
   }
 
   process {
-    name = "telemedecine-rw"
+    name = "telemed-fn"
   }
 
 }

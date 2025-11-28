@@ -10,8 +10,8 @@ interface ToastMessage {
 
 interface FormDataType {
   email: string;
-  fullName: string;
-  phone: string;
+  // fullName: string;
+  // phone: string;
 }
 
 const getAuthHeaders = () => {
@@ -52,8 +52,8 @@ export const InviteAdmin = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormDataType>({
     email: '',
-    fullName: '',
-    phone: ''
+    // fullName: '',
+    // phone: ''
   });
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
@@ -77,7 +77,7 @@ export const InviteAdmin = () => {
       }
 
       showToast('Invitation sent successfully!', 'success');
-      setFormData({ email: '', fullName: '', phone: '' });
+      setFormData({ email: '' });
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Failed to send invitation';
       showToast(msg, 'error');
@@ -123,7 +123,7 @@ export const InviteAdmin = () => {
               />
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Full Name *
               </label>
@@ -134,9 +134,9 @@ export const InviteAdmin = () => {
                 placeholder="John Doe"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-            </div>
+            </div> */}
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Phone Number *
               </label>
@@ -147,7 +147,7 @@ export const InviteAdmin = () => {
                 placeholder="0781234567"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-            </div>
+            </div> */}
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">

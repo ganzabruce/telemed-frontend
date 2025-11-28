@@ -12,16 +12,16 @@ interface RegisterResponse {
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    fullName: "",
+    // fullName: "",
     email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
+    // phone: "",
+    // password: "",
+    // confirmPassword: "",
   })
   const [loading, setLoading] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  // const [showPassword, setShowPassword] = useState(false)
+  // const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -31,32 +31,32 @@ const RegisterPage: React.FC = () => {
     e.preventDefault()
     setFeedback(null)
 
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setFeedback("❌ Passwords do not match.")
-      return
-    }
-    if (formData.password.length < 6) {
-      setFeedback("❌ Password must be at least 6 characters long.")
-      return
-    }
+    // // Validation
+    // if (formData.password !== formData.confirmPassword) {
+    //   setFeedback("❌ Passwords do not match.")
+    //   return
+    // }
+    // if (formData.password.length < 6) {
+    //   setFeedback("❌ Password must be at least 6 characters long.")
+    //   return
+    // }
 
     setLoading(true)
 
     try {
-      const { fullName, email, phone, password } = formData
+      const {  email  } = formData
       await axios.post<RegisterResponse>(
         `${API_BASE_URL}/auth/register-patient`,
-        { fullName, email, phone, password },
+        { email },
         { headers: { "Content-Type": "application/json" } }
       )
 
       setFeedback("✅ Registration successful! Please check your email to verify your account and complete the setup.")
       
       // Redirect to login after 5 seconds
-      setTimeout(() => {
-        navigate("/login")
-      }, 5000)
+      // setTimeout(() => {
+      //   navigate("/login")
+      // }, 5000)
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 409) {
@@ -110,7 +110,7 @@ const RegisterPage: React.FC = () => {
             )}
 
             {/* Full Name Field */}
-            <div>
+            {/* <div>
               <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-2">
                 Full Name
               </label>
@@ -131,7 +131,7 @@ const RegisterPage: React.FC = () => {
                   placeholder="John Doe"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Email Field */}
             <div>
@@ -158,7 +158,7 @@ const RegisterPage: React.FC = () => {
             </div>
 
             {/* Phone Field */}
-            <div>
+            {/* <div>
               <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
                 Phone Number
               </label>
@@ -179,10 +179,10 @@ const RegisterPage: React.FC = () => {
                   placeholder="078..."
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Password Field */}
-            <div>
+            {/* <div>
               <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
               </label>
@@ -219,10 +219,10 @@ const RegisterPage: React.FC = () => {
                   )}
                 </button>
               </div>
-            </div>
+            </div> */}
 
             {/* Confirm Password Field */}
-            <div>
+            {/* <div>
               <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
                 Confirm Password
               </label>
@@ -259,7 +259,7 @@ const RegisterPage: React.FC = () => {
                   )}
                 </button>
               </div>
-            </div>
+            </div> */}
 
             {/* Submit Button */}
             <button

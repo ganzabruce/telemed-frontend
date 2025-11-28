@@ -40,7 +40,7 @@ export const StaffManagement = () => {
   const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ email: '', fullName: '', phone: '' });
+  const [inviteForm, setInviteForm] = useState({ email: ''});
   const [searchTerm, setSearchTerm] = useState('');
   const [showEditFeeDialog, setShowEditFeeDialog] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<any | null>(null);
@@ -86,7 +86,7 @@ export const StaffManagement = () => {
       if (response.ok) {
         toast.success('Invitation sent successfully');
         setShowInviteDialog(false);
-        setInviteForm({ email: '', fullName: '', phone: '' });
+        setInviteForm({ email: ''});
         fetchStaff();
       } else {
         const data = await response.json();
@@ -351,7 +351,7 @@ export const StaffManagement = () => {
                 </div>
 
                 <div className="space-y-4 bg-gray-50 rounded-xl p-4">
-                  <div>
+                  {/* <div>
                     <Label className="text-sm font-semibold text-gray-700">Full Name</Label>
                     <Input
                       className="mt-2 h-11 outline-none bg-white transition-colors"
@@ -359,7 +359,7 @@ export const StaffManagement = () => {
                       value={inviteForm.fullName}
                       onChange={(e) => setInviteForm({...inviteForm, fullName: e.target.value})}
                     />
-                  </div>
+                  </div> */}
                   <div>
                     <Label className="text-sm font-semibold text-gray-700">Email Address</Label>
                     <div className="relative mt-2">
@@ -373,7 +373,7 @@ export const StaffManagement = () => {
                       />
                     </div>
                   </div>
-                  <div>
+                  {/* <div>
                     <Label className="text-sm font-semibold text-gray-700">Phone Number</Label>
                     <div className="relative mt-2">
                       <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -383,8 +383,8 @@ export const StaffManagement = () => {
                         value={inviteForm.phone}
                         onChange={(e) => setInviteForm({...inviteForm, phone: e.target.value})}
                       />
-                    </div>
-                  </div>
+                    </div> */}
+                  {/* </div> */}
                 </div>
 
                 {/* Action buttons */}
