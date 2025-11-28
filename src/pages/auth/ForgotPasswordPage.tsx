@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { API_BASE_URL } from '../../utils/apiConfig';
-import { se } from 'date-fns/locale';
+
 
 type Step = 'email' | 'otp' | 'reset';
 
