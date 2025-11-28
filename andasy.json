@@ -1,0 +1,6 @@
+{
+  "static": {
+    "dir": "dist",
+    "fallback": "index.html"
+  }
+}
