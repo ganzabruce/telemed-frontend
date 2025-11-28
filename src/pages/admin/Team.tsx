@@ -196,7 +196,7 @@ const Team: React.FC = () => {
               resetForm();
               setShowModal(true);
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 sm:text-sm text-white px-2 py-1 md:px-4 lg:px-4 md:py-2 lg:py-2 rounded-lg flex items-center  hover:bg-blue-700 transition-colors"
           >
             <Plus size={20} />
             Add Team Member

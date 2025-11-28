@@ -194,17 +194,17 @@ export const Hospitals: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-800">Hospitals Management</h1>
           <p className="text-gray-600 mt-1">Manage all hospitals in the system</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap  gap-3 ">
           <button
             onClick={handleExportExcel}
-            className="bg-white text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 border border-gray-300 hover:bg-gray-50 transition-colors"
+            className="bg-white  text-gray-700 px-2 py-1 md:px-4 lg:px-4 md:py-2 lg:py-2 rounded-lg flex items-center gap-2 border border-gray-300 hover:bg-gray-50 transition-colors"
           >
             <Download size={20} />
             Export
           </button>
           <button
             onClick={() => { resetForm(); setShowModal(true) }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-1 py-1 md:px-4 lg:px-4 md:py-2 lg:py-2 rounded-lg flex items-center hover:bg-blue-700 transition-colors"
           >
             <Plus size={20} />
             Add Hospital
@@ -302,7 +302,7 @@ export const Hospitals: React.FC = () => {
                           <span className="text-sm text-gray-700 font-mono">{hospital.licenseNumber || 'N/A'}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 ">
                             <button
                               onClick={() => handleViewDetails(hospital)}
                               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -363,24 +363,24 @@ export const Hospitals: React.FC = () => {
                         <p className="text-xs text-gray-500 font-mono truncate">{hospital.id.substring(0, 13)}...</p>
                       </div>
                     </div>
-                    <div className="flex gap-2 shrink-0">
+                    <div className="flex -gap-2 shrink-0">
                       <button
                         onClick={() => handleViewDetails(hospital)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title="View Details"
                       >
                         <Eye size={18} />
                       </button>
                       <button
                         onClick={() => openEditModal(hospital)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className=" text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title="Edit"
                       >
                         <Edit size={18} />
                       </button>
                       <button
                         onClick={() => handleDelete(hospital.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className=" text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Delete"
                       >
                         <Trash2 size={18} />

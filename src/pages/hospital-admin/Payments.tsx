@@ -190,14 +190,14 @@ const PaymentsPage = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+                <div className="grid grid-cols-3 pt-2 border-t border-gray-100">
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Amount</div>
                     <div className="text-sm font-semibold">{formatCurrency(Number(p.amount || 0))}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Method</div>
-                    <div className="text-sm">{p.method}</div>
+                    <div className="text-xs text-gray-500 mb-1 ">Method</div>
+                    <div className="text-sm flex flex-wrap">{p.method}</div>
                   </div>
                 </div>
 

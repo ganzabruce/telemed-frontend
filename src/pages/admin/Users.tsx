@@ -270,17 +270,17 @@ const UsersManagement = () => {
           <h1 className="text-3xl font-bold text-gray-800">Users Management</h1>
           <p className="text-gray-600 mt-1">Manage and monitor all registered users</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <button
             onClick={handleExportExcel}
-            className="bg-white text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 border border-gray-300 hover:bg-gray-50 transition-colors"
+            className="bg-white text-gray-700 px-2 py-1 md:px-4 lg:px-4 md:py-2 lg:py-2 rounded-lg flex items-center  border border-gray-300 hover:bg-gray-50 transition-colors"
           >
             <Download size={20} />
             Export
           </button>
           <button
             onClick={() => setShowInviteModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-2 py-1 md:px-4 lg:px-4 md:py-2 lg:py-2 rounded-lg flex items-center  hover:bg-blue-700 transition-colors"
           >
             <Plus size={20} />
             Invite User

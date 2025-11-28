@@ -260,7 +260,7 @@ const BrowseHospitalsPage = () => {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4 flex-1">
-                      <div className="w-16 h-16 rounded-xl bg-blue-500 flex items-center justify-center shrink-0">
+                      <div className="w-16 h-16 rounded-xl hidden bg-blue-500 md:flex lg:flex items-center justify-center shrink-0">
                         <Building2 className="w-8 h-8 text-white" />
                       </div>
                       <div className="flex-1">
@@ -315,14 +315,14 @@ const BrowseHospitalsPage = () => {
                         <p>No doctors available at this hospital</p>
                       </div>
                     ) : (
-                      <div className="mt-6 space-y-3">
+                      <div className="mt-6 space-y-3 " >
                         {hospital.doctors?.map((doctor) => (
                           <div
                             key={doctor.id}
                             className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200"
                           >
                             {/* Doctor Avatar */}
-                            <div className="shrink-0">
+                            <div className="shrink-0 sm:display-none ">
                               {doctor.user.avatarUrl ? (
                                 <img
                                   src={doctor.user.avatarUrl}
@@ -330,16 +330,16 @@ const BrowseHospitalsPage = () => {
                                   className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
                                 />
                               ) : (
-                                <div className="w-16 h-16 rounded-full bg-blue-500  flex items-center justify-center border-2 border-gray-200">
+                                <div className="w-16 h-16 rounded-full hidden   bg-blue-500  md:flex lg:flex items-center justify-center border-2 border-gray-200">
                                   <User className="w-8 h-8 text-white" />
                                 </div>
                               )}
                             </div>
 
                             {/* Doctor Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
+                            <div className="flex-1 min-w-0 ">
+                              <div className="flex items-start justify-between gap-4 flex-wrap">
+                                <div className="flex-1  ">
                                   <div className="flex items-center gap-3 mb-2">
                                     <h3 className="font-bold text-lg text-gray-900">
                                       {doctor.user.fullName}
