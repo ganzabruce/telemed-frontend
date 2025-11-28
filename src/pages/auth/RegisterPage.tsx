@@ -12,11 +12,7 @@ interface RegisterResponse {
 const RegisterPage: React.FC = () => {
 
   const [formData, setFormData] = useState({
-    // fullName: "",
     email: "",
-    // phone: "",
-    // password: "",
-    // confirmPassword: "",
   })
   const [loading, setLoading] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
