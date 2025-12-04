@@ -5,7 +5,6 @@ import { Navigation } from "@/pages/landing/components/navigation";
 import { Hero } from "./landing/components/hero";
 import { Services } from "./landing/components/services";
 import { AboutSection } from "./landing/components/aboutSection";
-import { SpecialOffer } from "./landing/components/specialOffer";
 import { InsurancePartners } from "./landing/components/insurancePartners";
 import { Footer } from "./landing/components/Footer";
 import { Team } from "./landing/components/team";
@@ -25,7 +24,7 @@ const LandingPage = () => {
       <Hero />
       <Services />
       <AboutSection />
-      <SpecialOffer />
+
       <InsurancePartners />
       <Team />
       <Footer />
