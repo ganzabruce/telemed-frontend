@@ -6,11 +6,9 @@ import {
   FileText, 
   AlertCircle, 
   Loader2,
-  Clock,
-  Activity,
+  // Clock,
+  // Activity,
   X,
-  Filter,
-  SortAsc,
   ChevronRight,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -242,7 +240,7 @@ const DoctorPatientsPage: React.FC = () => {
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">My Patients</h1>
             <p className="text-gray-600">Manage and view your patient records</p>
           </div>
-          <div className="flex gap-3">
+          {/* <div className="flex gap-3">
             <Button variant="outline" className="gap-2">
               <Filter className="w-4 h-4" />
               Filter
@@ -251,7 +249,7 @@ const DoctorPatientsPage: React.FC = () => {
               <SortAsc className="w-4 h-4" />
               Sort
             </Button>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -267,7 +265,7 @@ const DoctorPatientsPage: React.FC = () => {
           <h3 className="text-sm font-medium text-gray-600">Total Patients</h3>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        {/* <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 rounded-xl bg-green-500  flex items-center justify-center">
               <Activity className="w-6 h-6 text-white" />
@@ -275,9 +273,9 @@ const DoctorPatientsPage: React.FC = () => {
             <span className="text-3xl font-bold text-gray-900">{stats.active}</span>
           </div>
           <h3 className="text-sm font-medium text-gray-600">Active Patients</h3>
-        </div>
+        </div> */}
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        {/* <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 rounded-xl bg-orange-500  flex items-center justify-center">
               <Clock className="w-6 h-6 text-white" />
@@ -285,7 +283,7 @@ const DoctorPatientsPage: React.FC = () => {
             <span className="text-3xl font-bold text-gray-900">{stats.pending}</span>
           </div>
           <h3 className="text-sm font-medium text-gray-600">Pending</h3>
-        </div>
+        </div> */}
       </div>
 
       {error && (
@@ -317,20 +315,20 @@ const DoctorPatientsPage: React.FC = () => {
               >
                 All ({patients.length})
               </Button>
-              <Button
+              {/* <Button
                 variant={statusFilter === 'ACTIVE' ? 'default' : 'outline'}
                 onClick={() => setStatusFilter('ACTIVE')}
                 className={`flex-1 md:flex-none ${statusFilter === 'ACTIVE' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border-blue-200'}`}
               >
                 Active ({stats.active})
-              </Button>
-              <Button
+              </Button> */}
+              {/* <Button
                 variant={statusFilter === 'PENDING' ? 'default' : 'outline'}
                 onClick={() => setStatusFilter('PENDING')}
                 className={`flex-1 md:flex-none ${statusFilter === 'PENDING' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border-blue-200'}`}
               >
                 Pending ({stats.pending})
-              </Button>
+              </Button> */}
             </div>
           </div>
         </CardContent>
@@ -364,7 +362,7 @@ const DoctorPatientsPage: React.FC = () => {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blood Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th> */}
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -405,11 +403,11 @@ const DoctorPatientsPage: React.FC = () => {
                           <span className="text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
+                      {/* <td className="px-4 py-4 whitespace-nowrap">
                         <Badge className={`${getStatusColor(patient.status)} border text-xs font-medium`}>
                           {patient.status}
                         </Badge>
-                      </td>
+                      </td> */}
                       <td className="px-4 py-4 whitespace-nowrap text-sm">
                         <Button
                           variant="outline"
