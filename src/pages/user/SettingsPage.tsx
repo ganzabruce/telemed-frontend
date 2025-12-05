@@ -3,8 +3,8 @@ import {
   Settings,
   Lock,
   User,
-  Mail,
-  Phone,
+  // Mail,
+  // Phone,
   Calendar,
   Heart,
   FileText,
@@ -59,7 +59,7 @@ const SettingsPage = () => {
   const { state } = useAuth();
   const [loading, setLoading] = useState(true);
   const [patientProfile, setPatientProfile] = useState<PatientProfile | null>(null);
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const [_userInfo, setUserInfo] = useState<any>(null);
 
   // Password change state
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -202,7 +202,7 @@ const SettingsPage = () => {
       </div>
 
       {/* User Information Card */}
-      <Card className="border-none shadow-lg">
+      {/* <Card className="border-none shadow-lg">
         <CardHeader className="bg-gray-400 text-white">
           <CardTitle className="flex items-center gap-2 text-2xl">
             <User className="w-6 h-6" />
@@ -246,7 +246,7 @@ const SettingsPage = () => {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Patient Profile Information */}
       {state.user?.role === 'PATIENT' && patientProfile && (
